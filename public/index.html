@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>STARQ Operations Room</title>
+    <style>
+      :root { color-scheme: dark; font-family: system-ui, sans-serif; background: #101418; color: #e8edf2; }
+      body { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+      h1 { margin-bottom: 8px; }
+      p { color: #aeb9c4; }
+      #status { padding: 16px; border: 1px solid #30404d; border-radius: 12px; background: #172028; }
+      code { color: #8dd8ff; }
+    </style>
+  </head>
+  <body>
+    <h1>STARQ Operations Room</h1>
+    <p>Private Vercel surface. Live traffic is available only after the authenticated upstream is configured.</p>
+    <div id="status">Checking secure upstream…</div>
+    <script>
+      fetch('/api/health')
+        .then((r) => r.json())
+        .then((data) => {
+          document.querySelector('#status').innerHTML = data.upstreamConfigured
+            ? 'Secure upstream configured. Room client can be connected.'
+            : 'Upstream not configured yet. Set <code>OPS_ROOM_UPSTREAM_URL</code> and <code>OPS_ROOM_UPSTREAM_TOKEN</code> in Vercel.';
+        })
+        .catch(() => { document.querySelector('#status').textContent = 'Health check failed.'; });
+    </script>
+  </body>
+</html>

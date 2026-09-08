@@ -1,0 +1,11 @@
+node_modules/
+.vercel/
+.env
+.env.*
+!.env.example
+*.log
+room.jsonl
+inbox/
+cursors/
+identities.json
+staff-state.json
