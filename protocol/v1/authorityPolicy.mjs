@@ -224,3 +224,54 @@ export function isOutstandingAction(record, targetAgent = null) {
 
   return true;
 }
+
+/**
+ * Canonical owner attribution for a record's structured `actionRequired` text.
+ *
+ * ROOM-PROTO-1 made structured `actionRequired` the authoritative signal for WHETHER
+ * an action is outstanding; this is the companion for WHO it is addressed to, so that
+ * a single record can CC one seat while assigning the work to another and each
+ * seat's watcher agrees on the owner. Verb-free by design: the earlier per-watcher
+ * approaches relied on hand-maintained action-verb allowlists (`selfActionLevel` in
+ * the claude-herdr watcher; inline owner logic in room-watch-codex) that were fragile
+ * and drifted between seats. Attribution is purely by the `@handle`s named in the
+ * `actionRequired` directive.
+ *
+ * Returns an array of canonical-ish lowercase handles named as owners:
+ *   - `[]`            -> no explicit owner named (NONE, empty, or a free-text ask).
+ *   - `['all']`       -> addressed to everyone (@all / @everyone / @team).
+ *   - `['codex', …]`  -> the specific seats named in the actionRequired text.
+ */
+export function actionRequiredOwners(record) {
+  const metadata = record?.event?.metadata || record?.metadata || {};
+  const ar = metadata?.actionRequired ?? record?.actionRequired ?? null;
+  if (ar == null || isNoneActionRequired(ar)) return [];
+  const text = String(ar);
+  if (/@all\b|@everyone\b|@team\b/i.test(text)) return ['all'];
+  const owners = (text.match(/@[a-z0-9_-]+/gi) || []).map(h => h.replace(/^@/, '').toLowerCase());
+  return [...new Set(owners)];
+}
+
+/**
+ * Whether a record's action is addressed to `targetAgent`.
+ *
+ * This is NOT a standalone relevance test — it answers only "is the target among the
+ * named owners?". Combine it with `isOutstandingAction(record, targetAgent)` to decide
+ * whether to wake a seat: the pair gives "there is an outstanding action AND it is
+ * (at least partly) mine".
+ *
+ * Rules:
+ *   - No explicit owner named (free-text ask, or absent structured directive) -> true
+ *     (do not suppress; `isOutstandingAction` already gated on delivery + audience).
+ *   - `@all` / `@everyone` / `@team` -> true for any target.
+ *   - Otherwise -> true only if the target is one of the named owners. A record that
+ *     names only other seats (target merely CC'd) -> false.
+ */
+export function isActionAddressedTo(record, targetAgent = null) {
+  if (!targetAgent) return true;
+  const target = String(targetAgent).replace(/^@/, '').toLowerCase();
+  const owners = actionRequiredOwners(record);
+  if (owners.length === 0) return true;
+  if (owners.includes('all')) return true;
+  return owners.includes(target);
+}

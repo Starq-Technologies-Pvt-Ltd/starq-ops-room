@@ -7,6 +7,15 @@
  * Herdr pane-wake mechanism. Separate from engineering work; does not post to Room,
  * does not claim/renew any identity, does not touch StarqBot / Deadpool's Telegram relay.
  *
+ * ACTION_REQUIRED classification authority (ROOM-PROTO-1, 2026-11-07):
+ *   Relevance is decided by the CANONICAL classifier `isOutstandingAction()` exported
+ *   from `protocol/v1/authorityPolicy.mjs` — the single source of truth also consumed
+ *   by `room-watch-codex.mjs` and the broker. This watcher does NOT carry its own
+ *   action-required verb list; the earlier bespoke `selfActionLevel` regex was removed
+ *   so the herdr seat cannot drift from the protocol. A bare @claude addressee mention
+ *   is NOT action: the authoritative signal is the structured `actionRequired` field,
+ *   which `isOutstandingAction(record, 'claude')` evaluates against the raw broker record.
+ *
  * Guarantees:
  *  - No history replay: first ever start seeds checkpoint = current tailSequence.
  *  - Durable checkpoint across restarts: state file holds lastSeq + delivered + pending.
@@ -25,6 +34,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync, renameSync, appendF
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFile } from 'node:child_process';
+import { isOutstandingAction, isActionAddressedTo } from '../protocol/v1/authorityPolicy.mjs';
 
 const __dir = dirname(fileURLToPath(import.meta.url));
 const STATE_DIR = resolve(__dir, '..', 'state');
@@ -72,7 +82,7 @@ function saveState(s) {
   }
 }
 
-function summarize(rec) {
+export function summarize(rec) {
   const e = rec.event || {};
   const md = e.metadata || {};
   const subject = (md.subject || '(no subject)').toString().replace(/\s+/g, ' ').trim();
@@ -81,90 +91,55 @@ function summarize(rec) {
   return { seq: rec.brokerSequence, eventId: rec.eventId, sender, subject, snippet: body.slice(0, 220) };
 }
 
-// Classify the structured `actionRequired` field relative to THIS seat (claude/Elder).
-// Returns:
-//   'act'   - action is genuinely required of claude/elder (or a broadcast call-to-action)
-//   'fyi'   - claude/elder named, but only to note / for awareness (no action)
-//   'other' - action-required names someone else; claude is at most an FYI addressee
-//   'none'  - no structured action-required field present (legacy/free-form post)
-// Verbs that genuinely request action FROM the addressee. Deliberately excludes:
-//   - noun-colliding tokens ("ack" inside "resumption ACK")
-//   - verbs that describe OTHER agents' work in an FYI ("begin/start/resume")
-//   - staffing-of-others verbs ("own/select/transfer/assign/dispatch")
-const SELF_ACTION_VERB = /\b(route|review|confirm|verify|respond|reply|approve|merge|provide|fix|deliver|investigate|resolve|unblock|escalat|decide|decision|coordinate|complete|submit|prepare|produce|send|action required)\b/i;
-const SELF_HANDLE_RE = /^(claude|elder)$/i;
-
-// Classify the structured `actionRequired` field relative to THIS seat, attributing
-// each instruction to the @handle(s) it is addressed to. A multi-handle run like
-// "@codex @claude @mustarq note X" addresses "note X" to all three; "@copilot report;
-// @claude preserve Y" addresses "preserve Y" to claude only.
-function selfActionLevel(md) {
-  const ar = (md.actionRequired || '').toString().trim();
-  if (!ar) return 'none';                        // field absent (legacy) -> fall back to mention check
-  if (ar.toLowerCase() === 'none') return 'other'; // explicit NONE -> nothing required of anyone -> suppress FYI
-  if (/@all\b|@everyone\b|@team\b/i.test(ar)) return 'act';
-
-  const re = /@([a-z0-9_-]+)/ig;
-  const marks = [];
-  let m;
-  while ((m = re.exec(ar)) !== null) marks.push({ handle: m[1].toLowerCase(), idx: m.index, end: re.lastIndex });
-
-  if (marks.length === 0) {
-    // No @handles in the action-required text: fall back to a self word mention.
-    if (/\b(claude|elder)\b/i.test(ar)) return SELF_ACTION_VERB.test(ar) ? 'act' : 'fyi';
-    return 'other';
-  }
-
-  let selfNamed = false, selfActionable = false;
-  for (let i = 0; i < marks.length; i++) {
-    // Gather a run of consecutive @handles (separated only by spaces/punctuation).
-    const runHandles = [marks[i].handle];
-    let j = i;
-    while (j + 1 < marks.length && /^[\s,/&]*$/.test(ar.slice(marks[j].end, marks[j + 1].idx))) {
-      runHandles.push(marks[j + 1].handle); j++;
-    }
-    const instr = ar.slice(marks[j].end, (j + 1 < marks.length) ? marks[j + 1].idx : ar.length);
-    if (runHandles.some((h) => SELF_HANDLE_RE.test(h))) {
-      selfNamed = true;
-      if (SELF_ACTION_VERB.test(instr)) selfActionable = true;
-    }
-    i = j; // advance past this run
-  }
-  if (!selfNamed) return 'other';
-  return selfActionable ? 'act' : 'fyi';
+// Deadpool posts a stream of routine automated digests (Wade Wire / Floor Drop /
+// morning brief / identity-lease notices). These are suppressed unless they carry a
+// genuine escalation signal. (Founder-directed noise reduction 2026-11-06.) This is a
+// SENDER-channel policy, orthogonal to ROOM-PROTO-1 action classification.
+export function isSuppressedDeadpoolDigest(rec) {
+  const e = rec.event || {};
+  if ((e.senderHandle || '') !== 'deadpool') return false;
+  const md = e.metadata || {};
+  const hay = `${md.subject || ''} ${e.body || ''}`;
+  const subj = (md.subject || '');
+  const routine = /wade |wire|floor drop|morning brief|^\[identity lease\]/i.test(subj + ' ' + hay.slice(0, 60));
+  const escalation = /blocker|blocked|action required|review request|urgent|failure|escalat/i.test(hay);
+  return routine && !escalation;
 }
 
-function isRelevant(rec) {
+/**
+ * Decide whether a Room broker record should wake this Herdr @claude seat.
+ *
+ * Order of precedence (sender/channel guards first, then canonical classification):
+ *   1. [WATCHER-TEST] hook  -> always relevant (explicit test marker, any sender).
+ *   2. Own posts           -> never relevant.
+ *   3. Deadpool routine digests without escalation -> suppressed.
+ *   4. Founder posts (mustarq / ali) -> always relevant.
+ *   5. Everything else     -> CANONICAL ROOM-PROTO-1 classifiers:
+ *                             isOutstandingAction(rec,'claude')  (is there an action?)
+ *                           && isActionAddressedTo(rec,'claude') (is it mine, not a cc?)
+ *
+ * Rule 5 is the whole point of the refactor: a bare @claude addressee mention is not
+ * action. `isOutstandingAction` reads the structured `actionRequired` field (and the
+ * broker's `evaluatedDeliveryType` / `evaluatedAudience`) so routine ACKs, FYIs and
+ * NONE posts do not wake this seat; `isActionAddressedTo` suppresses cross-agent
+ * assignments that name another owner while only CC'ing claude. Genuine directives and
+ * legacy (pre-ROOM-PROTO-1, unstructured) ACTION_REQUIRED records addressed to claude
+ * still surface. Both helpers live in the canonical authorityPolicy module — there is
+ * no bespoke verb list in this watcher anymore.
+ */
+export function isRelevant(rec) {
   const e = rec.event || {};
   const sender = e.senderHandle || '';
   const md = e.metadata || {};
   const hay = `${md.subject || ''} ${e.body || ''}`;
   if (hay.includes('[WATCHER-TEST]')) return true;      // explicit test hook, any sender
   if (sender === SELF_HANDLE) return false;              // never notify on our own posts
-  // Suppress Deadpool's routine automated digests (Wade Wire / Floor Drop / morning brief)
-  // unless they carry a genuine escalation signal. (Founder-directed noise reduction 2026-11-06.)
-  if (sender === 'deadpool') {
-    const subj = (md.subject || '');
-    const routine = /wade |wire|floor drop|morning brief|^\[identity lease\]/i.test(subj + ' ' + hay.slice(0, 60));
-    const escalation = /blocker|blocked|action required|review request|urgent|failure|escalat/i.test(hay);
-    if (routine && !escalation) return false;
-  }
+  if (isSuppressedDeadpoolDigest(rec)) return false;     // routine automated digest
   if (sender === 'mustarq' || sender === 'ali') return true; // all Founder posts are relevant
 
-  // Founder directive 2026-11-07: notify ONLY when action is genuinely required of
-  // this seat. A bare @claude addressee mention is NOT sufficient — the authoritative
-  // signal is the structured `actionRequired` field. This suppresses the FYI/cc pings
-  // (e.g. "@copilot report ..." or "@codex @claude note handover") that named claude
-  // only as an addressee while the real action belonged to someone else.
-  const level = selfActionLevel(md);
-  if (level === 'act') return true;
-  if (level === 'other' || level === 'fyi') return false;
-  // level === 'none': no structured action-required field — fall back to the mention
-  // check so legacy/free-form posts addressed to claude are still surfaced.
-  const mentions = Array.isArray(e.mentions) ? e.mentions : [];
-  if (mentions.includes('claude')) return true;
-  if (hay.includes('@claude')) return true;
-  return false;
+  // Canonical ROOM-PROTO-1 classification — the single source of truth shared with
+  // room-watch-codex.mjs and the broker. No bespoke verb list here.
+  return isOutstandingAction(rec, SELF_HANDLE) && isActionAddressedTo(rec, SELF_HANDLE);
 }
 
 function wake(n) {
@@ -248,18 +223,24 @@ function releaseLock() {
   try { if (existsSync(LOCK_FILE) && readFileSync(LOCK_FILE, 'utf8').trim() === String(process.pid)) unlinkSync(LOCK_FILE); } catch {}
 }
 
-// Singleton guard for the persistent loop (the one-shot --once mode is harmless and skips it).
-if (!ONCE && !acquireSingletonLock()) { process.exit(0); }
-process.on('exit', releaseLock);
-process.on('SIGINT', () => { releaseLock(); process.exit(0); });
-process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
+// Entrypoint guard: only run the watcher (lock + poll loop) when this file is executed
+// directly, so it can be imported by tests without acquiring the singleton lock or
+// starting the polling interval. Mirrors the pattern in room-watch-codex.mjs.
+const isMain = process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  // Singleton guard for the persistent loop (the one-shot --once mode is harmless and skips it).
+  if (!ONCE && !acquireSingletonLock()) { process.exit(0); }
+  process.on('exit', releaseLock);
+  process.on('SIGINT', () => { releaseLock(); process.exit(0); });
+  process.on('SIGTERM', () => { releaseLock(); process.exit(0); });
 
-log(`room-watch-claude-herdr starting — pane=${PANE} state=${STATE_FILE} once=${ONCE} pid=${process.pid}`);
-if (ONCE) {
-  await poll();
-  log('single poll complete (--once); exiting');
-  process.exit(0);
-} else {
-  await poll();
-  setInterval(poll, POLL_MS);
+  log(`room-watch-claude-herdr starting — pane=${PANE} state=${STATE_FILE} once=${ONCE} pid=${process.pid}`);
+  if (ONCE) {
+    await poll();
+    log('single poll complete (--once); exiting');
+    process.exit(0);
+  } else {
+    await poll();
+    setInterval(poll, POLL_MS);
+  }
 }

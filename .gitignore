@@ -9,3 +9,10 @@ inbox/
 cursors/
 identities.json
 staff-state.json
+
+# Per-machine runtime state — never commit (see docs/handover/OPERATIONS_ROOM_HANDOVER_2026-11-07.md §5,§7).
+# Watcher checkpoints (state/*.json), singleton locks, and broker ingress locks are
+# live-runtime artifacts that live under D:\StarqTech\agent-comms, not curated source.
+state/
+locks/
+*.lock
