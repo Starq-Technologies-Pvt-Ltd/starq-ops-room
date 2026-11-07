@@ -27,3 +27,5 @@ jobs:
           tests/room-proto-1-classification.test.mjs
           tests/room-watch-claude-herdr.test.mjs
           tests/seat-routing.test.mjs
+          tests/session-routing.test.mjs
+          tests/room-dispatcher.test.mjs

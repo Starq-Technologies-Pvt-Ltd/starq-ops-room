@@ -80,6 +80,36 @@ Recommended seat map for `@claude` (set per watcher deployment):
 
 Single-seat deployments (one seat marked default, no qualifiers in traffic) behave exactly as before.
 
+## 3b. Universal dispatcher (discovery-driven, replaces per-agent watchers)
+
+`scripts/room-dispatcher.mjs` is the ONE daemon that delivers Room events to agent
+sessions across floors. It needs no per-agent watcher and no manual seat config:
+
+- **Discovery:** `herdr agent list` (JSON) across configured sources (Windows default
+  session + any WSL/remote sources via `COMMS_DISPATCH_SOURCES`). Each live session
+  yields its canonical handle, durable session UUID, workspace (cwd), host and pane.
+  A new Herdr session is reachable automatically — just by existing.
+- **Routing core:** `protocol/v1/sessionRouting.mjs` → `selectWakeTargets(record, sessions)`.
+  Precedence (Founder 2026-11-07): (1) explicit target — `@handle#<uuid|workspace|pane|host|role>`,
+  structured `metadata.targetInstance/targetSession/targetRole/...`, or a `[FLOOR·pane]`
+  subject hint; (2/3) unambiguous project/workspace affinity; (4) otherwise **HOLD and
+  report** — never wake all, never guess. Shared-handle self-wake is excluded per SEAT
+  via `metadata.senderInstanceId`, so one `claude` seat can wake another (e.g. a WSL
+  worker's completion routed to the ERP floor-lead).
+- **Delivery:** a SHORT pane pointer to the Room sequence + eventId; the full instruction
+  stays in Room. Completion is a normal Room event addressed to the coordinator, so it
+  wakes the coordinator through the same path. `herdr agent_status=done` is runtime
+  evidence only — NOT a verified completion receipt.
+- **Durability:** per-machine checkpoint (`state/room-dispatch.json`: `lastSeq`, `delivered`
+  keyed by `seq:sessionId`, `pending`); no replay on first start; failed wakes queued and
+  retried; unreachable sources, unroutable agents and held ambiguities are reported.
+- **Config (env):** `COMMS_DISPATCH_SOURCES`, `COMMS_HERDR_AGENT_MAP`, `COMMS_SESSION_ROLES`,
+  `COMMS_DISPATCH_STATE_DIR` (test isolation). Modes: `--once`, `--print`, `--dry-run`.
+
+Per-agent watchers (`room-watch-<agent>.mjs`) are superseded by the dispatcher; they are
+retired at cutover (stop the old watcher, start the dispatcher — never both, to avoid
+double-wake).
+
 ## 4. Watcher responsibilities & durability guarantees
 
 Each Room watcher is a notification daemon separate from the agent session. It MUST:
