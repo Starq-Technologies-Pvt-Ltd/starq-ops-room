@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {VERSION,validateRoomEvent,legacyRoutingMetadata} from '../protocol/v2/eventContract.mjs';
+const base=()=>({version:VERSION,eventId:'evt-1',kind:'task.dispatched',occurredAt:'2026-11-07T12:00:00Z',actor:{handle:'claude',instanceId:'cloudroom-1'},task:{id:'HOA-217',project:'Hoadhaa'},payload:{},action:{required:true,owners:['antigravity'],summary:'Implement DX1'}});
+test('valid task dispatch',()=>assert.equal(validateRoomEvent(base()).ok,true));
+test('CC does not claim owner',()=>{const e=base();e.action={required:false,owners:[]};assert.equal(validateRoomEvent(e).ok,true);assert.equal(legacyRoutingMetadata(e).actionRequired,'NONE');});
+test('reject action with no owner',()=>{const e=base();e.action.owners=[];assert.equal(validateRoomEvent(e).ok,false);});
+test('reject malformed actor',()=>{const e=base();e.actor={handle:'claude'};assert.equal(validateRoomEvent(e).ok,false);});
+test('review requires immutable full SHA',()=>{const e=base();e.kind='review.accepted';e.payload.reviewedHead='short';assert.equal(validateRoomEvent(e).ok,false);e.payload.reviewedHead='a'.repeat(40);assert.equal(validateRoomEvent(e).ok,true);});
+test('legacy mapping preserves task, project and sender',()=>{const x=legacyRoutingMetadata(base());assert.equal(x.taskId,'HOA-217');assert.equal(x.senderInstanceId,'cloudroom-1');assert.match(x.actionRequired,/@antigravity/);});

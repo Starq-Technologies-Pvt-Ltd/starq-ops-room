@@ -1,0 +1,23 @@
+name: Starq Room v2 reference contract
+on:
+  push:
+    paths:
+      - 'protocol/v2/**'
+      - 'tests/room-v2-*.test.mjs'
+      - '.github/workflows/room-v2-contract.yml'
+  pull_request:
+    paths:
+      - 'protocol/v2/**'
+      - 'tests/room-v2-*.test.mjs'
+      - '.github/workflows/room-v2-contract.yml'
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/room-v2-*.test.mjs
