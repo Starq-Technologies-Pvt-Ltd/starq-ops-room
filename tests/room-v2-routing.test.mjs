@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {routeRoomEvent} from '../protocol/v2/routeTarget.mjs';
+const e=()=>({actor:{instanceId:'cloud-1'},action:{required:true,owners:['antigravity']},task:{project:'Hoadhaa'}});
+const sessions=[{handle:'antigravity',instanceId:'ag-erp',projects:['StarqERP'],role:'builder',sessionId:'erp1'},{handle:'antigravity',instanceId:'ag-hoa',projects:['Hoadhaa'],role:'builder',sessionId:'hoa1'}];
+test('Hoadhaa dispatch only wakes Hoadhaa seat',()=>{const r=routeRoomEvent(e(),sessions);assert.equal(r.wake.length,1);assert.equal(r.wake[0].session.instanceId,'ag-hoa');});
+test('ERP dispatch only wakes ERP seat',()=>{const x=e();x.task.project='StarqERP';assert.equal(routeRoomEvent(x,sessions).wake[0].session.instanceId,'ag-erp');});
+test('unqualified ambiguous owner holds rather than broadcasts',()=>{const x=e();x.task.project='Unknown';const r=routeRoomEvent(x,sessions);assert.equal(r.wake.length,0);assert.equal(r.held[0].reason,'AMBIGUOUS_SESSION');});
+test('explicit session mismatches hold rather than fallback',()=>{const x=e();x.target={sessionId:'does-not-exist'};const r=routeRoomEvent(x,sessions);assert.equal(r.wake.length,0);assert.equal(r.held[0].reason,'TARGET_NOT_LIVE');});
+test('explicit target wins',()=>{const x=e();x.target={sessionId:'erp1'};assert.equal(routeRoomEvent(x,sessions).wake[0].session.instanceId,'ag-erp');});
+test('FYI never wakes agent',()=>{const x=e();x.action.required=false;x.action.owners=[];assert.equal(routeRoomEvent(x,sessions).wake.length,0);});
+test('do not self-wake identical instance',()=>{const x=e();x.actor.instanceId='ag-hoa';const r=routeRoomEvent(x,sessions);assert.equal(r.wake.length,1);assert.equal(r.wake[0].session.instanceId,'ag-erp');});
+test('unrecognized handle held',()=>{const x=e();x.action.owners=['ghost'];assert.equal(routeRoomEvent(x,sessions).held[0].reason,'NO_LIVE_SESSION');});
