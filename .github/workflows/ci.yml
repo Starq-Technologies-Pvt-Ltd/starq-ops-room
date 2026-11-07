@@ -1,0 +1,29 @@
+name: ci
+
+# Operations Room classification & delivery regression tests.
+# Runs the in-repo-runnable suites against the SANITIZED identity fixture
+# (tests/fixtures/identities.json) via COMMS_IDENTITIES_PATH — the live registry
+# is never present in CI. See docs/protocol/COMMUNICATION_CONTRACT.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      COMMS_IDENTITIES_PATH: tests/fixtures/identities.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Classification & delivery tests
+        run: >
+          node --test
+          tests/room-proto-1-classification.test.mjs
+          tests/room-watch-claude-herdr.test.mjs
+          tests/seat-routing.test.mjs
