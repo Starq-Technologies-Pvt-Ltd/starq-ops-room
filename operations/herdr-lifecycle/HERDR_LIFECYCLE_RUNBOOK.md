@@ -134,3 +134,40 @@ The XPS runs Debian 13.5 under WSL2 with Herdr 0.9.5 and Hermes JARVIS. It was n
 - Tests mock every external call. A pass shows the control logic. It does not show that a real installer behaves as mocked, or that any agent conversation can be resumed.
 - Live execution has no code path: `$script:LiveApplyEnabled` is false and a live context is refused even if it were true. Enabling it needs real runners, independent acceptance and a reviewed change.
 - No independent review has taken place.
+
+## Official Herdr Desktop and machines (2026-11-10, later the same day)
+
+Two different products carry the Herdr name. Do not treat them as one.
+
+| | Herdr 1 (the Starq floor) | Official Herdr Desktop |
+| --- | --- | --- |
+| Daemon | `herdr server` 0.9.x | `herdr-core` (`hc`) 0.1.19 |
+| Desktop | Sheprd 20261108.1, or the preserved 20261028.1 GUI, or the `herdr` TUI | `herdr-app` 0.1.14, `%LOCALAPPDATA%\Programs\herdr-app` |
+| Publisher | CN=Fabien Penso (Sheprd) | CN=herdr, O=herdr, Wilmington, Delaware |
+| State | `%APPDATA%\herdr`, `%LOCALAPPDATA%\herdr` | `~/.config/herdr-app`, `~/.local/state/herdr-core` |
+| Machines | `herdr machine ...`, WSL device in Sheprd | `hc machine add <ssh host> --install` |
+
+Herdr Desktop cannot attach to, import or migrate a Herdr 0.9.x server. No such mechanism appears in the herdr-app README, docs, changelog or the herdr-core README. The ten original panes and three workspaces stay on the Herdr 1 backend and are reachable only through Herdr 1 clients. Moving work to Herdr Desktop means starting new spaces there and resuming each agent with its own resume command; nothing is carried across.
+
+### Sheprd is still a dependency
+
+- No standalone herdr-core is installed on the Nitro. Herdr Desktop started `herdr-core.exe` from the Sheprd directory (first on PATH), and `hc update` has since replaced that file in place with 0.1.19. Uninstalling Sheprd while that core runs would remove or strand the binary Herdr Desktop depends on.
+- The "Herdr UI Remote Control" task runs `sheprd-remote-control.exe` from the same directory.
+- Sheprd is the current desktop for the Herdr 1 floor and its Ubuntu WSL device link.
+
+To retire Sheprd later, in this order: install standalone herdr-core with the official installer (`%LOCALAPPDATA%\Programs\herdr-core`); restart the official core onto that binary and confirm its terminals survived; decide what replaces phone remote control; confirm the 20261028.1 GUI or the TUI is an acceptable way to reach the Herdr 1 floor; then uninstall from Settings > Apps. The uninstaller leaves `%APPDATA%\herdr` and `%LOCALAPPDATA%\herdr` alone according to upstream; back them up first anyway.
+
+### Machine connectivity (herdr-core 0.1.19)
+
+| Machine | SSH (non-interactive) | Platform | herdr-core | Registered | Online | Remote exec |
+| --- | --- | --- | --- | --- | --- | --- |
+| jarvis (XPS, Windows side) | Works after adding `IdentityFile ~/.ssh/jarvis_xps` to the host entry | Windows AMD64, cmd shell; Debian WSL2 running | 0.1.19 installed to `%LOCALAPPDATA%\Programs\herdr-core` by `hc machine add --install` | No | No | No |
+| note8 | Works | Android 9, Termux, aarch64 | Runs `--version`; core restarts on every command. Removed again. | No (added, then removed) | No | No |
+| s20plus | Works | Android 13, Termux, aarch64 | Does not execute (`unexpected e_type: 2`) | No | No | No |
+| fold4 | Works | Android 16, Termux, aarch64 | Does not execute | No | No | No |
+| fold6 | Works | Android 17, Termux, aarch64 | Does not execute | No | No | No |
+
+- **XPS blocker.** The core refuses to start from an elevated SSH login while that user has a desktop session ("the desktop app could not access it"). This is a deliberate guard and is not to be worked around. At the XPS, in an ordinary non-administrator terminal, run `hc server start` (or open Herdr Desktop there); then on the Nitro run `hc machine add jarvis`. Hermes and the Herdr 0.9.5 server inside Debian were not touched; their process list was identical before and after.
+- **JARVIS lives in Debian WSL2, not on the Windows side.** A Windows-side core reaches it with `wsl -d Debian` from a terminal. A core inside Debian would need its own route in (an SSH server in the distribution, or `hc machine add --via`), which changes JARVIS's environment and needs a separate decision.
+- **Samsung nodes.** herdr-core publishes Linux aarch64 builds as static non-PIE executables and no Android build. Android 13 and later refuse to run them under Termux. On Android 9 the binary starts but the core crashes on use. No supported route exists today. Do not install an x86_64 build, and do not count a proot or emulation layer as supported.
+- SSH discovery in the app lists hosts from `~/.ssh/config`. A listed host is not a connected machine.
