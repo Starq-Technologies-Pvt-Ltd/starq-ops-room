@@ -1,0 +1,8 @@
+{
+  "schema": "starq.herdr.compat.v1",
+  "note": "Only pairs actually observed working. Add a row after a verified connection, with its Room record. Absence means UNVERIFIED and blocks.",
+  "verified": [
+    { "desktop": "20261108.1", "serverProtocol": "22", "serverVersions": ["0.9.4-preview.2026-10-14-fbd2ae23927f", "0.9.5"], "observed": "2026-11-10 Nitro: Windows backend direct, Ubuntu backend through the WSL device bridge. Room #18692." },
+    { "desktop": "20261028.1", "serverProtocol": "22", "serverVersions": ["0.9.4-preview.2026-10-14-fbd2ae23927f"], "observed": "Original Nitro desktop, Room #18665." }
+  ]
+}

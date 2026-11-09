@@ -1,7 +1,18 @@
 [CmdletBinding()]
-param([Parameter(Mandatory=$true)][ValidateSet('A','B')][string]$Path, [Parameter(Mandatory=$true)][string]$EvidenceFile)
+param([Parameter(Mandatory=$true)][ValidateSet('A','B')][string]$Path, [string]$EvidenceFile = '', [string]$EvidenceDir = '', [string]$BackupRoot = '')
 . "$PSScriptRoot\herdr-common.ps1"
 try {
+    if ($EvidenceDir) {
+        # Evidence-backed mode: sealed baseline, release and review records plus a re-hashed backup set.
+        if ($EvidenceFile) { throw 'Choose EvidenceDir or EvidenceFile, not both.' }
+        if (-not $BackupRoot) { throw 'BackupRoot is required with EvidenceDir.' }
+        . "$PSScriptRoot\herdr-ops.ps1"
+        $result = Test-EvidencePreflight -Path $Path -EvidenceDir $EvidenceDir -BackupRoot $BackupRoot
+        Write-Result 'preflight' $result.status $result
+        if ($result.status -ne 'EVIDENCE_VERIFIED') { exit 2 }
+        exit 0
+    }
+    if (-not $EvidenceFile) { throw 'EvidenceDir (verified) or EvidenceFile (declared) is required.' }
     $e = Read-JsonFile $EvidenceFile
     $checks = [ordered]@{}
     foreach ($name in @('inventoryComplete','windowsBaseline','wslBaseline','releaseIntegrity','compatibility','backupVerified','rollbackPlan','independentReview')) { $checks[$name] = Require-True (Get-Field $e $name) }
@@ -14,6 +25,6 @@ try {
     }
     $failed = @($checks.Keys | Where-Object { -not $checks[$_] })
     $status = if ($failed.Count) { 'BLOCKED' } else { 'EVIDENCE_DECLARED' }
-    Write-Result 'preflight' $status @{ path = $Path; checks = $checks; failed = $failed; warning = 'Assertions are operator-supplied, not independently verified; no live action is enabled.' }
+    Write-Result 'preflight' $status @{ path = $Path; checks = $checks; failed = $failed; warning = 'Assertions are operator-supplied, not independently verified; no live action is enabled. Use -EvidenceDir for the evidence-backed check.' }
     if ($failed.Count) { exit 2 }
 } catch { Write-Result 'preflight' 'ERROR' @{ message = $_.Exception.Message }; exit 1 }

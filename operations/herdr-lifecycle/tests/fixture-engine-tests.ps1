@@ -1,7 +1,7 @@
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 . (Join-Path (Split-Path -Parent $PSScriptRoot) 'herdr-fixture-engine.ps1')
-$parent = 'D:\StarqTech\scratch\codex\herdr-lifecycle-fixtures'
+$parent = Get-FixtureParent
 $root = Join-Path $parent ([Guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Path $root -Force | Out-Null
 Set-Content -LiteralPath (Join-Path $root '.fixture-only') -Value 'fixture'

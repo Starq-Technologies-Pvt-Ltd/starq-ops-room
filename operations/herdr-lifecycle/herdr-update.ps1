@@ -11,5 +11,5 @@ try {
         $artifact = @{ status = $(if ($actual -eq $ExpectedSha256) { 'HASH_MATCH' } else { 'HASH_MISMATCH' }); sha256 = $actual }
         if ($actual -ne $ExpectedSha256) { Write-Result 'update' 'BLOCKED' @{ path = $Path; artifact = $artifact; executed = $false }; exit 2 }
     }
-    Write-Result 'update' 'PLAN_ONLY' @{ path = $Path; steps = $steps; artifact = $artifact; executed = $false; note = 'No download, install, staging, handoff, or restart is implemented. A hash is useful only when obtained from a trusted release source.' }
+    Write-Result 'update' 'PLAN_ONLY' @{ path = $Path; steps = $steps; artifact = $artifact; executed = $false; implementation = 'Invoke-DesktopUpdate (Path A) and Invoke-ServerMigration (Path B) in herdr-ops.ps1, sandbox-tested only.'; note = 'This entry point performs no download, install, handoff or restart. A bare operator-supplied hash proves nothing about provenance: the operational path requires release evidence with two agreeing published hash sources and the pinned Authenticode publisher.' }
 } catch { Write-Result 'update' 'ERROR' @{ message = $_.Exception.Message }; exit 1 }
