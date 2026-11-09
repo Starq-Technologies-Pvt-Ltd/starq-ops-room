@@ -1,6 +1,6 @@
 # Herdr lifecycle and continuity
 
-Status: **IMPLEMENTED — INDEPENDENT REVIEW PENDING**. This is an inventory and planning facility, not an updater. Every `-Apply` operation is deliberately disabled. No live action is authorized by a preflight result. Independent review and a subsequent implementation of supported, appropriately gated actions are required before any live maintenance.
+Status: **PHASE 2 INCOMPLETE — INDEPENDENT REVIEW PENDING**. This is an inventory, discovery and fixture-testing facility, not an operational updater. Every `-Apply` operation is deliberately disabled. No live action is authorized by a preflight result. Production implementations of supported, appropriately gated actions and independent review are required before live maintenance.
 
 ## Observed baseline, 2026-11-09
 
@@ -31,7 +31,7 @@ All scripts emit one structured JSON result and default to observation or planni
 
 `herdr-preflight.ps1 -Path A|B -EvidenceFile <json>` checks **operator assertions**, not evidence authenticity, approvals or current state. `EVIDENCE_DECLARED` is not permission and never enables execution. `herdr-verify.ps1` compares supplied string evidence; matching strings do not prove live health, conversation resume, or activity. Prefer verified PID plus creation time, live socket/GUI connection, explicit session tests and repository status. Empty or missing values fail closed.
 
-`herdr-detach.ps1`, `herdr-update.ps1`, `herdr-reconnect.ps1` and `herdr-rollback.ps1` are plans only. `-Apply` fails with exit 2. They do not implement download, installation, preservation, detachment, migration, restoration or rollback. Do not rely on them for an operational recovery.
+`herdr-detach.ps1`, `herdr-update.ps1`, `herdr-reconnect.ps1` and `herdr-rollback.ps1` are plans only. `-Apply` fails with exit 2. They do not implement production download, installation, preservation, detachment, migration, restoration or rollback. Do not rely on them for an operational recovery. `herdr-fixture-engine.ps1` contains executable file backup, side-by-side staging and rollback experiments restricted to marked fixture roots beneath `D:\StarqTech\scratch\codex\herdr-lifecycle-fixtures`; it is not wired to `-Apply` and cannot operate on the original environment. It retains partial files after interrupted staging and previous state after rollback. Fixture component and recovery tests are mocked; they do not prove live endpoint health.
 
 ## Path A: future client-only maintenance
 
@@ -43,4 +43,4 @@ For each affected Windows and Ubuntu session, separately document whether the ex
 
 ## Release detection and operations
 
-No scheduler is installed. After independent review, a bounded, non-interactive scheduled release-metadata check could compare upstream release IDs and emit an assessment only on change; no automatic download, migration or agent-token polling. Identify the authoritative APIs, rate limits, failure handling and state location before deploying it. The current code has no discovery implementation, backup implementation, actual reconnection or remote/ACP health check. Preserve existing authentication and do not store secrets in logs. Update history only with verified facts.
+No scheduler is installed. `herdr-discover.ps1` defaults offline; `-Online -Component core|desktop` queries the upstream GitHub latest-release API with a timeout, emitting metadata only. A bounded scheduled check could compare release IDs and emit an assessment only on change; never automatically download, migrate or interrupt sessions. Rate limits, durable state, authentication and notification routes require a separate design and review. The current code has no production download, backup, actual reconnection or remote/ACP health check. Preserve existing authentication and do not store secrets in logs. Update history only with verified facts.

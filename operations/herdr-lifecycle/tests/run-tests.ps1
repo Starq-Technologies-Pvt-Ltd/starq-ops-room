@@ -19,6 +19,8 @@ Check 'String true does not pass' 2 'BLOCKED' @("$root\herdr-preflight.ps1",'-Pa
 Check 'Missing input fails' 1 'ERROR' @("$root\herdr-preflight.ps1",'-Path','A','-EvidenceFile',"$PSScriptRoot\does-not-exist.json")
 Check 'Matching evidence' 0 'EVIDENCE_MATCH' @("$root\herdr-verify.ps1",'-BeforeFile',"$PSScriptRoot\verify-before.json",'-AfterFile',"$PSScriptRoot\verify-before.json")
 Check 'Missing conversation evidence' 2 'INCOMPLETE' @("$root\herdr-verify.ps1",'-BeforeFile',"$PSScriptRoot\verify-before.json",'-AfterFile',"$PSScriptRoot\verify-incomplete.json")
+Check 'Release discovery fixture' 0 'DISCOVERED' @("$root\herdr-discover.ps1",'-FixtureFile',"$PSScriptRoot\release.json")
+Check 'Discovery default offline' 0 'NOT_CHECKED' @("$root\herdr-discover.ps1")
 $fixture = "$PSScriptRoot\preflight-a.json"
 $fixtureHash = (Get-FileHash -LiteralPath $fixture -Algorithm SHA256).Hash
 Check 'Artifact hash match' 0 'PLAN_ONLY' @("$root\herdr-update.ps1",'-Path','A','-ArtifactPath',$fixture,'-ExpectedSha256',$fixtureHash)
