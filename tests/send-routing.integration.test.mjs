@@ -186,4 +186,3 @@ test('legacy sender invocation without routing-file emits no routing metadata', 
     assert.equal(Object.hasOwn(p.record.event.metadata,'routing'), false);
   } finally { fs.rmSync(p.dir,{recursive:true,force:true}); }
 });
-
