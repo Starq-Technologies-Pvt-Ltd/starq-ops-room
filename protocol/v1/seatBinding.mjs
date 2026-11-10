@@ -89,19 +89,32 @@ export function validateSeatTable(table) {
  */
 export function resolveTarget(target, table, senderInstance = null) {
   const seats = (table?.seats || []).filter((s) => lc(s.handle) === lc(target.handle));
-  let matched;
-  let emptyReason;
-  if (target.instance) {
-    matched = seats.filter((s) => s.instance === target.instance);
-    emptyReason = 'INSTANCE_NOT_IN_SEAT_TABLE';
-  } else if (target.role) {
-    matched = seats.filter((s) => (s.roles || []).includes(target.role));
-    emptyReason = 'NO_SEAT_FOR_ROLE';
-  } else {
-    matched = seats.filter((s) => s.default === true);
-    emptyReason = 'NO_DEFAULT_SEAT';
+
+  // CONJUNCTION: every selector the target supplies must match the SAME seat.
+  // No selector is privileged over another. Each selector is evaluated on its
+  // own first so the hold reason says which one failed; if each matches some
+  // seat but no single seat satisfies all of them, the target contradicts
+  // itself and HOLDs (e.g. role ops-room-deputy + the ERP seat's instance must
+  // reach neither seat).
+  const selectors = [];
+  if (target.instance) selectors.push({ reason: 'INSTANCE_NOT_IN_SEAT_TABLE', test: (s) => s.instance === target.instance });
+  if (target.role) selectors.push({ reason: 'NO_SEAT_FOR_ROLE', test: (s) => (s.roles || []).includes(target.role) });
+  if (!target.instance && !target.role) selectors.push({ reason: 'NO_DEFAULT_SEAT', test: (s) => s.default === true });
+  if (target.backend) selectors.push({ reason: 'NO_SEAT_ON_BACKEND', test: (s) => s.backend === target.backend });
+
+  let matched = seats;
+  let emptyReason = null;
+  for (const sel of selectors) {
+    const own = seats.filter(sel.test);
+    if (own.length === 0) { matched = []; emptyReason = sel.reason; break; }
   }
-  if (target.backend) matched = matched.filter((s) => s.backend === target.backend);
+  if (!emptyReason) {
+    matched = seats.filter((s) => selectors.every((sel) => sel.test(s)));
+    if (matched.length === 0) {
+      const partial = seats.filter((s) => selectors.some((sel) => sel.test(s))).map((s) => s.seatId);
+      return { seats: [], hold: { reason: 'CONTRADICTORY_TARGET', candidates: partial }, self: [] };
+    }
+  }
 
   // Never deliver a seat its own post.
   const self = senderInstance ? matched.filter((s) => s.instance === senderInstance).map((s) => s.seatId) : [];
@@ -157,5 +170,7 @@ export const RECOVERABLE_HOLDS = new Set([
   'SOURCE_UNAVAILABLE', 'SOURCE_NOT_DISCOVERED', 'PANE_NOT_FOUND', 'AGENT_MISMATCH', 'CWD_MISMATCH',
   'SESSION_MISMATCH', 'AGENT_BLOCKED', 'PID_UNVERIFIED', 'PID_MISMATCH',
   'BACKEND_NOT_CONFIGURED', 'BACKEND_DELIVERY_UNVERIFIED', 'SEAT_NEVER_WAKE',
-  'INSTANCE_NOT_IN_SEAT_TABLE', 'NO_SEAT_FOR_ROLE', 'NO_DEFAULT_SEAT', 'AMBIGUOUS_ROLE', 'AMBIGUOUS_TARGET',
+  'INSTANCE_NOT_IN_SEAT_TABLE', 'NO_SEAT_FOR_ROLE', 'NO_DEFAULT_SEAT', 'NO_SEAT_ON_BACKEND', 'AMBIGUOUS_ROLE', 'AMBIGUOUS_TARGET',
+  // CONTRADICTORY_TARGET is deliberately absent: the event itself is wrong and
+  // only a corrected Room event can fix it.
 ]);

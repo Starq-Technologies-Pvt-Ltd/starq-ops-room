@@ -173,7 +173,17 @@ test('loose or malformed targets are rejected, never guessed', async () => {
   assert.equal(h.persisted.holds['evt-101::claude|instance=claude-erp'].reason, 'INSTANCE_NOT_IN_SEAT_TABLE');
   assert.equal(h.persisted.holds['evt-102::routing'].reason, 'INVALID_ROUTING');
   assert.equal(h.persisted.holds['evt-103::routing'].reason, 'INVALID_ROUTING');
-  assert.equal(h.persisted.holds['evt-104::claude|role=erp-floor-lead|backend=wsl/default'].reason, 'NO_SEAT_FOR_ROLE');
+  assert.equal(h.persisted.holds['evt-104::claude|role=erp-floor-lead|backend=wsl/default'].reason, 'CONTRADICTORY_TARGET');
+});
+
+test('multiple target qualifiers are conjunctive; contradictory selectors HOLD without choosing either seat', async () => {
+  const { h } = await seeded([
+    rec(101, { actionRequired: 'review', targets: [{ handle: 'claude', role: 'ops-room-deputy', instance: 'claude-erp-0001' }] }),
+    rec(102, { actionRequired: 'verify', targets: [{ handle: 'claude', role: 'ops-room-deputy', backend: 'wsl/default' }] }),
+  ]);
+  assert.deepEqual(h.wakes, []);
+  assert.equal(h.persisted.holds['evt-101::claude|role=ops-room-deputy|instance=claude-erp-0001'].reason, 'CONTRADICTORY_TARGET');
+  assert.equal(h.persisted.holds['evt-102::claude|role=ops-room-deputy|backend=wsl/default'].reason, 'CONTRADICTORY_TARGET');
 });
 
 test('alias mapping: aliases resolve to the canonical handle, in owners and in targets', async () => {

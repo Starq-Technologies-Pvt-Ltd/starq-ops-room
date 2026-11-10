@@ -15,6 +15,8 @@
       "backend": "windows/default", "pane": "w3:p1", "herdrAgent": "claude", "pid": 1031, "cwd": "D:\\Work\\ops-room", "evidence": "synthetic" },
     { "seatId": "erp-wsl-verification", "handle": "claude", "instance": "claude-wsl-0001", "roles": ["erp-wsl-verification"], "default": false,
       "backend": "wsl/default", "pane": "w1:p4", "herdrAgent": "claude", "pid": 2004, "cwd": "/mnt/d/Work/ERP", "evidence": "synthetic" },
+    { "seatId": "erp-cursor", "handle": "cursor", "instance": "cursor-inst-0001", "roles": ["erp-fullstack-studio-lead"], "default": false,
+      "backend": "windows/default", "pane": "w1:p6", "herdrAgent": "cursor", "pid": 1006, "cwd": "D:\\Work\\ERP", "evidence": "synthetic" },
     { "seatId": "hoadhaa-lead", "handle": "antigravity", "instance": "agy-hoa-0001", "roles": ["hoadhaa-lead"], "default": false,
       "backend": "windows/default", "pane": "w2:p1", "herdrAgent": "agy", "pid": 1021, "cwd": "D:\\Work\\Hoadhaa", "evidence": "synthetic" },
     { "seatId": "erp-ui-lead", "handle": "antigravity", "instance": "agy-erp-0001", "roles": ["erp-ui-lead"], "default": false, "neverWake": true,

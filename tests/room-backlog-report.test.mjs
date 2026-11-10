@@ -52,13 +52,18 @@ test('candidate seat table is valid and encodes the Floor Lead answers (#18741, 
   const codex = resolveTarget({ handle: 'codex', role: null, instance: null, backend: null }, candidate);
   assert.deepEqual(codex.seats.map((s) => `${s.seatId} ${s.pane}`), ['codex-chief-engineer w1:p1'], 'a post directed to @codex wakes Codex');
   assert.equal(candidate.seats.filter((s) => s.handle === 'codex' && s.default).length, 1);
+  const cursor = resolveTarget({ handle: 'cursor', role: 'erp-fullstack-studio-lead', instance: 'cursor-session-fixed', backend: 'windows/default' }, candidate);
+  assert.deepEqual(cursor.seats.map((s) => `${s.seatId} ${s.pane}`), ['erp-cursor w1:p6']);
+  assert.ok(candidate.unroutableSeats.some((s) => s.handle === 'copilot' && /ROOM_INSTANCE_UNKNOWN/.test(s.reason)));
+  assert.ok(candidate.unroutableSeats.some((s) => s.handle === 'opencode' && /UNPREPARED/.test(s.reason)));
+  for (const handle of ['devin', 'goose', 'omp']) assert.ok(candidate.unroutableSeats.some((s) => s.handle === handle && /ROOM_INSTANCE_UNKNOWN/.test(s.reason)));
   for (const handle of ['claude', 'antigravity']) {
     assert.equal(resolveTarget({ handle, role: null, instance: null, backend: null }, candidate).hold.reason, 'NO_DEFAULT_SEAT', `bare @${handle} holds`);
   }
   const ops = candidate.seats.find((s) => s.seatId === 'ops-room-deputy');
   assert.equal(ops.instance, 'e97d7e67-fd68-40a1-9c4e-a7e8be387554');
   assert.equal(ops.herdrAgentSession, undefined, 'stale Herdr agent_session is not asserted');
-  assert.ok(candidate.seats.every((s) => s.instance !== '7db2e99c-6595-47fb-afe5-bea257dce6d3' && s.herdrAgentSession === undefined));
+  assert.ok(candidate.seats.every((s) => s.instance !== '7db2e99c-6595-47fb-afe5-bea257dce6d3'), 'the stale Operations Room session is never used as a Room instance');
   assert.equal(candidate.seats.find((s) => s.pane === 'w1:p3').neverWake, true);
   assert.equal(candidate.backends.find((b) => b.key === 'wsl/default').delivery, 'unverified');
 });

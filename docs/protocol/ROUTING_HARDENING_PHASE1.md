@@ -16,20 +16,36 @@ Decided by `protocol/v1/routingTargets.mjs` from structured metadata only.
 | Input | Result |
 |---|---|
 | `actionRequired` is NONE, or the record is not `ACTION_REQUIRED` | no-op (`NOT_OUTSTANDING`) |
-| `metadata.routing = { schema: "starq.routing/1", targets: [{ handle, role?, instance?, backend? }] }` | exact recipients |
+| `metadata.routing = { schema: "starq.routing/1", targets: [{ handle, role?, instance?, backend? }] }` | exact recipients; all other mentions ignored |
 | no `routing`, but `@handles` named in `actionRequired` | unqualified handle targets |
 | `@all` / `@everyone` / `@team` in `actionRequired` | HOLD `BROADCAST_NOT_ROUTED` |
 | outstanding action, no owner named | no-op (`UNADDRESSED`) |
 | malformed `routing`, unknown field, unknown or retired handle | HOLD `INVALID_ROUTING` |
 
-The message body is never read. Quoted or forwarded mentions, `[FLOOR·pane]` subject tags,
+With structured routing present, the body and legacy mention fields are never used to expand
+the recipient set. Quoted or forwarded mentions, `[FLOOR·pane]` subject tags,
 `@handle#token` text, partial UUIDs, bare pane suffixes and cwd substrings have no routing
 meaning. Aliases (`@elder`, `@dp`, `@ag`) resolve to the canonical handle through the identity
 registry; retired identities are not routable.
 
-`send.mjs` does not yet have a flag that writes `metadata.routing`. Until it does, only
-unqualified owners can be expressed, and those resolve to a default seat or HOLD. Adding that
-flag is a change to a live-synced file and is an open approval gate (§7).
+`send.mjs --routing-file <json>` now writes validated `metadata.routing` for Room posts. The file
+must have schema `starq.routing/1` and a non-empty `targets` array. Example:
+
+```json
+{
+  "schema": "starq.routing/1",
+  "targets": [
+    { "handle": "claude", "role": "erp-floor-lead" },
+    { "handle": "claude", "role": "ops-room-deputy" }
+  ]
+}
+```
+
+Use with `node send.mjs --from codex --instance <session> --room --action-required "review requested"
+--body-file <message.txt> --routing-file <targets.json>`. The sender validates before lease
+registration or publishing; it does not derive recipients from message text. Omitting the flag
+preserves the legacy sender shape. An invalid identity is rejected before append; conflicting but
+well-formed selectors are recorded and held by the dispatcher, without waking either candidate.
 
 ## 2. Which seat
 
@@ -54,13 +70,18 @@ table on each poll, and expires into dead-letter after 24 h.
 | ops-room-deputy | claude | ops-room-deputy | no | windows/default w3:p1 | `e97d7e67-…` | #18733, #18737 |
 | erp-wsl-verification | claude | erp-wsl-verification | no | wsl/default w1:p4 (delivery unverified) | `claudewsl-wsl-w1p4-20261110` | #18728, #18742 |
 | hoadhaa-lead | antigravity | hoadhaa-lead | no | windows/default w2:p1 | `9629f477-…` | #18741 |
+| erp-cursor | cursor | erp-fullstack-studio-lead | no | windows/default w1:p6 | `cursor-session-fixed` | #18750; refreshed Herdr process/session |
 | erp-antigravity | antigravity | none | no, **never wake** | windows/default w1:p3 | Herdr value, unconfirmed | #18742 |
 
 A post directed to `@codex` wakes Codex: the verified Codex seat at w1:p1 is the sole `codex`
 default (Founder direction). Both Floor Leads asked that a bare `@claude` and a bare
-`@antigravity` HOLD, so those handles have no default seat and need a role or instance.
-Not in the table, therefore not routable: Cursor, Copilot, OpenCode (ERP floor), Devin, Goose,
-OMP (Hoadhaa floor, dispatched through their lead), Deadpool/Hermes, Vision, Cloudroom seats.
+`@antigravity` HOLD, so those handles have no default seat and need a role or instance. Hoadhaa's
+lead confirmed directly addressed workers may be notified individually, but the current Room
+instances for Devin, Goose and OMP are unknown; their historical lease IDs are stale. Copilot has
+no current Room instance, and OpenCode is not prepared (wrong CWD and no readiness/scratch evidence).
+These observations are listed under `unroutableSeats` in the candidate JSON for visibility only.
+Cursor is routable by role or exact Room instance. ERP Antigravity is explicitly `neverWake`.
+Deadpool/Hermes, Vision, Cloudroom seats and XPS/JARVIS remain outside this dispatcher map.
 
 ## 3. Binding check before every delivery and retry
 
@@ -112,20 +133,29 @@ Not claimed: control of any WSL pane. The dispatcher would run outside a Herdr p
 Herdr on Ubuntu accepts `agent prompt` from a `wsl.exe` caller with no pane binding is untested,
 and `HERDR_ENV` is never set by hand. WSL seats therefore HOLD with `BACKEND_DELIVERY_UNVERIFIED`.
 
+The publisher-to-router integration tests exercise the real `scripts/send.mjs` CLI path in a fresh
+temporary sandbox. Runtime-only Room/identity-lease modules are test doubles writing only to a
+throwaway Room file; the branch's identity checks, action policy, routing validator and dispatcher
+planner are used. The suite never invokes Herdr or wakes a real agent. An additional host-side
+sandbox smoke used the real Room sender, ingress, snapshot and dispatcher planner with temporary
+credentials and a throwaway Room file; it confirmed a structured Ops Deputy target stayed the sole
+audience despite quoted `@copilot` and `@all` body text. It did not contact Herdr or a real agent.
+A separate live dry-run reads the canonical Room snapshot and current Windows/WSL Herdr APIs,
+reports zero writes, and creates no state directory.
+
 Pane ids and workspace ids repeat across backends (`w1:p1`, `w1:p4` exist on Windows and on
 WSL). A pane is only ever addressed as backend + pane.
 
 Not solved here: Herdr's stale `agent_session` on w3:p1; pids in the seat table go stale on
 every harness restart and are corrected by hand; `agent prompt` is sent to a working agent
-(only `blocked` is refused); ledger-epoch changes; a `send.mjs` flag for structured targets.
+(only `blocked` is refused); ledger-epoch changes; seats without verified Room instance IDs.
 
 ## 7. Open approval gates
 
-1. Adding a structured-target flag to `send.mjs` (live-synced file).
-2. A supported, tested delivery path for WSL seats before `wsl/default` is marked verified.
-3. Disposition of the preserved production checkpoint (#18497), the stale Claude watcher
+1. A supported, tested delivery path for WSL seats before `wsl/default` is marked verified.
+2. Disposition of the preserved production checkpoint (#18497), the stale Claude watcher
    checkpoint and lock, and the unmerged PR #3 copy already present in the live tree.
-4. Independent review of this branch, then the controlled canary plan. Nothing is armed.
+3. Independent review of this branch, followed by a controlled canary plan. Nothing is armed.
 
 ## 8. Backlog
 

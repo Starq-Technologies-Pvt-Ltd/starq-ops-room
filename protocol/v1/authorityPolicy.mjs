@@ -33,29 +33,51 @@ const RELAY_SEAT_AUTHORITY_IDS = ['deadpool', 'hermes'];
  * delivery mechanism only (seq 3709): it creates no authority, expands no
  * scope, and overrides no Founder gate, role boundary, or no-self-review rule.
  */
+/** Return structured canonical recipients; null means legacy routing applies. */
+export function structuredRoutingHandles(eventMetadata = {}) {
+  const routing = eventMetadata?.routing;
+  if (routing === undefined || routing === null) return null;
+  if (routing.schema !== 'starq.routing/1' || !Array.isArray(routing.targets)) return [];
+  const handles = [];
+  for (const target of routing.targets) {
+    if (!target || typeof target.handle !== 'string') continue;
+    const ident = resolveIdentity(target.handle);
+    if (ident?.status === 'active' && !handles.includes(ident.canonicalHandle)) handles.push(ident.canonicalHandle);
+  }
+  return handles;
+}
+
 export function evaluateEventRouting(senderInput, bodyText, explicitMentions = [], eventMetadata = {}) {
   const sender = resolveIdentity(senderInput);
   if (!sender) {
     throw new Error(`Unknown sender identity: ${senderInput}`);
   }
 
-  // Parse all @mentions in body
+  // Structured targets are authoritative. Body/quoted text and extra caller
+  // mentions cannot widen their recipient set. Malformed structured metadata
+  // returns an empty set here and is held by the dispatcher.
+  const structuredMentions = structuredRoutingHandles(eventMetadata);
+  const hasStructuredRouting = structuredMentions !== null;
+
+  // Parse body mentions only for legacy, unstructured Room posts.
   const bodyMentions = [];
-  const mentionMatches = bodyText.match(/@[a-zA-Z0-9_-]+/g) || [];
-  for (const m of mentionMatches) {
-    const ident = resolveIdentity(m);
-    if (ident && !bodyMentions.includes(ident.canonicalHandle)) {
-      bodyMentions.push(ident.canonicalHandle);
+  if (!hasStructuredRouting) {
+    const mentionMatches = bodyText.match(/@[a-zA-Z0-9_-]+/g) || [];
+    for (const m of mentionMatches) {
+      const ident = resolveIdentity(m);
+      if (ident && !bodyMentions.includes(ident.canonicalHandle)) {
+        bodyMentions.push(ident.canonicalHandle);
+      }
     }
   }
 
   // Combine with explicit mentions
-  const allMentions = [...new Set([...bodyMentions, ...explicitMentions])];
-  const isBroadcast = bodyText.includes('@all') || allMentions.length === 0;
+  const allMentions = hasStructuredRouting ? structuredMentions : [...new Set([...bodyMentions, ...explicitMentions])];
+  const isBroadcast = !hasStructuredRouting && (bodyText.includes('@all') || allMentions.length === 0);
 
   let deliveryType = 'CC_CONTEXT';
   let authorityReason = 'Standard Transmission';
-  let targetAudience = isBroadcast ? 'ALL' : allMentions;
+  let targetAudience = hasStructuredRouting ? allMentions : isBroadcast ? 'ALL' : allMentions;
 
   // --- Delegation-aware authority ---
   // When the WSL relay operator (canonical seat `deadpool`, legacy runtime
@@ -80,13 +102,13 @@ export function evaluateEventRouting(senderInput, bodyText, explicitMentions = [
     // 2026-09-03: the prior `&& !bodyText.includes('@all')` guard excluded
     // every @all message from ever reaching ACTION_REQUIRED, even from
     // ROOT_GENESIS. Founder ruling (bus seq #507): once corrected, resume.
-    if (allMentions.length > 0 || bodyText.includes('@all')) {
+    if (allMentions.length > 0 || (!hasStructuredRouting && bodyText.includes('@all'))) {
       deliveryType = 'ACTION_REQUIRED';
       authorityReason = 'Founder Directive';
     }
   } else if (isHermesDelegating) {
     // Hermes acting under Founder authority = founder-level routing
-    if (allMentions.length > 0 || bodyText.includes('@all')) {
+    if (allMentions.length > 0 || (!hasStructuredRouting && bodyText.includes('@all'))) {
       deliveryType = 'ACTION_REQUIRED';
       authorityReason = 'Founder Directive (delegated)';
     }

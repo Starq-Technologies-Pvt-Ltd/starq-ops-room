@@ -2,7 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { resolveIdentity } from './identityProvider.mjs';
-import { evaluateEventRouting } from './authorityPolicy.mjs';
+import { evaluateEventRouting, structuredRoutingHandles } from './authorityPolicy.mjs';
+import { validateRoutingDocument } from './routingInput.mjs';
 import { computeEventId, generateNonce, validateAuthorEvent } from './envelope.mjs';
 import { deriveProject, loadProjectRegistry } from './projectClassifier.mjs';
 import { getBrokerHeadState, computeRecordHash } from './hashChain.mjs';
@@ -30,6 +31,13 @@ export function roomEpochIntegrityError(detail) {
 export function writeRoomPostFailure(err, write = (...parts) => console.error(...parts)) {
   if (err?.code === ROOM_EPOCH_INTEGRITY) write(ROOM_EPOCH_INTEGRITY_STDERR_MARKER);
   write(`Failed to post to room: ${err?.message || err}`);
+}
+
+/** Canonical Room ingress refuses malformed structured recipients before append. */
+function assertValidStructuredRouting(metadata) {
+  if (metadata?.routing === undefined || metadata?.routing === null) return;
+  const result = validateRoutingDocument(metadata.routing);
+  if (!result.ok) throw new Error(`Invalid structured Room routing: ${result.errors.join('; ')}`);
 }
 
 export function withLock(action) {
@@ -124,19 +132,29 @@ export function createAuthorEvent({
     }
   }
 
-  // Parse mentions from body
+  // For structured routing, the validated metadata is the sole recipient list.
+  // This prevents quoted/forwarded @mentions from leaking into the Room
+  // audience used by legacy readers. Invalid structured routing fails closed.
+  const structuredMentions = structuredRoutingHandles(metadata);
+
+  // Parse mentions from body only for legacy, unstructured Room events.
   const bodyMentions = [];
-  const mentionMatches = body.match(/@[a-zA-Z0-9_-]+/g) || [];
-  for (const m of mentionMatches) {
-    const ident = resolveIdentity(m);
-    if (ident && !bodyMentions.includes(ident.canonicalHandle)) {
-      bodyMentions.push(ident.canonicalHandle);
+  if (structuredMentions === null) {
+    const mentionMatches = body.match(/@[a-zA-Z0-9_-]+/g) || [];
+    for (const m of mentionMatches) {
+      const ident = resolveIdentity(m);
+      if (ident && !bodyMentions.includes(ident.canonicalHandle)) {
+        bodyMentions.push(ident.canonicalHandle);
+      }
     }
   }
-  const allMentions = [...new Set([...bodyMentions, ...explicitMentions])];
+  const allMentions = structuredMentions === null
+    ? [...new Set([...bodyMentions, ...explicitMentions])]
+    : structuredMentions;
 
   // Merge delegation fields into metadata (NOT into canonical hash — delegation
   // is transport/transport semantics, not cryptographic identity).
+  assertValidStructuredRouting(metadata);
   const eventMetadata = { ...metadata };
   if (delegation) {
     eventMetadata.delegated = delegation.delegated !== false; // default true
@@ -186,6 +204,7 @@ export function emitEvent(eventOrParams) {
   let authorEvent;
   if (eventOrParams.protocolVersion === '1.0' && eventOrParams.eventId) {
     authorEvent = eventOrParams;
+    assertValidStructuredRouting(authorEvent.metadata);
     validateAuthorEvent(authorEvent);
   } else {
     authorEvent = createAuthorEvent(eventOrParams);

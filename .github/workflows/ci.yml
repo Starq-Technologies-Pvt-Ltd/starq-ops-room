@@ -30,3 +30,4 @@ jobs:
           tests/session-routing.test.mjs
           tests/room-dispatcher.test.mjs
           tests/room-backlog-report.test.mjs
+          tests/send-routing.integration.test.mjs
