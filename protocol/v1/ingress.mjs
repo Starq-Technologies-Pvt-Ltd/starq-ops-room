@@ -217,7 +217,7 @@ export function emitEvent(eventOrParams) {
     const epoch = readCurrentEpoch();
     const discontinuity = readEpochDiscontinuity(epoch);
     if (discontinuity) {
-      const audit = verifyCurrentEpoch();
+      const audit = verifyCurrentEpoch({ epoch, roomPath: ROOM_FILE });
       if (!audit.ok) {
         throw roomEpochIntegrityError(`current Room epoch verification failed (${audit.failureCount} failures)`);
       }
