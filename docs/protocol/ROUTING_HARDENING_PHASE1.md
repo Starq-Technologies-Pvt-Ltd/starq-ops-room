@@ -143,6 +143,11 @@ audience despite quoted `@copilot` and `@all` body text. It did not contact Herd
 A separate live dry-run reads the canonical Room snapshot and current Windows/WSL Herdr APIs,
 reports zero writes, and creates no state directory.
 
+`protocol/v1/ingressPaths.mjs` preserves the canonical Room, lock and inbox paths when
+`COMMS_ROOM_PATH` is unset. Isolated publisher tests may set it to an absolute Room file in a
+separate temporary directory; the ingress lock and recipient inboxes then live under that same
+test directory. Relative overrides and overrides beside the canonical Room are refused.
+
 Pane ids and workspace ids repeat across backends (`w1:p1`, `w1:p4` exist on Windows and on
 WSL). A pane is only ever addressed as backend + pane.
 

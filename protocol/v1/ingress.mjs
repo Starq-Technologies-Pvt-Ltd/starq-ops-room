@@ -8,13 +8,12 @@ import { computeEventId, generateNonce, validateAuthorEvent } from './envelope.m
 import { deriveProject, loadProjectRegistry } from './projectClassifier.mjs';
 import { getBrokerHeadState, computeRecordHash } from './hashChain.mjs';
 import { readCurrentEpoch, readEpochDiscontinuity, verifyCurrentEpoch } from './ledger-epoch.mjs';
+import { resolveIngressPaths } from './ingressPaths.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT_DIR = path.resolve(__dirname, '..', '..');
-const ROOM_FILE = path.join(ROOT_DIR, 'room.jsonl');
-const LOCK_FILE = path.join(ROOT_DIR, 'locks', 'ingress.lock');
-const INBOX_DIR = path.join(ROOT_DIR, 'inbox');
+const { roomFile: ROOM_FILE, lockFile: LOCK_FILE, inboxDir: INBOX_DIR } = resolveIngressPaths({ rootDir: ROOT_DIR });
 
 fs.mkdirSync(path.dirname(LOCK_FILE), { recursive: true });
 fs.mkdirSync(INBOX_DIR, { recursive: true });
