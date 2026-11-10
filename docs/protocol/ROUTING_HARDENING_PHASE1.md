@@ -17,10 +17,10 @@ Decided by `protocol/v1/routingTargets.mjs` from structured metadata only.
 |---|---|
 | `actionRequired` is NONE, or the record is not `ACTION_REQUIRED` | no-op (`NOT_OUTSTANDING`) |
 | `metadata.routing = { schema: "starq.routing/1", targets: [{ handle, role?, instance?, backend? }] }` | exact recipients; all other mentions ignored |
-| no `routing`, but `@handles` named in `actionRequired` | unqualified handle targets |
+| no `routing`, but `@handles` named in `actionRequired` | active registered owners route as unqualified targets; `@thread` is a recognized reference qualifier; any other unknown or retired owner HOLDs the whole event as `INVALID_ROUTING` |
 | `@all` / `@everyone` / `@team` in `actionRequired` | HOLD `BROADCAST_NOT_ROUTED` |
 | outstanding action, no owner named | no-op (`UNADDRESSED`) |
-| malformed `routing`, unknown field, unknown or retired handle | HOLD `INVALID_ROUTING` |
+| malformed `routing`, unknown field, unknown or retired structured target handle | HOLD `INVALID_ROUTING` |
 
 With structured routing present, the body and legacy mention fields are never used to expand
 the recipient set. Quoted or forwarded mentions, `[FLOOR·pane]` subject tags,

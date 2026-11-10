@@ -164,6 +164,15 @@ test('ambiguous shared handle is HELD and nothing is broadcast', async () => {
   assert.deepEqual(h.persisted.holds['evt-101::claude'].candidates.sort(), ['erp-floor-lead', 'erp-wsl-verification', 'ops-room-deputy']);
 });
 
+test('unknown explicit owner holds the whole event instead of partially routing known owners', async () => {
+  const { h, report } = await seeded([rec(101, { actionRequired: '@codex @phantom: review this' })]);
+  assert.deepEqual(h.wakes, []);
+  assert.equal(report.plan[0].outcome, 'HOLD');
+  assert.deepEqual(report.plan[0].holds, ['INVALID_ROUTING']);
+  assert.equal(h.persisted.holds['evt-101::routing'].reason, 'INVALID_ROUTING');
+  assert.match(h.persisted.holds['evt-101::routing'].detail, /actionRequired owner "@phantom" is not an active registered identity/);
+});
+
 test('loose or malformed targets are rejected, never guessed', async () => {
   assert.equal(validateTarget({ handle: 'claude', pane: 'p5' }).ok, false, 'pane is not a routable field');
   assert.equal(validateTarget({ handle: 'nobody' }).ok, false);

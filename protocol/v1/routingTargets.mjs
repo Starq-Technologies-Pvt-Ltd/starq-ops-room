@@ -26,6 +26,9 @@ const ROLE_RE = /^[a-z][a-z0-9-]{1,47}$/;
 const BACKEND_RE = /^[a-z][a-z0-9-]{0,23}\/[a-z0-9][a-z0-9_-]{0,47}$/;
 const INSTANCE_RE = /^[A-Za-z0-9][A-Za-z0-9_.:-]{3,127}$/;
 const TARGET_KEYS = new Set(['handle', 'role', 'instance', 'backend']);
+// `@thread:<id>` is a Room reference qualifier used in actionRequired text,
+// not an agent recipient. Other unknown owner handles must fail closed.
+const NON_RECIPIENT_OWNER_TOKENS = new Set(['thread']);
 
 const isRecord = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 
@@ -81,7 +84,7 @@ export function targetKey(t) {
  *   source: 'structured'|'action-required-owners'|null,
  *   targets: Array<{handle, role, instance, backend}>,
  *   invalid: Array<{raw, errors}>,   // any entry here => the whole record HOLDs
- *   ignoredOwners: string[],         // @tokens in actionRequired that are not identities
+ *   ignoredOwners: string[],         // recognized non-recipient tokens in actionRequired
  * }}
  */
 export function recipientsFor(record) {
@@ -108,11 +111,20 @@ export function recipientsFor(record) {
 
   const owners = actionRequiredOwners(record);
   if (owners.includes('all')) return { ...base, actionable: true, reason: 'BROADCAST_NOT_ROUTED', source: 'action-required-owners' };
-  const targets = []; const ignoredOwners = []; const seen = new Set();
+  const targets = []; const ignoredOwners = []; const unresolvedOwners = []; const seen = new Set();
   for (const o of owners) {
     const handle = canonicalHandle(o);
-    if (!handle) { ignoredOwners.push(o); continue; }
+    if (!handle) {
+      if (NON_RECIPIENT_OWNER_TOKENS.has(o)) ignoredOwners.push(o);
+      else unresolvedOwners.push(o);
+      continue;
+    }
     if (!seen.has(handle)) { seen.add(handle); targets.push({ handle, role: null, instance: null, backend: null }); }
+  }
+  if (unresolvedOwners.length) {
+    return { ...base, actionable: true, reason: 'INVALID_ROUTING', source: 'action-required-owners',
+      invalid: unresolvedOwners.map((owner) => ({ raw: owner, errors: [`actionRequired owner "@${owner}" is not an active registered identity`] })),
+      ignoredOwners };
   }
   if (targets.length === 0) return { ...base, reason: 'UNADDRESSED', ignoredOwners };
   return { ...base, actionable: true, reason: 'ACTION_REQUIRED_OWNERS', source: 'action-required-owners', targets, ignoredOwners };
