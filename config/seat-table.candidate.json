@@ -6,7 +6,7 @@
     { "key": "windows/default", "bin": "env:HERDR_BIN_PATH", "delivery": "verified",
       "note": "Nitro Windows, Herdr 0.9.5 default session. agent list, pane process-info and agent prompt all exercised from w3:p1 on 2026-11-10." },
     { "key": "wsl/default", "bin": "wsl.exe", "args": ["-d", "Ubuntu", "--", "/home/mustarq/.local/bin/herdr"], "delivery": "unverified",
-      "note": "Ubuntu WSL, Herdr 0.9.5 default session. Read-only discovery verified from Windows; prompt delivery through wsl.exe has NOT been exercised, so seats here HOLD (BACKEND_DELIVERY_UNVERIFIED)." }
+      "note": "Ubuntu WSL, Herdr 0.9.5 default session. Read-only discovery verified from Windows. One identified canary on 2026-11-11 (Room #18795, recipient evidence #18797): agent prompt through wsl.exe to w1:p4 was accepted and arrived as a single prompt. Kept unverified, so seats here still HOLD (BACKEND_DELIVERY_UNVERIFIED), until Codex or the Founder decides whether a wsl.exe caller outside the WSL server is an accepted path; Herdr documents only --machine for cross-server control. See docs/reviews/WSL_DELIVERY_PATH_AND_FOUNDER_INGRESS_2026-11-11.md." }
   ],
   "seats": [
     { "seatId": "codex-chief-engineer", "enrollmentSeq": 18737, "handle": "codex", "instance": "01a1c4c0-23ab-75d2-95cb-3a41fc2dc826", "roles": ["chief-engineer"], "default": true,
