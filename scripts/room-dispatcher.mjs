@@ -20,8 +20,9 @@
  *      atomic write BEFORE any pane is touched. A failed write throws and stops
  *      the dispatcher.
  *   5. DELIVER: immediately before every attempt and retry the seat is
- *      re-verified on its own backend (pane, agent kind, cwd, optional session,
- *      foreground pid). A stale or unverifiable binding is a recoverable HOLD.
+ *      checked for enrollment evidence (the Room record the seat table cites
+ *      must come from that handle with that exact instance) and re-verified on
+ *      its own backend (pane, agent kind, cwd, optional session, foreground pid). A stale or unverifiable binding is a recoverable HOLD.
  *      The pointer is a short single-line ASCII reference to the Room record.
  *
  * Delivery states are kept apart: submitted, delivered (herdr accepted),
@@ -49,8 +50,8 @@ import nodeFs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { execFileSync, execFile } from 'node:child_process';
-import { recipientsFor, senderInstanceOf, targetKey } from '../protocol/v1/routingTargets.mjs';
-import { validateSeatTable, resolveTarget, verifySeatBinding, RECOVERABLE_HOLDS } from '../protocol/v1/seatBinding.mjs';
+import { recipientsFor, senderInstanceOf, targetKey, canonicalHandle } from '../protocol/v1/routingTargets.mjs';
+import { validateSeatTable, resolveTarget, verifySeatBinding, verifySeatEnrollment, RECOVERABLE_HOLDS } from '../protocol/v1/seatBinding.mjs';
 import { deliveryKey, createDelivery, canAttempt, recordAttempt, recordTransportAck, recordFailure } from '../protocol/v2/deliveryLedger.mjs';
 import { assertIsolatedStateDir, loadState, saveState, STATE_FILENAME } from '../protocol/v1/deliveryStore.mjs';
 
@@ -264,7 +265,9 @@ export async function pollOnce(deps) {
     }
   }
 
-  // F. Attempts. The binding is re-verified immediately before every submit.
+  // F. Attempts. Enrollment evidence and the live binding are both re-verified
+  //    immediately before every submit.
+  const recordBySeq = new Map(records.map((r) => [r.brokerSequence, r]));
   for (const [key, d] of Object.entries(state.deliveries)) {
     const heldBinding = d.status === 'held' && d.holdKey && state.holds[d.holdKey]?.status === 'open'
       && state.holds[d.holdKey].recoverable && state.holds[d.holdKey].reason !== 'SUBMIT_OUTCOME_UNKNOWN';
@@ -273,9 +276,11 @@ export async function pollOnce(deps) {
     const seat = seatByInstance.get(d.sessionId);
     const backend = seat ? backends.get(seat.backend) : undefined;
     const source = seat ? discovery[seat.backend] : undefined;
-    const check = seat
-      ? verifySeatBinding(seat, backend, source, backend && source?.ok && !seat.neverWake ? probe(seat, backend) : null)
-      : { ok: false, reason: 'INSTANCE_NOT_IN_SEAT_TABLE', detail: d.sessionId };
+    // A never-wake seat is refused by the binding check before anything else.
+    const enrolled = seat && !seat.neverWake ? verifySeatEnrollment(seat, recordBySeq, canonicalHandle) : { ok: true };
+    const check = !seat ? { ok: false, reason: 'INSTANCE_NOT_IN_SEAT_TABLE', detail: d.sessionId }
+      : !enrolled.ok ? enrolled
+      : verifySeatBinding(seat, backend, source, backend && source?.ok && !seat.neverWake ? probe(seat, backend) : null);
 
     if (!check.ok) {
       const holdKey = `${key}::binding`;

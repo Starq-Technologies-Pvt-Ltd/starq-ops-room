@@ -54,7 +54,7 @@ function makeSandbox() {
   return dir;
 }
 
-function publish({ targets, routingDocument, body = 'synthetic protocol check', actionRequired = 'notify named seat' } = {}) {
+function publish({ targets, routingDocument, body = 'synthetic protocol check', actionRequired = 'notify named seat', extraEnv = {} } = {}) {
   const dir = makeSandbox();
   const room = path.join(dir, 'room.jsonl');
   const bodyFile = path.join(dir, 'body.txt');
@@ -67,7 +67,7 @@ function publish({ targets, routingDocument, body = 'synthetic protocol check', 
   const result = spawnSync(process.execPath, args, {
     cwd: dir,
     encoding: 'utf8',
-    env: { ...process.env, COMMS_IDENTITIES_PATH: path.join(dir, 'tests', 'identities.json'), TEST_ROOM_FILE: room },
+    env: { ...process.env, COMMS_ROOM_PATH: '', COMMS_IDENTITIES_PATH: path.join(dir, 'tests', 'identities.json'), TEST_ROOM_FILE: room, ...extraEnv },
   });
   const record = fs.existsSync(room) ? JSON.parse(fs.readFileSync(room, 'utf8').trim().split(/\r?\n/).at(-1)) : null;
   return { dir, result, record, room };
@@ -94,7 +94,14 @@ function mockDeps(table) {
 
 async function routePublished(record, table = seatTable) {
   const h = mockDeps(table);
-  h.deps.snapshot = { state:'OK', stable:true, tailSequence:record.brokerSequence, records:[record] };
+  // Enrollment evidence the dispatcher now requires: each seat's cited Room record,
+  // from that seat's own handle and instance. The checkpoint sits above all of them.
+  const evidence = table.seats.filter((s) => s.enrollmentSeq).map((s) => ({ brokerSequence:s.enrollmentSeq, eventId:`enroll-${s.seatId}`,
+    evaluatedDeliveryType:'CC_CONTEXT', evaluatedAudience:'ALL', event:{ senderHandle:s.handle, body:'', metadata:{ actionRequired:'NONE', senderInstanceId:s.instance } } }));
+  const OFFSET = 1_000_000;
+  h.state.checkpoint.lastSeq = OFFSET;
+  record = { ...record, brokerSequence: OFFSET + record.brokerSequence };
+  h.deps.snapshot = { state:'OK', stable:true, tailSequence:record.brokerSequence, records:[...evidence, record] };
   const report = await pollOnce(h.deps);
   return { ...h, report };
 }
@@ -185,4 +192,23 @@ test('legacy sender invocation without routing-file emits no routing metadata', 
     assert.ok(p.record);
     assert.equal(Object.hasOwn(p.record.event.metadata,'routing'), false);
   } finally { fs.rmSync(p.dir,{recursive:true,force:true}); }
+});
+
+test('sender warns on stderr whenever COMMS_ROOM_PATH redirects the post, and is silent otherwise', () => {
+  const plain = publish({ targets:[{handle:'codex'}] });
+  const redirected = publish({ targets:[{handle:'codex'}], extraEnv:{ COMMS_ROOM_PATH: path.join(os.tmpdir(), 'starq-isolated-room', 'room.jsonl') } });
+  const legacy = publish({ body:'legacy @cursor ping', actionRequired:'@cursor: synthetic', extraEnv:{ COMMS_ROOM_PATH: path.join(os.tmpdir(), 'starq-isolated-room', 'room.jsonl') } });
+  try {
+    assert.equal(plain.result.status, 0, plain.result.stderr);
+    assert.doesNotMatch(plain.result.stderr, /COMMS_ROOM_PATH/);
+
+    for (const p of [redirected, legacy]) {
+      assert.equal(p.result.status, 0, p.result.stderr);
+      assert.match(p.result.stderr, /WARNING: COMMS_ROOM_PATH is set\. This post goes to an ISOLATED Room file, NOT the canonical Room/);
+      assert.ok(p.result.stderr.includes(path.join('starq-isolated-room', 'room.jsonl')), 'names the redirect target');
+      assert.match(p.result.stderr, /WARNING: record #\d+ was written to the ISOLATED Room/);
+      assert.doesNotMatch(p.result.stdout, /COMMS_ROOM_PATH|ISOLATED/, 'stdout is unchanged for callers that parse it');
+    }
+    assert.equal(redirected.result.stdout, plain.result.stdout.replace(/\[[0-9a-f]{8}\]/, redirected.result.stdout.match(/\[[0-9a-f]{8}\]/)[0]));
+  } finally { for (const p of [plain, redirected, legacy]) fs.rmSync(p.dir, { recursive:true, force:true }); }
 });

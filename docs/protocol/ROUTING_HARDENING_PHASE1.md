@@ -168,3 +168,17 @@ every harness restart and are corrected by hand; `agent prompt` is sent to a wor
 `scripts/room-backlog-report.mjs` produces a read-only reconciliation of the range after the
 preserved production checkpoint. Every actionable entry is `UNVERIFIED_HOLD`, `delivered: false`.
 The report is generated outside the repository and outside the live tree.
+
+## Follow-up 2026-11-10: enrollment guard and sender warning
+
+- **Enrollment guard.** Each seat cites the Room record in which it reported itself
+  (`enrollmentSeq`). Before every attempt the dispatcher requires that record to exist and to come
+  from the seat's canonical handle with the seat's exact instance; otherwise the delivery holds
+  (`INSTANCE_NOT_ENROLLED`, `ENROLLMENT_RECORD_NOT_FOUND`, `ENROLLMENT_EVIDENCE_MISMATCH`). The
+  live pane/agent/cwd/pid check still runs afterwards.
+- **Sender warning.** `send.mjs` warns on stderr whenever `COMMS_ROOM_PATH` redirects a post.
+- **Known incompatibility.** `watch/deadpool-room-watch.mjs` re-derives routing without metadata
+  and would reject a structured post whose body names another handle. Not changed here.
+
+Details, PR #4 disposition and the `mentions` consumer trace:
+`docs/reviews/PR3_FOLLOWUP_AND_PR4_RECONCILIATION_2026-11-10.md`.

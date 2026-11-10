@@ -15,7 +15,7 @@ process.env.COMMS_IDENTITIES_PATH = process.env.COMMS_IDENTITIES_PATH || 'tests/
 const here = path.dirname(fileURLToPath(import.meta.url));
 const { pollOnce, buildPointer, herdrArgv, makeHerdrRuntime } = await import('../scripts/room-dispatcher.mjs');
 const { recipientsFor, validateTarget, canonicalHandle } = await import('../protocol/v1/routingTargets.mjs');
-const { validateSeatTable, resolveTarget, verifySeatBinding, normalizeCwd } = await import('../protocol/v1/seatBinding.mjs');
+const { validateSeatTable, resolveTarget, verifySeatBinding, verifySeatEnrollment, normalizeCwd } = await import('../protocol/v1/seatBinding.mjs');
 const { assertIsolatedStateDir, loadState, saveState, emptyState, StateError, STATE_FILENAME } = await import('../protocol/v1/deliveryStore.mjs');
 
 const TABLE = JSON.parse(fs.readFileSync(path.join(here, 'fixtures', 'seat-table.json'), 'utf8'));
@@ -42,6 +42,7 @@ function makeHarness({ table = cloneTable(), state } = {}) {
     table, wakes: [], saves: 0, clock: 1_000_000, failSaveAt: null, wakeResult: true,
     persisted: state ?? emptyState(0),
     down: new Set(), missingPanes: new Set(), pidOverride: new Map(), agentOverride: new Map(),
+    unenrolled: new Set(), enrollInstance: new Map(),
   };
   h.store = {
     load: () => structuredClone(h.persisted),
@@ -63,8 +64,11 @@ function makeHarness({ table = cloneTable(), state } = {}) {
   };
   h.probe = (seat) => ({ pane_id: seat.pane, foreground_processes: [{ pid: h.pidOverride.get(seat.seatId) ?? seat.pid }] });
   h.wake = async (seat, backend, text) => { h.wakes.push({ seatId: seat.seatId, backend: backend.key, pane: seat.pane, argv: herdrArgv(backend, ['agent', 'prompt', seat.pane, text]) }); return h.wakeResult; };
+  // Enrollment evidence: each seat's cited Room record, posted by that seat's own
+  // handle and instance. Sequences are below the seed point, so they are never planned.
+  h.enrollment = () => h.table.seats.filter((s) => s.enrollmentSeq && !h.unenrolled.has(s.seatId)).map((s) => rec(s.enrollmentSeq, { sender: s.handle, senderInstance: h.enrollInstance.get(s.seatId) ?? s.instance, actionRequired: 'NONE', deliveryType: 'CC_CONTEXT' }));
   h.poll = (records, { deliver = true, options } = {}) => pollOnce({
-    snapshot: { state: 'OK', stable: true, records, tailSequence: records.at(-1)?.brokerSequence ?? 0 },
+    snapshot: { state: 'OK', stable: true, records: [...h.enrollment(), ...records], tailSequence: records.at(-1)?.brokerSequence ?? 0 },
     seatTable: h.table, discover: h.discover, probe: h.probe, wake: h.wake, store: h.store, now: () => h.clock, deliver, options,
   });
   h.woken = () => h.wakes.map((w) => w.seatId);
@@ -304,6 +308,50 @@ test('seat table validation rejects duplicates, two defaults, undeclared backend
     assert.ok(v.errors.some((e) => e.includes(needle)), needle);
   }
   assert.deepEqual(resolveTarget({ handle: 'claude', role: 'erp-floor-lead', instance: null, backend: null }, TABLE).seats.map((s) => s.seatId), ['erp-floor-lead']);
+});
+
+test('enrollment guard: no delivery unless the cited Room record comes from that handle with that exact instance', async () => {
+  const records = [rec(100, { actionRequired: 'NONE' }), rec(101, { actionRequired: 'x', targets: [{ handle: 'claude', role: 'erp-floor-lead' }] })];
+  const key = 'evt-101::claude-erp-0001';
+
+  // 1. The seat table cites a record that is not in the Room.
+  const a = makeHarness(); await a.poll(records.slice(0, 1));
+  a.unenrolled.add('erp-floor-lead');
+  await a.poll(records);
+  assert.deepEqual(a.wakes, []);
+  assert.equal(a.persisted.holds[`${key}::binding`].reason, 'ENROLLMENT_RECORD_NOT_FOUND');
+  a.unenrolled.clear();                       // the seat posts its own startup record
+  await a.poll(records);
+  assert.deepEqual(a.woken(), ['erp-floor-lead'], 'recoverable once the evidence exists');
+
+  // 2. The cited record exists but was posted under a different instance of the same handle.
+  const b = makeHarness(); await b.poll(records.slice(0, 1));
+  b.enrollInstance.set('erp-floor-lead', 'claude-ops-0001');
+  await b.poll(records);
+  assert.deepEqual(b.wakes, []);
+  assert.equal(b.persisted.holds[`${key}::binding`].reason, 'ENROLLMENT_EVIDENCE_MISMATCH');
+
+  // 3. The seat cites nothing at all: an operator's table entry alone is not enough.
+  const c = makeHarness(); await c.poll(records.slice(0, 1));
+  delete c.table.seats.find((s) => s.seatId === 'erp-floor-lead').enrollmentSeq;
+  await c.poll(records);
+  assert.deepEqual(c.wakes, []);
+  assert.equal(c.persisted.holds[`${key}::binding`].reason, 'INSTANCE_NOT_ENROLLED');
+
+  // 4. Evidence does not replace the live binding: enrolled seat, wrong pid, still held.
+  const d = makeHarness(); await d.poll(records.slice(0, 1));
+  d.pidOverride.set('erp-floor-lead', 9999);
+  await d.poll(records);
+  assert.deepEqual(d.wakes, []);
+  assert.equal(d.persisted.holds[`${key}::binding`].reason, 'PID_MISMATCH');
+
+  // Pure function: wrong handle, alias resolution, invalid citation.
+  const seat = TABLE.seats.find((s) => s.seatId === 'erp-floor-lead');
+  const by = (o) => new Map([[seat.enrollmentSeq, rec(seat.enrollmentSeq, o)]]);
+  assert.equal(verifySeatEnrollment(seat, by({ sender: 'codex', senderInstance: seat.instance })).reason, 'ENROLLMENT_EVIDENCE_MISMATCH');
+  assert.equal(verifySeatEnrollment(seat, by({ sender: 'elder', senderInstance: seat.instance }), canonicalHandle).ok, true);
+  assert.equal(verifySeatEnrollment({ ...seat, enrollmentSeq: 0 }, new Map()).reason, 'INSTANCE_NOT_ENROLLED');
+  assert.ok(validateSeatTable({ ...cloneTable(), seats: [{ ...seat, enrollmentSeq: -3 }] }).errors.some((e) => e.includes('enrollmentSeq')));
 });
 
 // ---- 4. durability ------------------------------------------------------------------

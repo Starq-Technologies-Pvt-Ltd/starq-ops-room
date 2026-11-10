@@ -71,6 +71,7 @@ export function validateSeatTable(table) {
     if (typeof s.pane === 'string' && !/^w[0-9a-z]+:p[0-9a-z]+$/i.test(s.pane)) errors.push(`seat ${id}: pane must be a full pane id like w3:p1`);
     if (s.backend && !backendKeys.has(s.backend)) errors.push(`seat ${id}: backend ${s.backend} is not declared`);
     if (s.instance) { if (instances.has(s.instance)) errors.push(`duplicate instance ${s.instance}`); instances.add(s.instance); }
+    if (s.enrollmentSeq !== undefined && (!Number.isInteger(s.enrollmentSeq) || s.enrollmentSeq <= 0)) errors.push(`seat ${id}: enrollmentSeq must be a positive Room sequence`);
     const paneKey = `${s.backend}::${lc(s.pane)}`;
     if (panes.has(paneKey)) errors.push(`two seats claim ${paneKey}`);
     panes.add(paneKey);
@@ -165,11 +166,37 @@ export function verifySeatBinding(seat, backend, source, processInfo) {
   return { ok: true, reason: null, detail: null };
 }
 
+/**
+ * Enrollment evidence: a seat is deliverable only if the Room itself holds the
+ * record the seat table cites (`enrollmentSeq`) and that record was posted by
+ * this seat's canonical handle with this seat's EXACT instance id. The seat
+ * table alone is an operator's claim; this ties it to a post only that session
+ * could have attributed to itself. Fail closed: no citation, a missing record
+ * or any mismatch is a HOLD. This complements, and never replaces, the live
+ * pane/pid binding check below.
+ *
+ * @param seat        seat table entry
+ * @param recordBySeq Map<brokerSequence, brokerRecord> from the current Room snapshot
+ * @param canonical   handle -> canonical handle resolver (identity registry)
+ */
+export function verifySeatEnrollment(seat, recordBySeq, canonical = (h) => lc(h)) {
+  const hold = (reason, detail = null) => ({ ok: false, reason, detail });
+  if (!Number.isInteger(seat.enrollmentSeq) || seat.enrollmentSeq <= 0) return hold('INSTANCE_NOT_ENROLLED', 'seat cites no enrollment record');
+  const rec = recordBySeq?.get(seat.enrollmentSeq);
+  if (!rec) return hold('ENROLLMENT_RECORD_NOT_FOUND', `Room #${seat.enrollmentSeq}`);
+  const sender = canonical(rec.event?.senderHandle);
+  const instance = rec.event?.metadata?.senderInstanceId ?? null;
+  if (!sender || sender !== lc(seat.handle)) return hold('ENROLLMENT_EVIDENCE_MISMATCH', `Room #${seat.enrollmentSeq} was posted by "${rec.event?.senderHandle}"`);
+  if (instance !== seat.instance) return hold('ENROLLMENT_EVIDENCE_MISMATCH', `Room #${seat.enrollmentSeq} carries instance "${instance}"`);
+  return { ok: true, reason: null, detail: null };
+}
+
 /** Hold reasons that a later poll can clear without a new Room event. */
 export const RECOVERABLE_HOLDS = new Set([
   'SOURCE_UNAVAILABLE', 'SOURCE_NOT_DISCOVERED', 'PANE_NOT_FOUND', 'AGENT_MISMATCH', 'CWD_MISMATCH',
   'SESSION_MISMATCH', 'AGENT_BLOCKED', 'PID_UNVERIFIED', 'PID_MISMATCH',
   'BACKEND_NOT_CONFIGURED', 'BACKEND_DELIVERY_UNVERIFIED', 'SEAT_NEVER_WAKE',
+  'INSTANCE_NOT_ENROLLED', 'ENROLLMENT_RECORD_NOT_FOUND', 'ENROLLMENT_EVIDENCE_MISMATCH',
   'INSTANCE_NOT_IN_SEAT_TABLE', 'NO_SEAT_FOR_ROLE', 'NO_DEFAULT_SEAT', 'NO_SEAT_ON_BACKEND', 'AMBIGUOUS_ROLE', 'AMBIGUOUS_TARGET',
   // CONTRADICTORY_TARGET is deliberately absent: the event itself is wrong and
   // only a corrected Room event can fix it.

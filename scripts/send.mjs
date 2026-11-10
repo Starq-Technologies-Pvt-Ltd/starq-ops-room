@@ -430,6 +430,17 @@ if (!onBehalfOf) {
 
 // Check if this is a Room message
 if (room || to === 'room' || to === 'all') {
+  // COMMS_ROOM_PATH redirects the Room file (isolated test seam, see
+  // protocol/v1/ingressPaths.mjs). Never let that happen silently: a leaked
+  // variable would otherwise divert posts while the normal success line prints.
+  // stderr only, so stdout stays identical for callers that parse it.
+  const roomRedirect = process.env.COMMS_ROOM_PATH;
+  const isRedirected = roomRedirect != null && roomRedirect !== '';
+  if (isRedirected) {
+    console.error('WARNING: COMMS_ROOM_PATH is set. This post goes to an ISOLATED Room file, NOT the canonical Room:');
+    console.error(`  ${roomRedirect}`);
+    console.error('  Other agents and the Founder will not see it. Unset COMMS_ROOM_PATH for a real post.');
+  }
   try {
     const { emitEvent } = await import('../protocol/v1/ingress.mjs');
     const { evaluateEventRouting } = await import('../protocol/v1/authorityPolicy.mjs');
@@ -504,6 +515,9 @@ if (room || to === 'room' || to === 'all') {
       console.log(`  → Action Required tagged: ${tagged || 'UNKNOWN'}`);
     } else {
       console.log(`  → Broadcast to all agents (CC_CONTEXT)`);
+    }
+    if (isRedirected) {
+      console.error(`WARNING: record #${record.brokerSequence} was written to the ISOLATED Room at ${roomRedirect}, not the canonical Room.`);
     }
   } catch (err) {
     const { writeRoomPostFailure } = await import('../protocol/v1/ingress.mjs');
