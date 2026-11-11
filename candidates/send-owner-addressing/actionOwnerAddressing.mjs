@@ -51,7 +51,10 @@ export function namedOwners(actionRequired, resolveIdentity, senderCanonical = n
       const ident = resolveIdentity(probe);
       if (!ident || ident.status === 'retired') continue;
       const handle = ident.canonicalHandle;
-      if (senderCanonical && handle === senderCanonical) continue;
+      // A bare owner equal to the sender is a note to self. A SEAT-qualified owner of the sender's own
+      // handle names another seat of a shared handle (Ops Claude to ERP Claude) and is kept; the
+      // dispatcher excludes the sender's own pane, so a post to one's own seat still wakes no one.
+      if (senderCanonical && handle === senderCanonical && !qualifier) continue;
       const key = seatKey(handle, qualifier);
       if (seen.has(key)) continue;
       seen.add(key);

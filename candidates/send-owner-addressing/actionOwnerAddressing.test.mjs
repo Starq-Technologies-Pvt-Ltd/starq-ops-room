@@ -124,6 +124,28 @@ test('rev2: two seats of one handle stay two owners and both are addressed and w
   assert.deepEqual(r.ambiguous, []);
 });
 
+test('rev3: a seat-qualified owner that shares the sender handle is another seat and is addressed (live miss, Room #19102)', () => {
+  // ERP Claude and Ops Claude share the handle claude; Ops posts to the ERP seat.
+  const r = fix('claude', 'Report text.', 'claude#w1:p5: name a reviewer');
+  assert.equal(r.changed, true);
+  assert.deepEqual(r.added, ['@claude#w1:p5']);
+  const after = route('claude', r.body, 'claude#w1:p5: name a reviewer');
+  assert.equal(after.deliveryType, 'ACTION_REQUIRED');
+  assert.deepEqual(after.targetAudience, ['claude']);
+  // the same post before the fix stayed a broadcast
+  assert.equal(route('claude', 'Report text.', 'claude#w1:p5: name a reviewer').deliveryType, 'CC_CONTEXT');
+  // both seats of the sender's handle, from a third handle, are unchanged behaviour
+  assert.deepEqual(fix('codex', 'x', 'claude#w3:p1: a; claude#w1:p5: b').added, ['@claude#w3:p1', '@claude#w1:p5']);
+});
+
+test('rev3: a bare owner equal to the sender is still a note to self; the body mention satisfies a qualified own-handle owner', () => {
+  assert.equal(fix('claude', 'x', 'claude: remember this').changed, false);
+  assert.equal(fix('claude', 'x', 'claude: remember. codex: act').changed, true);
+  assert.deepEqual(fix('claude', 'x', 'claude: remember. codex: act').added, ['@codex']);
+  assert.equal(fix('claude', '@claude#w1:p5 please', 'claude#w1:p5: do it').changed, false);
+  assert.deepEqual(namedOwners('claude#w1:p5: a', resolveIdentity, 'claude').map((o) => o.qualifier), ['w1:p5']);
+});
+
 test('rev2: identical seat named twice is one owner; same seat in different case too', () => {
   assert.equal(namedOwners('claude#w3:p1: a. claude#w3:p1: b; claude#W3:P1: c', resolveIdentity).length, 1);
 });

@@ -44,7 +44,17 @@ Two defects, both confirmed and fixed:
 fixture seats: both Ops and ERP Claude seats are woken and no other seat is; a bare or wrong-seat
 mention still gets the owner seat added. Run against the first revision, 4 of them fail.
 
-## Tests (`node --test` in this folder): 16 pass
+## Revision 3 (live miss, 2026-11-12, Room #19102/#19103)
+
+After revision 2 went live (Founder #19089), my own post from Ops Claude to the ERP Claude seat was stored
+as a broadcast FYI: the helper skipped any owner whose handle equalled the sender's handle, and both
+seats share the handle `claude`. Fix: a **seat-qualified** owner of the sender's own handle is another
+seat and is kept; a bare own-handle owner is still a note to self. Two new tests; both fail on the live
+helper (sha 8dccad5f5ae06241). Revised helper sha fc90c63a2a56324d. **Not applied live**: it needs an
+independent review first; the Codex PASS covers revision 2. Until then, address the recipient seat in
+the first line of the body.
+
+## Tests (`node --test` in this folder): 18 pass
 
 Real identity registry and real `evaluateEventRouting` from the live tree, read-only: the #19050 and
 #19051 shapes route CC_CONTEXT/ALL today and ACTION_REQUIRED/[codex] with the fix; ordinary FYIs
