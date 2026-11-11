@@ -95,3 +95,69 @@ test('regression over real Room history: every owner-only CC_CONTEXT handback is
   assert.ok(wouldChange >= 2, 'at least #19050 and #19051 are caught');
   console.log(`# history #18500+: CC_CONTEXT with NONE: ${none} (changed 0); CC_CONTEXT naming an owner: ${ownerOnly}; would be addressed: ${wouldChange}`);
 });
+
+// ---- Revision 2: seat-qualified recipients (independent review, Room #19061) ----
+const { selectWakeTargets } = await import(live('protocol/v1/sessionRouting.mjs'));
+process.env.COMMS_DISPATCH_STATE_DIR = process.env.COMMS_DISPATCH_STATE_DIR || new URL('./.tmp-dispatch/', import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1');
+const dispatcher = await import(live('scripts/room-dispatcher.mjs'));
+import { rmSync } from 'node:fs';
+process.on('exit', () => { try { rmSync(process.env.COMMS_DISPATCH_STATE_DIR, { recursive: true, force: true }); } catch {} });
+
+const sess = (agent, id, pane) => ({ agent, agent_session: { value: id }, agent_status: 'idle', cwd: 'D:\StarqTech\projects\starqerp', pane_id: pane, workspace_id: pane.split(':')[0], _host: 'windows' });
+const SEATS = [sess('claude', 'claude-erp', 'w1:p5'), sess('claude', 'claude-ops', 'w3:p1'), sess('codex', 'codex-1', 'w1:p1'), sess('antigravity', 'ag-hoadhaa', 'w2:p1'), sess('antigravity', 'ag-erp', 'w1:p3')];
+const wakePanes = (from, body, action) => {
+  const fixed = fix(from, body, action);
+  const classified = route(from, fixed.body, action);
+  const rec = { brokerSequence: 9, eventId: 'e9', evaluatedDeliveryType: classified.deliveryType, evaluatedAudience: classified.targetAudience,
+    event: { senderHandle: from, body: fixed.body, mentions: [], metadata: { actionRequired: action } } };
+  const routing = dispatcher.restrictToAddressed(selectWakeTargets(dispatcher.normalizeForRouting(rec), SEATS), rec);
+  return { fixed, classified, panes: routing.wake.map((w) => w.pane).sort(), ambiguous: routing.ambiguous.map((a) => a.handle) };
+};
+
+test('rev2: two seats of one handle stay two owners and both are addressed and woken', () => {
+  const action = 'claude#w3:p1: record this; claude#w1:p5: update the ERP lane';
+  assert.deepEqual(namedOwners(action, resolveIdentity).map((o) => `${o.handle}#${o.qualifier}`), ['claude#w3:p1', 'claude#w1:p5']);
+  const r = wakePanes('codex', 'Handback text with no recipient line.', action);
+  assert.deepEqual(r.fixed.added, ['@claude#w3:p1', '@claude#w1:p5']);
+  assert.equal(r.classified.deliveryType, 'ACTION_REQUIRED');
+  assert.deepEqual(r.panes, ['w1:p5', 'w3:p1'], 'exactly the two named seats, nobody else');
+  assert.deepEqual(r.ambiguous, []);
+});
+
+test('rev2: identical seat named twice is one owner; same seat in different case too', () => {
+  assert.equal(namedOwners('claude#w3:p1: a. claude#w3:p1: b; claude#W3:P1: c', resolveIdentity).length, 1);
+});
+
+test('rev2: a bare @claude in the body does not satisfy a seat-qualified owner', () => {
+  const r = fix('codex', '@claude please look at this.', 'claude#w3:p1: do it');
+  assert.equal(r.changed, true);
+  assert.deepEqual(r.added, ['@claude#w3:p1']);
+  assert.ok(r.body.endsWith('@claude please look at this.'));
+});
+
+test('rev2: a mention of a different seat does not satisfy the owner seat', () => {
+  const r = fix('codex', '@claude#w1:p5 FYI for the ERP seat.', 'claude#w3:p1: do it');
+  assert.equal(r.changed, true);
+  assert.deepEqual(r.added, ['@claude#w3:p1']);
+  const both = wakePanes('codex', '@claude#w1:p5 FYI for the ERP seat.', 'claude#w3:p1: do it');
+  assert.equal(both.classified.deliveryType, 'ACTION_REQUIRED');
+  assert.ok(both.panes.includes('w3:p1'), 'the owner seat is woken');
+});
+
+test('rev2: the matching seat in the body satisfies the owner; case and trailing punctuation do not matter', () => {
+  for (const body of ['@claude#w3:p1 please.', '@Claude#W3:P1, please', 'Thanks @claude#w3:p1.']) {
+    assert.equal(fix('codex', body, 'claude#w3:p1: do it').changed, false, body);
+  }
+});
+
+test('rev2: an owner with no seat is satisfied by any mention of the handle, bare or qualified', () => {
+  assert.equal(fix('codex', '@claude hi', 'claude: do it').changed, false);
+  assert.equal(fix('codex', '@claude#w1:p5 hi', 'claude: do it').changed, false);
+});
+
+test('rev2: one record naming both seats of one handle and a second handle', () => {
+  const r = wakePanes('mustarq', 'x', 'claude#w3:p1: a; claude#w1:p5: b; antigravity#w2:p1: c');
+  assert.deepEqual(r.fixed.added, ['@claude#w3:p1', '@claude#w1:p5', '@antigravity#w2:p1']);
+  assert.deepEqual(r.panes, ['w1:p5', 'w2:p1', 'w3:p1']);
+  assert.ok(!r.panes.includes('w1:p3'), 'the other antigravity seat is not woken');
+});

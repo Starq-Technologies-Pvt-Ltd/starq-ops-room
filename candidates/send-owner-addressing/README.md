@@ -29,13 +29,28 @@ stderr. The rest of the body is untouched.
 - Seat qualifiers are kept (`claude#w3:p1` becomes `@claude#w3:p1`).
 - `send.mjs.patch`: 1 line changed (`const body` to `let body`) and 9 added.
 
-## Tests (`node --test` in this folder): 9 pass
+## Revision 2 (independent review #19061)
+
+Two defects, both confirmed and fixed:
+
+1. Owners were de-duplicated by handle, so `claude#w3:p1: …; claude#w1:p5: …` collapsed to one seat.
+   An owner is now the pair (canonical handle, seat), compared case-insensitively.
+2. A bare `@claude` or a different seat in the body suppressed a required `@claude#w3:p1`. A body
+   mention now satisfies a seat-qualified owner only with the same `#seat`; an owner with no seat
+   is satisfied by any mention of the handle. Trailing punctuation and case are ignored.
+
+7 new regression tests, run through the real `evaluateEventRouting` and the real routing core
+(`selectWakeTargets` via the dispatcher's `normalizeForRouting` / `restrictToAddressed`) with five
+fixture seats: both Ops and ERP Claude seats are woken and no other seat is; a bare or wrong-seat
+mention still gets the owner seat added. Run against the first revision, 4 of them fail.
+
+## Tests (`node --test` in this folder): 16 pass
 
 Real identity registry and real `evaluateEventRouting` from the live tree, read-only: the #19050 and
 #19051 shapes route CC_CONTEXT/ALL today and ACTION_REQUIRED/[codex] with the fix; ordinary FYIs
 are unchanged; qualifiers, owner lists, Founder aliases, self, URL colons, retired seats; and a
-replay over real history: 269 CC_CONTEXT records with action NONE, **0 changed**; 21 owner-only
-records addressed.
+replay over real history: 271 CC_CONTEXT records with action NONE, **0 changed**; the same 21
+owner-only records addressed.
 
 ## Limits
 
