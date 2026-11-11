@@ -62,7 +62,10 @@ gateway restart. Not switched on: that is a live cutover awaiting approval [#190
 When running the gateway test suites in the live tree, set `STARQ_BOT_MIRROR_ALL=0` and
 `STARQ_BOT_LAYOUT=classic`, because the live config file changes the defaults those suites expect.
 
-Deadpool's separate relay is not part of this and stays off Telegram.
+Deadpool's separate relay is not part of this. It was live and unfiltered until 21:20 PKT on
+2026-11-11 and sent every record to the Founder in a second bot chat, so #19026 to #19052
+arrived twice [#19058]. It is now in mode `off` (`relay-config.json` in Deadpool's profile) and
+must stay off; its old twin job is paused.
 
 ## Tag routing
 

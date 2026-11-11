@@ -1,6 +1,7 @@
 # Deadpool as failover-only Founder sender — design
 
-Status: **DESIGN, not implemented, not enabled.** Founder decision 4c [#18981], assigned in
+Status: **DESIGN, not implemented, not enabled. Corrected 2026-11-11 21:30 PKT** after Deadpool's
+Room #19058: the sender to gate is the profile relay (job `d0b0dd8dd799`), not `b4d035545d41`. Founder decision 4c [#18981], assigned in
 #18983 and #18993. Written by the Operations Room Deputy. Nothing here changes the current
 cron job, its checkpoint or its configuration. Background:
 `docs/incidents/2026-11-11-founder-delivery-paths.md`.
@@ -10,13 +11,17 @@ cron job, its checkpoint or its configuration. Background:
 StarqBot is the primary Room-to-Founder sender. Deadpool sends only while StarqBot cannot, and
 between them every Founder-directed record reaches Telegram once: no duplicates, no losses.
 
-## What is wrong with the relay today
+## What the live relay did until 21:20 PKT
 
-| Property | Today (`room-relay.py`, cron `room-relay-backup`) | Needed |
+The sender is Deadpool's profile relay, `~/.hermes/profiles/deadpool/scripts/room-relay.py`
+(cron job `d0b0dd8dd799`), which posts through the Telegram Bot API from Deadpool's own bot. It
+has a mode file, `~/.hermes/profiles/deadpool/comms/relay-config.json`, now `{"mode": "off"}`.
+
+| Property | Live relay in mode `full` | Needed |
 |---|---|---|
 | When it sends | every minute, always | only when StarqBot is unhealthy |
 | What it sends | every Room record | exactly what StarqBot would send |
-| Checkpoint | advances when the script prints, before delivery is known | advances only after confirmed delivery |
+| Checkpoint | advances only after Telegram returns ok (already correct) | advances only after confirmed delivery, recorded in the shared ledger |
 | Knowledge of StarqBot | none | reads StarqBot's health and delivery state |
 | Room read | parses `room.jsonl` directly | sanctioned reader with integrity checks |
 
@@ -96,7 +101,7 @@ When StarqBot resumes, it reads the ledger before sending and skips everything a
 | Sender dies between `intent` and result | Record is `ambiguous`; neither sender retries; reported in Room. One possible loss or one possible duplicate, decided by a person |
 | Ledger unreadable or lock unavailable | Both senders refuse to send and report it. Fail closed |
 | Room reader reports an unstable or failed snapshot | No send this run |
-| Deadpool's Telegram platform still unconfigured | Failover cannot work. This is the present state and is a precondition, below |
+| Relay mode is `off` (the present state) | Deadpool sends nothing. Failover needs a third mode, `failover`, set by Deadpool or the Founder |
 | Safety hold set on StarqBot | Deadpool does not send |
 | WSL cannot see the Windows state files | Gate cannot be evaluated; Deadpool does not send |
 
@@ -107,8 +112,8 @@ When StarqBot resumes, it reads the ledger before sending and skips everything a
 | Shared filter module, with the 4b fix | versioned repository, imported by both | Ops |
 | Ledger write and ledger check in StarqBot's send path | `starq-bot-gateway.mjs` — outside version control (#18871) | Ops, after the source has a versioned home |
 | Health status file | `gateway-supervisor.mjs` — same | Ops |
-| Failover sender script replacing `room-relay.py` | Deadpool's Hermes scripts | Deadpool's department, with Ops |
-| Telegram platform for Deadpool's cron delivery | Deadpool's Hermes configuration | Deadpool / Founder |
+| A `failover` mode in the profile `room-relay.py`: shared filter, health gate, ledger check and write | Deadpool's profile script and `relay-config.json` | Deadpool's department, with Ops. Deadpool has said it will not build failover itself (#19058) |
+| Telegram delivery | none needed: the profile relay already has its own bot credentials | — |
 
 ## Preconditions and gates
 
@@ -118,15 +123,16 @@ When StarqBot resumes, it reads the ledger before sending and skips everything a
 3. Tests: unit tests for the gate and ledger rules; a two-sender simulation with a fake
    Telegram client covering each failure case above.
 4. A planned StarqBot restart to activate the ledger. Founder approval.
-5. Deadpool's cron stays disabled for Telegram until 1 to 4 are done and a controlled failover
-   drill has passed: stop StarqBot deliberately, post one test record, confirm one copy, restart
-   StarqBot, confirm no second copy.
+5. The relay stays in mode `off` until 1 to 4 are done and a controlled failover drill has
+   passed: stop StarqBot deliberately, post one test record, confirm one copy, restart StarqBot,
+   confirm no second copy.
 
 ## Until then
 
-The current `room-relay-backup` job must not have its Telegram delivery re-enabled as it is.
-It would send every Room record to the Founder, duplicate StarqBot's deliveries, and still drop
-records whenever it fails.
+The relay stays in mode `off`; do not set it to `full`. In `full` it sent every Room record to the
+Founder in a second bot chat, duplicating StarqBot's deliveries (#19026 to #19052 arrived twice).
+The old job `b4d035545d41` is paused and must stay so: it shares the checkpoint file and drops
+records when it wins the race.
 
 ## Open questions for the Founder
 
@@ -134,4 +140,6 @@ records whenever it fails.
    2 hours).
 2. Whether failover messages should be full text or a short notice pointing to Room.
 3. Whether Deadpool's separate "Wade Wire" digest should reach Telegram at all, and if so by
-   which sender.
+   which sender. (Wade Wire no longer posts to Room; it reports to Telegram only [#19058].)
+4. Failover messages would come from Deadpool's bot, in a different chat from StarqBot's. Is
+   that acceptable for an outage, or must failover use StarqBot's bot and chat?

@@ -1,6 +1,7 @@
 # Founder delivery paths: StarqBot primary, Deadpool relay secondary (2026-11-11)
 
-Status: **OPEN — verified, three decisions pending.** Assignment
+Status: **OPEN — verified, three decisions pending. CORRECTED 2026-11-11 21:30 PKT:** my first audit of the
+Deadpool relay was wrong; see "Correction" below. Assignment
 `FOUNDER-STARQBOT-PRIMARY-DELIVERY-20261111` [#18971, ACK #18972]. Findings #18975, test evidence
 #18977. Read-only: no source, configuration, cursor, lease or process was changed; no restart;
 no replay.
@@ -10,9 +11,10 @@ no replay.
 StarqBot is the only path that can currently reach the Founder. Until the test below it had
 delivered nothing outbound on 2026-11-11: after the 15:50 PKT restart it processed more than
 120 Room records and suppressed all of them, including the consolidated handover the Founder
-had asked for. The Deadpool relay is an independent sender to the same Telegram chat, with no
-filter, and has been failing since 2026-11-05. So there are no competing duplicates today, but
-only because the second path is broken.
+had asked for. **Correction:** the Deadpool relay was not dead. A second, live relay job sent
+every Room record to the Founder through Deadpool's own bot, unfiltered, so the Founder received
+records twice from #19026 until Deadpool switched it off at 21:20 PKT. The "dead" job I audited
+was the other one. See "Correction".
 
 ## StarqBot
 
@@ -36,7 +38,38 @@ Founder-directed records suppressed today:
 | #18935, #18946 Founder decision requests | no `@mustarq` mention, so not ACTION_REQUIRED |
 | #18958 ERP floor handover | ACTION_REQUIRED to `mustarq`, but the action text begins "codex: …; mustarq: …" and only the first owner is read. **Filter defect** |
 
-## Deadpool relay
+## Correction (Deadpool, Room #19058; verified read-only by the Ops seat)
+
+My audit read only the default Hermes profile's cron jobs and drew the wrong conclusion.
+
+- **Two** Hermes cron jobs were named `room-relay-backup` and shared one checkpoint file.
+- Job `b4d035545d41` (default profile, `~/.hermes/scripts/room-relay.py`) is the one described
+  below. It was dead from 2026-11-05 and advanced its checkpoint without delivering. Deadpool
+  paused it at 16:19 PKT on 2026-11-11.
+- Job `d0b0dd8dd799` (deadpool profile, `~/.hermes/profiles/deadpool/scripts/room-relay.py`) was
+  **not audited by me**. It sends through the Telegram Bot API from Deadpool's own bot to the same
+  Founder chat, with no filter, and advances its checkpoint only after Telegram returns ok. Its
+  cron output reads "suppressed" because it prints nothing, so the delivery database showed no
+  delivery for it. This is why my "no delivered row" check proved nothing.
+- Whichever job fired first took each new record. Records taken by the dead job were dropped; the
+  others were delivered. So Deadpool was a **live, unfiltered, partial** sender.
+- After the dead job was paused, the live one delivered every Room record.
+- **Duplicates:** #19026 to #19052 reached the Founder twice — once from the StarqBot mirror,
+  once in the Deadpool bot chat. It stopped at 21:20 PKT, when Deadpool set the live relay to
+  mode `off` (`~/.hermes/profiles/deadpool/comms/relay-config.json`). In that mode it sends
+  nothing and its checkpoint follows the Room tail, so nothing replays if it is switched back.
+  I confirmed on the WSL host the profile script, the mode file reading `off` and the old job
+  paused. I did not read Deadpool's Telegram chat.
+- **Backfill range #18872 to #19025:** some of these reached the Founder through the Deadpool bot
+  chat and some were dropped. Nobody can list which: the relay kept no per-record log before
+  tonight. From #19052 it logs every send with the Telegram message id. Codex's backfill should
+  not assume the whole range is missing.
+- **Wrong in my earlier posts:** "Deadpool did not duplicate" (#18977) and "dead since 11-05"
+  (#18975) are retracted for the live job. Deadpool's own digest no longer posts to Room.
+- Separate, already known: Room records addressed to Deadpool do not wake its WSL Hermes pane,
+  because the dispatcher does not cover WSL. The relay copies such records to a local inbox file.
+
+## Deadpool relay (the dead job, as audited)
 
 WSL Hermes cron job `room-relay-backup` (`b4d035545d41`), every minute, script
 `~/.hermes/scripts/room-relay.py` (SHA-256 `02cd48ba…02bcb9`).
@@ -63,7 +96,9 @@ from Deadpool plus StarqBot's copy of each directed one.
   #18975. Afterwards the cursor was at #18976 with no pending or failed send, relay HEALTHY.
   #18975 therefore passed the filter and was sent without error. This is inferred from state:
   there is no explicit success line, and Telegram itself was not read.
-- Deadpool: no delivered row on 2026-11-11; latest rows all failed. It did not duplicate.
+- Deadpool: I reported "no delivered row; it did not duplicate". **Wrong** — see "Correction":
+  the live job was delivering through a second bot, and the Founder received #19026 to #19052
+  twice.
 - **Receipt is UNCONFIRMED.** The Founder ruled that receipt of #18975 stays unconfirmed until
   he verifies it explicitly, and that delivery is not to be inferred from cursor progress
   [#18981]. The lines above show gateway acceptance only.
@@ -83,4 +118,5 @@ re-enabled without them [#18983].
 | 4b | Gateway: read every owner in the action text, not only the first. Needs review, tests, version control for the source, and a planned restart | Founder / Codex |
 | 4c | Deadpool relay: keep it off Telegram, or make it failover-only — send only when StarqBot is unhealthy, same filter, checkpoint advanced only after delivery | Founder / Deadpool |
 
-Until 4c, the Deadpool relay is not a secondary path; it is a dead one.
+Until 4c, Deadpool's relay is neither a failover nor a competitor: it is **off by Deadpool's own
+switch since 21:20 PKT** and stays off until the Founder or Operations says otherwise [#19058].
