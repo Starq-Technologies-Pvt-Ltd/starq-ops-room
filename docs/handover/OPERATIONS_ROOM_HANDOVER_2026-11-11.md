@@ -1,7 +1,7 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18913. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18922. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
@@ -67,15 +67,32 @@ Do not resume without a new direction.
 5. Herdr session values are stale for `w3:p1` and `w1:p5`.
 6. Copilot, OpenCode, Devin, Goose and OMP have no dispatcher seat enrolment.
 7. No logon task was found to relaunch StarqBot after a reboot.
-8. Herdr completion notification: finding incomplete, because Room #18912 is truncated
-   (`docs/incidents/2026-11-11-herdr-completion-notification.md`).
+8. Herdr completion signal fails on XPS (`agent_prompt_stalled`, no `completion_seq` change) and
+   works on Fold 4 (`docs/incidents/2026-11-11-herdr-completion-notification.md`). Until XPS is
+   validated: no blind resend; inspect the pane, read the output, record in Room.
 9. A long Room body was cut off silently on posting (#18912). Read long posts back.
+
+## Chain of command and message tracking
+
+Founder → Codex → Floor or Department Lead → owned agents. Reports go up the same chain. Every
+message is tracked through delivered, working, ACK, done and evidence. Both are in
+`docs/operations/FACTORY_STARTUP_SOP.md` [#18915].
 
 ## Other hosts
 
-XPS: reachable two-way from Nitro; JARVIS heads General Engineering Support with six on-demand
-profiles; no GitHub access to StarqERP; no assignment accepted [#18912]. Fold 4 / FORGE, Deadpool
-and the secondary WSL Claude are not yet reported.
+- XPS: reachable two-way from Nitro; JARVIS heads General Engineering Support with six on-demand
+  profiles; no GitHub access to StarqERP; no assignment accepted [#18912].
+- Fold 4: FORGE reachable and ready, supplementary only, session `20261111_114008_dbda46` in
+  remote `w1:p2`. Five X-Men profiles are configured but not running; capacity unverified; shared
+  gateway on that host reported stopped [#18915].
+- Deadpool and the secondary WSL Claude are not yet reported.
+
+## Work in flight on the floors
+
+See "Owner actions in progress" in `docs/journal/2026-11-11.md`. In short: the ERP lead is
+recovered the WSL Claude scratch path and its read-only ERP-543 lanes are running [#18921, #18922]; the Hoadhaa lead holds new activation
+below 1.23 GiB free (NO-GO at 0.92 GiB, #18920) and may start only HOA-255 [#18917]. The Hoadhaa startup was Founder-driven;
+Codex oversees it and does not repeat the lead's activation.
 
 Detail for 1–3 and 6 is on the PR #3 branch under `docs/reviews/`.
 

@@ -1,49 +1,46 @@
-# Herdr completion notification, and a truncated Room report (2026-11-11)
+# Herdr completion signal fails on XPS, works on Fold 4 (2026-11-11)
 
-Status: **OPEN — INCOMPLETE RECORD.** The Room record that reports this incident is cut off
-before the finding. Recorded by the Operations Room Deputy. Room: #18912, #18913.
+Status: **OPEN** — XPS completion path defective or unverified. Recorded by the Operations Room
+Deputy from Room #18912 and #18915. The observations are Codex's; the Ops seat has not
+reproduced them and has not inspected or changed any Herdr configuration.
 
-## What Room contains
+## What was observed [#18915]
 
-Room #18912 (Codex, 15:02 PKT) ends with a "Herdr notification follow-up". The stored text is:
+| Host | Seat | Prompt result | Completion signal |
+|---|---|---|---|
+| Nitro | Codex UI | — | `notifications.enabled=true`, `finished=true`; `herdr config check` OK. Listed integrations (Hermes, Claude, Antigravity, Codex and others) report current |
+| Fold 4 | FORGE, `w1:p2` | accepted | **Worked.** `completion_seq` advanced 36 → 38 and the pane returned to idle |
+| XPS | JARVIS, `w1:p1` | `agent_prompt_stalled` | **Did not work.** JARVIS was visibly running and later completed; Herdr kept reporting idle and `completion_seq` did not change |
 
-> Herdr notification follow-up: local agent integrations report current, and this Codex UI now
-> has notifications.enabled=true and finished=true (herdr config check: OK). However the XPS
-> prompt
+## Finding
 
-The record stops there. The stored body is 2149 characters and ends mid-sentence.
+The XPS Hermes completion hook or state path is defective or unverified. The same interaction on
+Fold 4 produced a correct completion signal, so the fault is specific to the XPS path, not to
+Herdr prompting in general. Cause not established.
 
-## What is established
+**Do not claim universal completion notifications** until XPS is corrected and validated.
 
-- On the Nitro Codex UI, Herdr notifications are now enabled, including the finished
-  (completion) notification, and `herdr config check` passes. The wording "now has" implies this
-  was changed today; the earlier setting is not stated in Room.
-- The local agent integrations are reported as current.
-- Something about the XPS prompt did not behave as expected. What it was is **not in Room**.
+## Protocol in force meanwhile [#18915]
 
-## What is not established
+1. Submit through the Herdr agent surface.
+2. Wait for an observed working, blocked or settled state.
+3. On `agent_prompt_stalled`: inspect the live pane and process. **Do not resend.**
+4. Read the actual completion output and record the ACK and result in Room.
+5. For a pane-only message, pair it with an explicit read or wait and with Room evidence.
 
-- The actual completion-hook finding for the XPS prompt.
-- Whether the earlier notification setting caused a missed completion, and for which seat.
-- Whether the same configuration applies to the other Herdr UIs and hosts.
+This is written into `docs/operations/FACTORY_STARTUP_SOP.md`, "Message tracking".
 
-Nothing in this file was taken from pane text or reconstructed. The Ops seat did not inspect or
-change any Herdr configuration.
+## Second defect: a Room report was truncated
 
-## Second defect: the report itself was truncated
-
-A Room body was cut off on the way in, and the sender received no error. This is a
-communications defect in its own right: an assignment or finding can be silently shortened.
-Cause not investigated. Until it is, long posts should be read back from Room after sending.
-
-## Standing rule this touches
-
-A Herdr finished notification, like `agent_status: done`, is a transport signal. It is not a
-completion receipt. Completion is the seat's own Room record
-(`docs/operations/FACTORY_STARTUP_SOP.md`, "Known traps").
+Room #18912 first carried this finding and was stored cut off mid-sentence (2149 characters,
+ending "However the XPS prompt"). The sender got no error. Flagged in #18913; the full finding
+arrived in #18915 (2808 characters, complete). Cause of the truncation not investigated. Long
+posts should be read back from Room after sending.
 
 ## To close
 
-1. Codex reposts the missing tail of #18912 (requested in #18913).
-2. This file is completed from that record.
-3. Decision on whether the truncation needs its own investigation.
+| Action | Owner |
+|---|---|
+| Correct and validate the XPS Hermes completion hook; confirm `completion_seq` advances on a test prompt | Codex with JARVIS |
+| Decide whether the Room truncation needs its own investigation | Codex |
+| Update this file and the SOP trap when XPS is validated | Ops Deputy |

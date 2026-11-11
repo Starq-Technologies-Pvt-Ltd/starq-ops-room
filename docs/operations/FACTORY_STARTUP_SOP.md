@@ -17,7 +17,18 @@ and an authority below disagree, the authority wins and this file is corrected.
 | Canonical handles | `agent-comms/protocol/v1/identities.json` plus the live Room assignment |
 | Room-first coordination and metadata | Room directives #10664, #10665 |
 | Durable engineering activity | `projects/starqerp/docs/governance/DURABLE_ENGINEERING_ACTIVITY_STANDARD_2026-11-06.md` |
-| Current hierarchy | Room #18912 (Founder correction; supersedes #18905), #18903 (Ops Deputy) |
+| Current hierarchy | Room #18912 (Founder correction; supersedes #18905), #18915, #18903 (Ops Deputy) |
+
+## Chain of command
+
+**Founder → Codex → Floor or Department Lead → owned agents.**
+
+- Direction travels down this chain. A lead directs only the agents it owns.
+- Reports travel up it. An agent reports to its lead; a lead reports to Codex; Codex reports to
+  the Founder. Floor lead updates always go upward, not sideways.
+- Delegated execution never transfers Codex's accountability [#18912, #18915].
+- Every assignment has exactly one owner.
+- Merge and release authority stays with the Founder.
 
 ## Hierarchy at startup (as of Room #18912)
 
@@ -29,7 +40,7 @@ and an authority below disagree, the authority wins and this file is corrected.
 | Hoadhaa Engineering Floor Lead | Antigravity (Hoadhaa) | Nitro Windows `w2:p1` | Codex |
 | Operations Deputy / Communications Engineering Lead | Claude (Ops) | Nitro Windows `w3:p1` | Codex |
 | Head of General Engineering Support | JARVIS | XPS `w1:p1` | coordinated by Codex |
-| Head of X-Men Department | FORGE | Fold 4 | coordinated by Codex |
+| Head of X-Men Department | FORGE | Fold 4 `w1:p2` | coordinated by Codex |
 | Independent departments | Deadpool, Vision | — | organisation-wide coordination |
 
 Rules stated with the hierarchy [#18912]:
@@ -58,6 +69,9 @@ an idle prompt, or Herdr's `agent_status` is not readiness.
    reads the Room tail.
 3. **Floor leads.** Codex posts each floor lead's assignment in Room, then sends a pane pointer to
    that sequence. Each lead completes the startup gate under its own identity.
+   A floor the Founder starts personally is Founder-driven: Codex oversees and coordinates it but
+   does not repeat the lead's activation. On 2026-11-11 this was the Hoadhaa floor [#18912,
+   #18915, #18917].
 4. **Floor seats.** Each floor lead brings up its own seats one at a time, verifying the real
    process and session in each pane and watching host memory between starts. Each seat posts its
    own readiness record. Existing unresolved prompts or assignments in a seat are preserved, not
@@ -83,6 +97,39 @@ an idle prompt, or Herdr's `agent_status` is not readiness.
 Run once per new session and again after a material continuity break. Later assignments in the
 same session need only a concise task ACK.
 
+## Message tracking (every message, every workspace)
+
+Mandatory from Room #18915. The sender of an assignment or pointer tracks it through five states
+and does not treat an earlier state as a later one.
+
+| State | What proves it |
+|---|---|
+| Delivered | The Herdr agent surface accepted the prompt, or the Room record is stored and reads back complete |
+| Working | The seat is observed working or blocked: Herdr state, or the live pane and process |
+| ACK | The seat's own task ACK in Room, under its own identity |
+| Done | The seat's own result record in Room |
+| Evidence | The commit, PR, file path or output that the result record names, checked by the receiver |
+
+Procedure:
+
+1. Put the full assignment in Room. Send only a pointer to the pane, through the Herdr agent
+   surface.
+2. Wait for an observed working, blocked or settled state.
+3. Read the actual completion output, then confirm the ACK and result are in Room.
+4. For a pane-only message, pair it with an explicit read or wait and with Room evidence.
+
+### Stalled-hook fallback
+
+Completion signals are not uniform across hosts (see
+`docs/incidents/2026-11-11-herdr-completion-notification.md`). When the prompt call returns
+`agent_prompt_stalled`, or no completion signal arrives:
+
+1. **Do not resend.** The prompt may have been delivered and may be running.
+2. Inspect the live pane and process for that seat.
+3. If it is working, wait and read its output when it settles.
+4. Record what was observed in Room. Only an inspected, confirmed non-delivery justifies a
+   second send, and that send says it is a retry.
+
 ## Known traps
 
 - **Shared handles.** Several seats post as `claude`. Address a seat by pane (`w3:p1`), not by the
@@ -96,8 +143,10 @@ same session need only a concise task ACK.
 - **Who started a seat.** Record it. A seat the Founder started personally is not started again by
   a lead; the lead monitors its reports, dependencies and blockers (Room #18912, Hoadhaa seats).
 - **Completion signals.** Herdr's finished notification and `agent_status: done` are not a
-  completion receipt. Completion is the seat's own Room record. See
-  `docs/incidents/2026-11-11-herdr-completion-notification.md`.
+  completion receipt. Completion is the seat's own Room record. The signal worked on Fold 4 and
+  failed on XPS on 2026-11-11; do not assume it anywhere until that host has been validated.
+- **Configured is not running.** A persistent profile that exists on a host is not capacity until
+  it has been activated and has answered (X-Men profiles, Room #18915).
 - **Truncated Room posts.** A long body can be cut off on the way into Room (Room #18912). After
   posting, read the stored record back and check that it ends where it should.
 - **After a host reboot** nothing restarts by itself unless its logon task exists. Check step 1
