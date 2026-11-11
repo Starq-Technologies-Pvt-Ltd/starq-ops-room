@@ -157,6 +157,18 @@ test('@mustarq is never emitted as a Herdr wake target', async () => {
   } finally { fs.rmSync(p.dir,{recursive:true,force:true}); }
 });
 
+test('explicit bare shared Claude address is held instead of waking multiple sessions', async () => {
+  const parsed = parseExplicitAddress('/to @claude\nPlease review the routing change.');
+  assert.equal(parsed.ok, true);
+  const p = publish({ routingDocument:parsed.routing, body:parsed.body, actionRequired:parsed.actionRequired });
+  try {
+    assert.equal(p.result.status, 0, p.result.stderr);
+    const r = await routePublished(p.record, candidateTable);
+    assert.deepEqual(r.wakes, []);
+    assert.ok(Object.values(r.state.holds).some((h)=>h.reason==='NO_DEFAULT_SEAT'));
+  } finally { fs.rmSync(p.dir,{recursive:true,force:true}); }
+});
+
 test('send CLI explicit multi-recipient plans each exact seat once', async () => {
   const p = publish({ targets:[{handle:'codex'},{handle:'claude',role:'erp-floor-lead'},{handle:'antigravity',role:'hoadhaa-lead'}] });
   try {

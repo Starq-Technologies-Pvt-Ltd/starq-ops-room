@@ -163,8 +163,9 @@ in `docs/protocol/ROUTING_HARDENING_PHASE1.md`.
 
 The parser is exercised through the existing sender CLI and dispatcher in isolated integration
 tests: explicit multi-recipient headers wake only the validated target seats; quoted body mentions
-and `@mustarq`-only notices wake none. Focused verification passed 14/14 and the full suite passed
-112/112 with `COMMS_IDENTITIES_PATH=tests/fixtures/identities.json`.
+and `@mustarq`-only notices wake none; an unqualified shared `@claude` is held rather than fanned
+out. Focused verification passed 14/14 and the full suite passed 113/113 with
+`COMMS_IDENTITIES_PATH=tests/fixtures/identities.json`.
 
 This does **not** wire the parser into the live Telegram gateway. The gateway remains outside this
 repository under `D:\StarqTech\agent-comms`; its current `telegramInboundStructuredMetadata()` and
