@@ -88,3 +88,10 @@ test('default seat: an unqualified shared handle goes to the configured seat onl
   const off = applyDefaultSeats(mk(), sessions, { claude: 'w9:p9' });
   assert.equal(off.wake.length, 0); assert.equal(off.ambiguous.length, 1);
 });
+
+test('default seat is not applied when the sender shares the handle', async () => {
+  const { applyDefaultSeats } = await import('../scripts/room-dispatcher.mjs');
+  const mk = () => ({ wake: [], unreachable: [], ambiguous: [{ handle: 'claude', candidates: [{ pane: 'w1:p5', sessionId: 'a' }, { pane: 'w3:p1', sessionId: 'b' }] }] });
+  assert.equal(applyDefaultSeats(mk(), [CLAUDE_ERP, CLAUDE_OPS], { claude: 'w3:p1' }, { event: { senderHandle: 'claude' } }).wake.length, 0);
+  assert.equal(applyDefaultSeats(mk(), [CLAUDE_ERP, CLAUDE_OPS], { claude: 'w3:p1' }, { event: { senderHandle: 'mustarq' } }).wake.length, 1);
+});

@@ -1,14 +1,15 @@
 --- a/scripts/room-dispatcher.mjs
 +++ b/scripts/room-dispatcher.mjs
-@@ -48,6 +48,7 @@
+@@ -48,6 +48,8 @@
  import { fileURLToPath, pathToFileURL } from 'node:url';
  import { execFileSync, execFile } from 'node:child_process';
  import { selectWakeTargets, DEFAULT_HERDR_AGENT_MAP } from '../protocol/v1/sessionRouting.mjs';
 +import { isOutstandingAction, isActionAddressedTo } from '../protocol/v1/authorityPolicy.mjs';
++import { resolveIdentity } from '../protocol/v1/identityProvider.mjs';
  
  const __dir = dirname(fileURLToPath(import.meta.url));
  // State dir: per-machine runtime state under the deploy root (agent-comms/state).
-@@ -65,6 +66,49 @@
+@@ -65,6 +67,118 @@
  const DRY_RUN = process.argv.includes('--dry-run');
  const POLL_MS = Number(process.env.COMMS_DISPATCH_POLL_MS || 2000);
  const DELIVERED_KEEP = 2000;
@@ -24,10 +25,12 @@
 +export function loadDefaultSeats(file = join(STATE_DIR, 'dispatch-default-seats.json')) {
 +  try { const j = JSON.parse(readFileSync(file, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; }
 +}
-+export function applyDefaultSeats(routing, sessions, defaults, map = DEFAULT_HERDR_AGENT_MAP) {
++export function applyDefaultSeats(routing, sessions, defaults, record = null) {
 +  const still = [];
++  const sender = String(record?.event?.senderHandle || "").replace(/^@/, "").toLowerCase();
 +  for (const a of routing.ambiguous) {
-+    const pane = defaults?.[a.handle];
++    // A seat tagging its own shared handle means another seat: never default it back to itself.
++    const pane = a.handle === sender ? null : defaults?.[a.handle];
 +    const hit = pane && a.candidates.some((c) => c.pane === pane)
 +      ? sessions.find((s) => s.pane_id === pane || s.pane === pane) : null;
 +    if (!hit) { still.push(a); continue; }
@@ -35,6 +38,72 @@
 +    routing.wake.push({ handle: a.handle, pane, sessionId: cand.sessionId, host: cand.host, _srcIndex: hit._srcIndex ?? 0 });
 +  }
 +  routing.ambiguous = still;
++  return routing;
++}
++
++/**
++ * Who a record is actually addressed to (Founder decision #19034: no false wake-ups from
++ * quoted handles). The broker audience contains every @handle anywhere in the body, so a
++ * handle that is merely quoted or forwarded used to be woken. Precedence:
++ *   1. owner prefixes in the action-required text ("codex: ...; mustarq/claude: ...")
++ *   2. @handles in the action-required text
++ *   3. @handles in the opening line of the body and in leading To:/Cc: lines
++ *   4. none of the above -> null: no restriction (legacy behaviour, never drops a message)
++ * Returns a Set of lower-case handles, or null.
++ */
++export function addressedHandles(record) {
++  const md = record?.event?.metadata || {};
++  const action = String(md.actionRequired ?? '');
++  const out = new Set();
++  const known = (h) => h === 'founder' || Boolean(resolveIdentity(h));
++  const add = (list) => { for (const raw of String(list).split(/[/,]/)) { const h = raw.trim().replace(/^@/, '').replace(/#.*$/, '').toLowerCase(); if (/^[a-z0-9_-]+$/.test(h) && known(h)) out.add(h); } };
++  const first = action.match(/^\s*(@?[A-Za-z0-9_-]+(?:#[\w:.-]+)?(?:\s*[\/,]\s*@?[A-Za-z0-9_-]+(?:#[\w:.-]+)?)*)\s*:(?!\/\/)/);
++  if (first) add(first[1]);
++  if (out.size) {
++    for (const m of action.matchAll(/(?:[.;]\s+|\n\s*)(@?[A-Za-z0-9_-]+(?:#[\w:.-]+)?(?:\s*[\/,]\s*@?[A-Za-z0-9_-]+(?:#[\w:.-]+)?)*)\s*:(?!\/\/)/g)) add(m[1]);
++    return out;
++  }
++  for (const m of action.matchAll(/@([a-z0-9_-]+)/gi)) out.add(m[1].toLowerCase());
++  if (out.size) return out;
++  const lines = String(record?.event?.body ?? '').split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 8);
++  lines.forEach((line, i) => { if (i === 0 || /^(to|cc)\s*:/i.test(line)) for (const m of line.matchAll(/@([a-z0-9_-]+)/gi)) out.add(m[1].toLowerCase()); });
++  return out.size ? out : null;
++}
++
++/**
++ * The routing core takes every @handle in the action text as an owner and ignores owners
++ * written without "@" once any @handle is present. Give it a copy of the record in which
++ * exactly the addressed handles carry "@": quoted handles lose it, addressed ones gain it.
++ * Seat qualifiers (@handle#seat) of addressed handles are preserved. No addressee
++ * recognised -> the record is returned unchanged.
++ */
++export function normalizeForRouting(record) {
++  if (!isOutstandingAction(record, null)) return record;
++  const addressed = addressedHandles(record);
++  if (!addressed) return record;
++  const md = record.event.metadata || {};
++  const text = String(md.actionRequired ?? '');
++  const present = new Set();
++  const stripped = text.replace(/@([a-z0-9_-]+)/gi, (whole, h) => {
++    if (addressed.has(h.toLowerCase())) { present.add(h.toLowerCase()); return whole; }
++    return h;
++  });
++  const missing = [...addressed].filter((h) => !present.has(h)).map((h) => '@' + h);
++  const actionRequired = missing.length ? missing.join(' ') + ' | ' + stripped : stripped;
++  return { ...record, event: { ...record.event, metadata: { ...md, actionRequired } } };
++}
++
++/** Drop routing outcomes for handles that are quoted, not addressed, and for the sender's own pane. */
++export function restrictToAddressed(routing, record) {
++  const addressed = addressedHandles(record);
++  const md = record?.event?.metadata || {};
++  const selfPane = md.senderPane ? String(md.senderPane).toLowerCase() : null;
++  const selfHost = md.senderHost ? String(md.senderHost).toLowerCase() : null;
++  const isSelf = (s) => selfPane && String(s.pane || '').toLowerCase() === selfPane && (!selfHost || !s.host || String(s.host).toLowerCase() === selfHost);
++  const keep = (h) => !addressed || addressed.has(String(h).toLowerCase());
++  routing.wake = routing.wake.filter((s) => keep(s.handle) && !isSelf(s));
++  routing.ambiguous = routing.ambiguous.filter((a) => keep(a.handle));
++  routing.unreachable = routing.unreachable.filter((u) => keep(u.handle));
 +  return routing;
 +}
 +
@@ -51,14 +120,15 @@
 +  for (const raw of aud) {
 +    const h = String(raw).replace(/^@/, '').toLowerCase();
 +    if (!h || NON_SEAT_HANDLES.has(h) || h === sender || seen.has(h) || out.includes(h)) continue;
-+    if (isActionAddressedTo(record, h)) out.push(h);
++    const addressed = addressedHandles(record);
++    if (addressed ? addressed.has(h) : isActionAddressedTo(record, h)) out.push(h);
 +  }
 +  return out;
 +}
  
  function log(line) {
    const msg = `[${new Date().toISOString()}] ${line}`;
-@@ -168,9 +212,10 @@
+@@ -168,9 +282,10 @@
      const s = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
      s.delivered = Array.isArray(s.delivered) ? s.delivered : [];
      s.pending = Array.isArray(s.pending) ? s.pending : [];
@@ -70,7 +140,7 @@
  }
  function saveState(s) {
    try {
-@@ -212,12 +257,41 @@
+@@ -212,12 +327,41 @@
    state.pending = stillPending;
  
    let maxSeq = state.lastSeq;
@@ -84,7 +154,7 @@
 +  for (const h of state.held) {
 +    const rec = bySeq.get(h.seq);
 +    if (!rec || now - h.firstHeldAt > HOLD_TTL_MS) { summary.expired++; log(`HOLD EXPIRED seq=${h.seq} waiting=${(h.waiting || []).join('|') || '-'} ambiguous=${(h.ambiguous || []).join('|') || '-'}`); continue; }
-+    const routing = selectWakeTargets(rec, sessions, { map: AGENT_MAP, sessionExtra });
++    const routing = restrictToAddressed(selectWakeTargets(normalizeForRouting(rec), sessions, { map: AGENT_MAP, sessionExtra }), rec);
 +    const stillUnreachable = new Set(routing.unreachable.map((u) => u.handle));
 +    const nowAmbiguous = new Set(routing.ambiguous.map((a) => a.handle));
 +    const waiting = [];
@@ -110,11 +180,11 @@
      if (!Number.isInteger(seq)) continue;      // skip legacy/non-broker records
      if (seq <= state.lastSeq) continue;
 -    const routing = selectWakeTargets(rec, sessions, { map: AGENT_MAP, sessionExtra });
-+    const routing = applyDefaultSeats(selectWakeTargets(rec, sessions, { map: AGENT_MAP, sessionExtra }), sessions, loadDefaultSeats());
++    const routing = applyDefaultSeats(restrictToAddressed(selectWakeTargets(normalizeForRouting(rec), sessions, { map: AGENT_MAP, sessionExtra }), rec), sessions, loadDefaultSeats(), rec);
      for (const target of routing.wake) {
        const key = `${seq}:${target.sessionId || target.pane}`;
        if (state.delivered.includes(key) || state.pending.some((p) => p.key === key)) continue;
-@@ -231,6 +305,13 @@
+@@ -231,6 +375,13 @@
      for (const a of routing.ambiguous) { summary.held++; log(`HELD seq=${seq} handle=${a.handle} project=${a.project || '-'} candidates=${a.candidates.map((c) => c.pane).join('|')} (ambiguous — reported, not delivered)`); }
      for (const u of routing.unreachable) { summary.unreachable++; log(`UNREACHABLE seq=${seq} handle=${u.handle} target=${u.token} (explicit target not live)`); }
      if (routing.unroutable.length) { summary.unroutable += routing.unroutable.length; }

@@ -57,10 +57,17 @@ The dispatcher reads new Room records and wakes only the seat a record is addres
 - **Seat offline, or an explicit seat (`@claude#w3:p1`) not live: the record is retained** in
   the dispatcher state and delivered when that seat appears, for up to 24 hours.
 - **Shared handle with several live seats and no qualifier (`@claude`, `@antigravity`): held,
-  never guessed.** It is not delivered automatically, even if seats later leave. To make an
-  unqualified handle reach one seat, the Founder can name a default in
-  `state\room-dispatch-codex-live\dispatch-default-seats.json`, for example
-  `{ "claude": "w1:p5" }`. The file does not exist today.
+  never guessed** — Founder decision, Room #19034: no arbitrary defaults. It is not delivered
+  automatically, even if seats later leave. Address the exact seat: `@claude#w1:p5`,
+  `@claude#w3:p1`, `@antigravity#w2:p1`. (The code can read a default-seat file; none exists
+  and none should be created without the Founder.)
+- **Only addressed handles are woken** (Room #19034). A handle that is merely quoted in a
+  message no longer wakes its seat. The addressees are, in order: owner prefixes in the
+  action-required text (`codex: …; mustarq/claude: …`), else `@handles` in the action text,
+  else `@handles` in the opening line of the body and in leading `To:`/`Cc:` lines. If none
+  of these names anyone, every handle in the audience is woken as before, so nothing is dropped.
+- **A seat is never woken by its own post.** `send.mjs` stamps the sender's Herdr pane on each
+  record and the dispatcher excludes that pane.
 - After a dispatcher restart it continues from its checkpoint, so records committed while it was
   down are routed then. Delivery is de-duplicated per record and seat.
 - The dispatcher never starts an agent or creates a session. A seat that is not running is
@@ -86,7 +93,7 @@ Healthy: three "running" lines; lock HELD by a live pid; safety hold NONE; relay
 | Safety hold active | A person set it. Do not release it without that person or the Founder |
 | Mirror stopped at one record | `--status` shows the failure. Restart the gateway (kill the three gateway processes; the keeper restarts them). If the record is marked ambiguous, use `--recover-batch 1 --confirm-duplicate` under the standing duplicate authorisation |
 | A tag reached nobody | Search `state\room-dispatch-codex-live\room-dispatch.log` for the sequence: `RETAINED` means the seat is offline; `HELD` means the handle is ambiguous and must be re-sent with a seat qualifier |
-| Roll back | Backups sit beside the live files with the suffixes `.pre-mirror-20261111`, `.pre-retain-20261111`, `.pre-autostart-20261111`. Copy one back and restart that process. `Unregister-ScheduledTask StarqTech-StarqBot-Logon` removes autostart |
+| Roll back | Backups sit beside the live files with the suffixes `.pre-mirror-20261111`, `.pre-retain-20261111`, `.pre-autostart-20261111`, `.pre-senderpane-20261111`. Copy one back and restart that process. `Unregister-ScheduledTask StarqTech-StarqBot-Logon` removes autostart |
 
 Never: reset a cursor, replay the backlog as routine, release a lock whose pid is alive, or take
 over a live identity lease.
@@ -97,7 +104,11 @@ over a live identity lease.
 |---|---|---|
 | Gateway mirror unit tests (new) | 6 pass | `tests\starq-bot-gateway-mirror.test.mjs` |
 | Existing gateway suites | unchanged from the pre-change baseline: 6 failures that also fail on the original file | batch-recovery 5, delivery 1 |
-| Dispatcher tests | 8 pass (5 new) | `tests\room-dispatcher-retention.test.mjs`, `tests\room-dispatcher.test.mjs` |
+| Dispatcher tests | 16 pass (13 new) | `tests\room-dispatcher-retention.test.mjs`, `tests\room-dispatcher-addressing.test.mjs`, `tests\room-dispatcher.test.mjs` |
+| Dispatcher killed, no manual action | restarted by the task's own 5-minute timer after 4 minutes | killed 20:53:13, started 20:57:12 PKT |
+| Quoted handles | only the addressee woken | Room #19041, dispatcher log 16:01:31Z |
+| Seat addressing its own pane | not woken | Room #19042 |
+| Founder's Telegram receipt | confirmed by the Founder | Room #19034 |
 | StarqBot crash with stale lock → restart by the scheduled task | recovered in about 30 s | keeper log 20:45:50 PKT |
 | Record committed while StarqBot was down | sent after restart | Room #19026, gateway log 15:46:23Z |
 | Mirror of ordinary records | #19026–#19030 each logged as delivered | gateway log |
@@ -105,16 +116,23 @@ over a live identity lease.
 | Codex acknowledgement | ACK 29 s after the tag | Room #19030 |
 | Offline registered seat | retained, nobody else woken | Room #19029, `RETAINED seq=19029` |
 
-Not tested: an actual reboot of Nitro; receipt on the Founder's phone (the log shows Telegram
-accepted the messages, which is not receipt).
+Not tested: an actual reboot of Nitro. It would end every agent session on the floor and needs
+someone at the machine to sign in, so it is the Founder's to schedule.
 
 ## Known defects still open (seen live on 2026-11-11)
 
-1. **A handle quoted in a message body is routed as a recipient.** Room #19031 named two seats
-   as examples and the dispatcher woke one of them [#19032]. Until the strict-address work of
-   PR #3 is live, do not write `@handle` in a body unless that agent should be woken.
-2. **A seat can be woken by its own post** when Herdr lists its pane under an old session ID,
-   because self-exclusion compares session IDs. Seen for `w3:p1`.
-3. Unqualified shared handles are held, not delivered (see "Tag routing").
+1. Fixed 2026-11-11 21:01 PKT: a quoted handle woke its seat [#19031, #19032]. Verified live
+   with #19041 (two quoted handles, only the addressee woken) and by replay over 1,541 real
+   records: 119 false wake-ups removed, 2 previously dropped addressees restored, no other
+   change. Still true: the broker lists a quoted handle in a record's audience, and a quoted
+   handle in the **opening line** is treated as addressed.
+2. Fixed 2026-11-11 21:03 PKT: a seat woken by its own post. Verified live with #19042.
+3. Unqualified shared handles are held, by Founder decision (see "Tag routing").
+5. WSL and remote seats are outside the dispatcher. Polling WSL from Windows would start the
+   WSL VM whenever it is stopped, and that delivery path was never verified; not enabled.
+6. Nitro does not sign in by itself (auto-logon is off) and the Herdr app is not started
+   automatically. After a reboot someone signs in and opens Herdr; StarqBot and the Cloudroom
+   app start at sign-in, the dispatcher starts as soon as Herdr is up, and records committed in
+   between are mirrored and routed from the saved checkpoints.
 4. Records #18872 to #19025 were committed while the mirror was filtering and were not sent to
    Telegram. No backfill was run by the Ops seat; Codex holds that lane [#19025, #19027].

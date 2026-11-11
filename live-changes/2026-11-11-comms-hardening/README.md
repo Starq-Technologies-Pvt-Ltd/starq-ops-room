@@ -7,7 +7,8 @@ independently reviewed. Operation and rollback: `docs/operations/COMMS_RECOVERY_
 | File here | Live file | Change |
 |---|---|---|
 | `starq-bot-gateway.mjs.patch` | `scripts/starq-bot-gateway.mjs` | optional full mirror (`mirrorAll`), Telegram 429 back-off, a log line per delivered record |
-| `room-dispatcher.mjs.patch` | `scripts/room-dispatcher.mjs` | retain records for offline seats; optional default seat for a shared handle |
+| `room-dispatcher.mjs.patch` | `scripts/room-dispatcher.mjs` | retain records for offline seats; wake only addressed handles; never wake the sender's own pane; default-seat reader (no file exists, by Founder decision #19034) |
+| `send.mjs.patch` | `scripts/send.mjs` | stamp `senderPane` / `senderHost` from `HERDR_PANE_ID` |
 | `start-starq-bot-if-needed.ps1.patch` | `scripts/start-starq-bot-if-needed.ps1` | clear a dead-pid stale lock when no gateway process exists |
 | `keep-starq-comms.ps1` | `scripts/keep-starq-comms.ps1` | new: idempotent keeper run by the scheduled task |
 | `*.test.mjs` | `tests/` | new tests |
@@ -15,7 +16,8 @@ independently reviewed. Operation and rollback: `docs/operations/COMMS_RECOVERY_
 SHA-256 (first 16) after / before:
 
 - `starq-bot-gateway.mjs` `40df49bc7676c73a` / `1780cc0aeadeff09`
-- `room-dispatcher.mjs` `d6910994648b2577` / `a01aceb218458b32`
+- `room-dispatcher.mjs` `71e6ede337c4abfa` / `a01aceb218458b32`
+- `send.mjs` `8185191beff01c4f` (backup `send.pre-senderpane-20261111.mjs`)
 - `start-starq-bot-if-needed.ps1` `d80aad07e3ea7455` / `98f050a38a6bdba4`
 - `keep-starq-comms.ps1` `b95fe71f36ef89f1` (new)
 
