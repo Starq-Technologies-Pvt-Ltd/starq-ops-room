@@ -107,3 +107,14 @@ over a live identity lease.
 
 Not tested: an actual reboot of Nitro; receipt on the Founder's phone (the log shows Telegram
 accepted the messages, which is not receipt).
+
+## Known defects still open (seen live on 2026-11-11)
+
+1. **A handle quoted in a message body is routed as a recipient.** Room #19031 named two seats
+   as examples and the dispatcher woke one of them [#19032]. Until the strict-address work of
+   PR #3 is live, do not write `@handle` in a body unless that agent should be woken.
+2. **A seat can be woken by its own post** when Herdr lists its pane under an old session ID,
+   because self-exclusion compares session IDs. Seen for `w3:p1`.
+3. Unqualified shared handles are held, not delivered (see "Tag routing").
+4. Records #18872 to #19025 were committed while the mirror was filtering and were not sent to
+   Telegram. No backfill was run by the Ops seat; Codex holds that lane [#19025, #19027].
