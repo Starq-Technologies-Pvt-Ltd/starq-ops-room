@@ -37,7 +37,81 @@
  function loadEnv(file) {
    const out = {};
    if (!existsSync(file)) return out;
-@@ -1425,7 +1455,7 @@
+@@ -1229,7 +1259,73 @@
+   return [...text].map((ch) => (ch >= 'A' && ch <= 'Z' ? String.fromCodePoint(0x1D5D4 + ch.charCodeAt(0) - 65) : ch)).join('');
+ }
+ 
++// Founder #19039: readable phone layout. Selected by STARQ_BOT_LAYOUT=mobile|classic or
++// {"layout":"mobile"} in state/starq-bot-config.json. Default stays "classic" (unchanged).
++export function telegramLayout(env = process.env, configPath = MIRROR_CONFIG_FILE) {
++  const flag = String(env?.STARQ_BOT_LAYOUT ?? '').trim().toLowerCase();
++  if (flag === 'mobile' || flag === 'classic') return flag;
++  try { return JSON.parse(readFileSync(configPath, 'utf8')).layout === 'mobile' ? 'mobile' : 'classic'; }
++  catch { return 'classic'; }
++}
++
++function unicodeBold(text) {
++  return [...text].map((ch) => {
++    const c = ch.codePointAt(0);
++    if (c >= 65 && c <= 90) return String.fromCodePoint(0x1D5D4 + c - 65);
++    if (c >= 97 && c <= 122) return String.fromCodePoint(0x1D5EE + c - 97);
++    if (c >= 48 && c <= 57) return String.fromCodePoint(0x1D7EC + c - 48);
++    return ch;
++  }).join('');
++}
++
++function pktStamp(iso) {
++  const ms = Date.parse(iso ?? '');
++  if (!Number.isFinite(ms)) return null;
++  const d = new Date(ms + 5 * 3600 * 1000); // PKT = UTC+5, no DST
++  const mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()];
++  const hh = String(d.getUTCHours()).padStart(2, '0');
++  const mm = String(d.getUTCMinutes()).padStart(2, '0');
++  return `${d.getUTCDate()} ${mon}, ${hh}:${mm} PKT`;
++}
++
++/**
++ * Mobile layout. Envelope values come only from the authenticated event and the broker
++ * decision, exactly as in the classic layout; the body is passed through verbatim.
++ */
++export function formatTelegramOutboundMobile(rec) {
++  const sender = rec?.event?.senderHandle || rec?.from || 'unknown';
++  const fromHandle = sender.startsWith('@') ? sender : `@${sender}`;
++  const rawBody = unescapeLiteralNewlinesForTelegram(String(rec?.event?.body ?? rec?.body ?? ''));
++  const metadata = rec?.event?.metadata && typeof rec.event.metadata === 'object' ? rec.event.metadata : {};
++  const founder = isFounderNotificationEligible(rec);
++  const deliveryType = String(rec?.evaluatedDeliveryType || 'UNKNOWN');
++  const kind = deliveryType === 'ACTION_REQUIRED' ? 'Action required' : (deliveryType === 'CC_CONTEXT' ? 'FYI' : deliveryType);
++  const toVal = outboundToFromBroker(rec);
++  const when = pktStamp(rec?.event?.createdAt ?? rec?.receivedAt);
++  const subject = String(metadata.subject ?? '').replace(/\s+/g, ' ').trim();
++  const action = metadata.actionRequired == null ? '' : String(metadata.actionRequired).trim();
++  const actionIsNone = action === '' || /^(none|unknown)\b/i.test(action);
++  const status = metadata.status == null ? '' : String(metadata.status).trim();
++  const refs = metadata.references ?? (rec?.event?.replyTo ? [`room-event:${rec.event.replyTo}`] : null);
++  const refText = Array.isArray(refs) ? refs.map(String).join(', ') : (refs == null ? '' : String(refs));
++
++  const out = [];
++  if (founder) out.push(`🚨 ${unicodeBold('ACTION FOR YOU')}`, '━━━━━━━━━━━━━━━━━━━━');
++  out.push(subject ? unicodeBold(subject) : unicodeBold('(no subject)'));
++  out.push(`#${rec?.brokerSequence ?? '?'} · ${fromHandle}${toVal ? ` → ${toVal}` : ''}`);
++  out.push([when, kind].filter(Boolean).join(' · '));
++  if (!actionIsNone) {
++    out.push('');
++    out.push(founder ? `👉 ${unicodeBold('Your action:')} ${action}` : `▸ Action: ${action}`);
++  }
++  if (rawBody.trim() !== '') { out.push('', '━━━━━━━━━━', '', rawBody.replace(/\s+$/, '')); }
++  const footer = [status && `Status: ${status}`, refText && refText !== 'NONE' && `Ref: ${refText}`, metadata.blocker != null && `Blocker: ${metadata.blocker}`, metadata.nextStep != null && `Next: ${metadata.nextStep}`].filter(Boolean);
++  if (footer.length) out.push('', '──────────', ...footer);
++  return out.join('\n');
++}
++
+ export function formatTelegramOutbound(rec) {
++  if (telegramLayout() === 'mobile') return formatTelegramOutboundMobile(rec);
+   const sender = rec?.event?.senderHandle || rec?.from || 'unknown';
+   const fromHandle = sender.startsWith('@') ? sender : `@${sender}`;
+   const rawBody = unescapeLiteralNewlinesForTelegram(String(rec?.event?.body ?? rec?.body ?? ''));
+@@ -1425,7 +1521,7 @@
    // requires broker ACTION_REQUIRED routing to the Founder plus explicit
    // actionRequired metadata. Never skip a record whose chunks are already
    // partially in flight: resume that exact delivery first.
@@ -46,7 +120,7 @@
      const pending = state?.outboundProgress;
      if (pending && pending.sequence !== seq) {
        const reason = `refusing suppression: partial delivery pending for #${pending.sequence} while current record is #${seq}`;
-@@ -1601,6 +1631,7 @@
+@@ -1601,6 +1697,7 @@
      return { delivered: false, failed: true, reason: error.message };
    }
  
@@ -54,7 +128,7 @@
    return {
      delivered: true,
      failed: false,
-@@ -2025,7 +2056,11 @@
+@@ -2025,7 +2122,11 @@
      return await runGatewayTick(state, {
        allowedUserId,
        getUpdates: (params) => tgCall('getUpdates', params),

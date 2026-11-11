@@ -47,6 +47,15 @@ return to Founder-action-only delivery.
   threw) is not retried automatically, by design: it could duplicate.
 - Each delivered record writes a line in `logs\starq-bot-gateway.log`.
 
+**Layout (Founder #19039).** The gateway has two layouts. `classic` (default, in use) shows
+the full header block. `mobile` puts a bold subject first, then one line with sequence, sender
+and recipients, then PKT time and kind, a separated Founder action, and the body verbatim; empty
+metadata is left out. Switch with `"layout": "mobile"` in `statestarq-bot-config.json` and a
+gateway restart. Not switched on: that is a live cutover awaiting approval [#19043].
+
+When running the gateway test suites in the live tree, set `STARQ_BOT_MIRROR_ALL=0` and
+`STARQ_BOT_LAYOUT=classic`, because the live config file changes the defaults those suites expect.
+
 Deadpool's separate relay is not part of this and stays off Telegram.
 
 ## Tag routing
