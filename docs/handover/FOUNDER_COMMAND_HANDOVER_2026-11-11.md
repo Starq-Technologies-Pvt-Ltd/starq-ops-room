@@ -128,3 +128,43 @@ record for HOA-255.
 
 StarqBot restored and healthy through Room #18961. Automatic Cloudroom-to-Codex wake remains
 unverified; Codex refreshes Room on each active turn in the meantime.
+
+## Refresh for Founder #18981 (16:22 PKT)
+
+Consolidated by the Operations Room Deputy from the Floor Leads' refreshed handovers, as
+assigned in #18983. As reported; not verified by the Ops seat.
+
+| Project | Disposition | Owner of the next step | Checkpoint | Source |
+|---|---|---|---|---|
+| **Hoadhaa-Dev** | **READY TO RESUME for Founder planning** | Founder for PR #8; Hoadhaa Floor Lead for sequencing | none blocking planning | #18988, #18991 |
+| **StarqERP-Dev** | **WAITING FOR CHECKPOINT** (unchanged) | Founder | review route for PR #204 at head `808ad84b829e37a300778aef5d79a66d6280f814` | #18990 |
+
+### Hoadhaa [#18988, #18991]
+
+- HOA-255 / WP-3: implemented by Devin (`w2:p2`) and committed **locally** at
+  `1f9d83cff212603b3c26e08a22701c0c4149b156` on `hoa-218-wp3-explore-map`. Reported tests:
+  core 205/205, architecture and graph 32/32, type check and build clean. Not pushed; no PR; no
+  merge. Codex: this is delivery evidence pending the floor's next assurance and integration
+  gate, **not independent acceptance**. Devin's own Room records: #18976, #18978.
+- HOA-253 / WP-1: candidate `4edf2da` unchanged; Vision review still BLOCKED [#18923]; not
+  accepted. The floor's "code/tests remain sound" is its own statement.
+- PR #8 (head `49fd4ad`): untouched; disposition reserved for the Founder.
+- Capacity: about 0.80 GiB free, below the 1.23 GiB gate. The next step (OMP assurance or a
+  push) is sequenced by the Floor Lead under that constraint.
+
+### StarqERP [#18990]
+
+- PR #204 / ERP-465: open, mergeable, 5/5 required checks, **no independent review of the
+  current head**; Vision attempt BLOCKED with no verdict [#18938]; Copilot not retried. No
+  Founder decision on the review route appears in Room through #18988.
+- ERP-543 / B8: not started; no builder dispatched (Cursor named, idle, no worktree).
+  Preparation complete [#18927]. Waits on the PR #204 merge and on the Founder's policy items:
+  enforcement (hard refusal or recorded override), legacy PURCHASE/pay path, the
+  `financial_controller` seat question, builder, worktree and capacity gate.
+- ERP-454 / PR #192: unchanged; draft, Founder HOLD.
+- Capacity changes: WSL Claude at its usage limit until 17:40 PKT; Nitro free memory 1.09 GiB,
+  below the gate. The ERP lead's session now runs Sonnet 5.5 after a re-login; same session.
+- **Which Cloudroom thread to resume is not confirmed.** Codex reported the ERP-Dev thread
+  `thr_qa5pk9d8bu` idle and ready [#18962]. The ERP lead could not find that thread in its own
+  listing, and reports the ERP-454 acceptance-suite thread `thr_jzexx3mpdp` in status FAILED,
+  not to be used for execution. Founder or Codex to confirm the resumption target.
