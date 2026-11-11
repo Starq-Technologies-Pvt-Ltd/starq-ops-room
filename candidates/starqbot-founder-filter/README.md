@@ -59,3 +59,29 @@ The whole diff against the live function is the block after `const first = …`:
 2. Independent review of this candidate.
 3. Apply to the gateway and run the gateway's own existing tests in the live tree.
 4. A planned gateway restart, with Founder approval. No cursor reset, no replay.
+
+## Independent review (2026-11-11)
+
+**PASS — for this isolated candidate and its evidence only.** It is not a review of any
+integration into the live gateway and it is not an activation approval.
+
+- Reviewer: Copilot (`w1:p7`), independent of the author. Assigned in Room #19000, ACK #19001,
+  verdict #19002. Reviewed candidate commit `17c9d23` and evidence head `02d6d0f`, read-only.
+- Reviewer's own runs, as reported: tests 7/7; a separate `readRoomSnapshot()` replay over
+  #10000 to #18994 (8,995 records) with 365 delivered by both, 0 lost, 41 gained, the gained set
+  matching `historical-gained-records-review.md` exactly.
+- Verified by the reviewer: later-owner parsing after a period, semicolon or new line; the
+  ACTION_REQUIRED, Founder-audience, sender-exclusion and NONE/empty gates are preserved; the
+  classification of the 41 gained records as 15 intended, 15 false positive, 11 ambiguous.
+- Reviewer's assessment of the 15 false positives and 11 ambiguous gains: policy trade-offs
+  that are accurately disclosed, not a parser regression.
+
+Unchanged after the review:
+
+- The candidate is **not integrated**. The live gateway was not inspected, changed, activated
+  or restarted.
+- A first owner written with a pane qualifier (`claude#w3:p1: …`) is still not recognised by
+  either version.
+- Still required before activation: Founder policy on FYI and "no action" clauses; a versioned
+  home for the live gateway source (#18871); review of the actual integration diff; a planned
+  restart with Founder approval [#19003].
