@@ -83,7 +83,7 @@ arguable.
 
 ## Unresolved, for the reviewer and the Founder
 
-1. Should an FYI clause naming the Founder reach Telegram? (7 FYI records; 4 deferred or conditional.)
+1. Should an FYI clause naming the Founder reach Telegram? (6 FYI records; 5 deferred or conditional.)
 2. Should "Founder: no action" clauses be prevented at the source instead — a sender rule that
    the Founder is named as an owner only when something is asked of him? That costs no code
    and removes the false positives in both the live filter and the candidate.
