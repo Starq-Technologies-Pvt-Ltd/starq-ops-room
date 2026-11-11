@@ -108,3 +108,46 @@ dependencies), which is the same CI gap recorded in the phase 2 review.
 3. Real-ingress CI coverage (needs the live-only protocol modules in the repository).
 4. WSL prompt delivery; worker and Copilot/OpenCode enrollment.
 5. Canary plan from the phase 2 review, unchanged, after 1–2.
+
+## Follow-up 2026-11-11 — submit ambiguity, backend isolation, and live runtime
+
+Code commit `6a5244526b7093974384f4492b32e36e3800ac0f` adds two delivery safeguards:
+
+- A Herdr prompt subprocess timeout or kill is persisted as `SUBMIT_OUTCOME_UNKNOWN` and is not
+  automatically retried. A target Room reply or explicit operator resolution is required.
+- An unavailable backend whose delivery remains unverified is reported as partial coverage; it no
+  longer freezes verified backend ingestion. Messages explicitly targeting that backend are held
+  as `BACKEND_DELIVERY_UNVERIFIED`. Verified-backend outages still freeze ingestion.
+
+Verification on this head: `node --test` passed 105/105 with the CI identity fixture. GitHub CI run
+`42928571577` completed successfully. The added tests cover timeout no-retry, unverified WSL outage
+isolation, durable target holds, route recovery only after verification, and verified-backend freeze.
+These are candidate-code tests; they do not exercise a production pane.
+
+### Live state observed 2026-11-11 05:12 PKT
+
+- `gateway-supervisor.mjs --status`: preflight PASS, safety hold NONE, authoritative gateway lock
+  PID `10456`, relay HEALTHY, Room tail #18858.
+- Dispatcher PID `47728` is running the live `agent-comms/scripts/room-dispatcher.mjs --print`
+  without `--dry-run`. The live script defaults to delivery mode. Its SHA-256 begins
+  `A01ACEB2`; the PR #3 candidate has a different hash beginning `FE5A53C6`.
+- The default live `agent-comms/state/room-dispatch.json` remains at #18497, but the process-specific
+  state directory was not identified from the running process command line. Do not attribute that
+  default file to PID `47728` or use it as the process checkpoint.
+- No process, gateway, checkpoint, machine connection, or configuration was changed during this
+  observation. The running dispatcher is not the PR #3 candidate.
+
+### Current gates
+
+1. Independent review of code commit `6a52445` is still absent. The existing GitHub Copilot review
+   is a quota-failure comment on an older head; Windows Operations Deputy Claude remains usage-limited
+   until 07:00 PKT. A review must use the latest PR head after this documentation addendum is pushed.
+2. Founder Telegram ingress still derives action from any `@word` in message text and emits no
+   structured `metadata.routing`. The unaddressed default is no recipient/no wake; exact explicit
+   recipient-header syntax remains to be settled before changing the shared gateway.
+3. WSL delivery remains marked unverified; the observed `wsl.exe` canary is not the documented
+   saved-machine-profile path.
+4. Deadpool's relay still re-derives recipients without structured routing metadata. Its owner must
+   resolve that compatibility before structured posts are used in production.
+5. PR #3 is open and unmerged. No production cutover or watcher activation has occurred; the live
+   dispatcher must not be described as the hardened candidate.
