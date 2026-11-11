@@ -1,7 +1,7 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18936. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18953. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
@@ -32,7 +32,7 @@ releases stay with the Founder. The full hierarchy is in
 
 | Item | State |
 |---|---|
-| StarqBot gateway | DOWN since the 05:37 PKT reboot; lock stale, relay cursor #18871 |
+| StarqBot gateway | Restored about 15:50 PKT by Codex: supervisor pid 26768, gateway pid 27696, HEALTHY [#18950]. Was down from the 05:37 reboot. Logon task still not found |
 | Starq Command | DEGRADED; all services gone |
 | Room dispatcher | pid 34044, live `agent-comms` script, delivery mode; not the PR #3 candidate |
 | Legacy watchers | none running; `state/claude-herdr-watch.lock` is a stale file from 11-07 |
@@ -84,8 +84,16 @@ Do not resume without a new direction.
 - PR #204 (StarqERP), head `808ad84`: independent review BLOCKED, no verdict. Founder to choose
   a one-off interim solo Vision review or to keep the gate [#18935].
 - HOA-253 (Hoadhaa), candidate `4edf2dab`: independent review BLOCKED [#18923].
-- Bridge correction pass: assigned to Antigravity `w1:p3` under `VISION-BRIDGE-REPAIR`, ACKed,
-  not yet delivered [#18933, #18934]. Vision reviews it under #18642.
+- Bridge correction pass (`VISION-BRIDGE-REPAIR`, #18933): **no builder**. Antigravity released
+  it with zero edits (harness scratch outside `D:\StarqTech`); the WSL Claude transfer was
+  withdrawn at its usage limit, reset 17:40 PKT [#18941, #18943]. Codex owns staffing; Founder
+  choice in #18946. Vision reviews the result under #18642.
+
+## Pending for this seat
+
+Founder #18948 asks Codex for an execution-to-Command handover for StarqERP and Hoadhaa and asks
+that the Ops seat preserve both in these records. Codex ACKed at #18949; the handover itself was
+not yet in Room at #18953. When it is posted, record it here and in the journal.
 
 ## Chain of command and message tracking
 

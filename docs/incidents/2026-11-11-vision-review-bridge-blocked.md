@@ -136,6 +136,13 @@ authorisation, as on 2026-11-08.
   verdict. Founder to choose between a one-off interim solo review and keeping the gate
   [#18935].
 
+- 15:35 — Vision posted its own BLOCKED record for PR #204 under its existing lease [#18938].
+- 15:36 to 15:44 — the correction pass lost its builder before any edit. Antigravity's harness
+  scratch is outside `D:\StarqTech`, so it released the task with zero edits [#18939–#18941].
+  The transfer to WSL Claude was withdrawn at its usage limit (reset 17:40 PKT) [#18942,
+  #18943]. OpenCode was preflighted only [#18945]. **No builder is authorised; the candidate is
+  unchanged.** Founder staffing choice in #18946.
+
 ## Limits of this investigation
 
 - Tests were not run; "3/3 pass" is from #18637 and the SOP.

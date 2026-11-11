@@ -1,7 +1,7 @@
 # StarqBot gateway down after host reboot (2026-11-11)
 
-Status: **OPEN** — observed and reported; no recovery action taken. Recorded by the Operations
-Room Deputy. Room: #18895, #18906.
+Status: **SERVICE RESTORED about 15:50 PKT by Codex [#18950]; one item open** (logon task).
+Recorded by the Operations Room Deputy. Room: #18895, #18906, #18950, #18952.
 
 ## What was observed
 
@@ -44,6 +44,28 @@ context. Whether it is missing or only invisible to a non-elevated session is **
    on an ambiguous sequence, the documented path is `--recover-batch 1 --confirm-duplicate`.
 4. Verify or recreate the logon task from an elevated session, then confirm it after the next
    reboot.
+
+## Resolution [#18950, as reported by Codex]
+
+- Before recovery the cursor was #18871, 76 records behind tail #18947.
+- The start wrapper halted: supervisor preflight refuses to proceed while a stale lock file
+  exists. So the note above was wrong — the launcher did **not** reclaim the stale lock by
+  itself.
+- Codex confirmed pid 10456 dead and no gateway or wrapper process running, cleared only the
+  stale lock with `gateway-supervisor --release-lock` (safety hold untouched), then launched
+  `start-starq-bot-if-needed.ps1`.
+- Result: supervisor pid 26768, gateway pid 27696, safety hold NONE, status HEALTHY, cursor at
+  #18949. Founder message #18948 was deduplicated; no cursor reset and no backlog replay.
+- Root cause as stated: a dead-pid stale lock blocked normal wrapper startup.
+- The 76 Founder-addressed records between #18871 and #18947 were not replayed to Telegram.
+
+Startup rule made explicit afterwards [#18952, #18953]: every new engineering session verifies
+StarqBot before work; if not healthy, use the wrapper; if a confirmed-dead pid holds the lock
+and no gateway process exists, clear only that lock; never reset the cursor or replay backlog
+as routine.
+
+Still open: the wrapper does not recover from a dead-pid lock unaided, and the logon task was
+not found. Either means the next reboot repeats this incident.
 
 ## Related
 

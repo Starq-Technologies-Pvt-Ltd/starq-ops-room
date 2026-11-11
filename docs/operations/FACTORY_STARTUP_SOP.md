@@ -153,6 +153,11 @@ Completion signals are not uniform across hosts (see
   Vision's verdict, a formal Vision review cannot be produced; an interim review needs the
   Founder's one-off authorisation. See
   `docs/incidents/2026-11-11-vision-review-bridge-blocked.md`.
+- **StarqBot before work.** Every new engineering session verifies the gateway before starting
+  assigned work; the recovery steps and their limits are in `AGENTS.md` and Room #18952.
+- **Report in Room, not in the terminal.** A status or report that exists only in a pane or
+  terminal has not been delivered. Post it to Room, read the stored record back, and cite its
+  sequence [#18947].
 - **After a host reboot** nothing restarts by itself unless its logon task exists. Check step 1
   before assuming Telegram relay or Command are up. See
   `docs/incidents/2026-11-11-starqbot-gateway-down-after-reboot.md`.
