@@ -183,6 +183,10 @@ Completion signals are not uniform across hosts (see
 - **Report in Room, not in the terminal.** A status or report that exists only in a pane or
   terminal has not been delivered. Post it to Room, read the stored record back, and cite its
   sequence [#18947].
+- **Reaching the Founder.** StarqBot sends a Room record to the Founder's Telegram only when
+  the body mentions `@mustarq` and the action-required text begins with `mustarq:`. A report
+  posted as context, or with another owner named first, stays in Room only. See
+  `docs/incidents/2026-11-11-founder-delivery-paths.md`.
 - **After a host reboot** nothing restarts by itself unless its logon task exists. Check step 1
   before assuming Telegram relay or Command are up. See
   `docs/incidents/2026-11-11-starqbot-gateway-down-after-reboot.md`.
