@@ -149,6 +149,10 @@ Completion signals are not uniform across hosts (see
   it has been activated and has answered (X-Men profiles, Room #18915).
 - **Truncated Room posts.** A long body can be cut off on the way into Room (Room #18912). After
   posting, read the stored record back and check that it ends where it should.
+- **Independent review depends on Vision's bridge.** Until it has a real-package receipt and
+  Vision's verdict, a formal Vision review cannot be produced; an interim review needs the
+  Founder's one-off authorisation. See
+  `docs/incidents/2026-11-11-vision-review-bridge-blocked.md`.
 - **After a host reboot** nothing restarts by itself unless its logon task exists. Check step 1
   before assuming Telegram relay or Command are up. See
   `docs/incidents/2026-11-11-starqbot-gateway-down-after-reboot.md`.

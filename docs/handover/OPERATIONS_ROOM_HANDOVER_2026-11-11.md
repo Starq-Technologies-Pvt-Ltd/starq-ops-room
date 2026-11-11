@@ -1,7 +1,7 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18922. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18931. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
@@ -71,6 +71,11 @@ Do not resume without a new direction.
    works on Fold 4 (`docs/incidents/2026-11-11-herdr-completion-notification.md`). Until XPS is
    validated: no blind resend; inspect the pane, read the output, record in Room.
 9. A long Room body was cut off silently on posting (#18912). Read long posts back.
+10. Vision's four-specialist review bridge is blocked for real packages. It blocks HOA-253 and
+    the PR #204 review. Owner chain, failing predicate, source defects and a repair plan are in
+    `docs/incidents/2026-11-11-vision-review-bridge-blocked.md`. The bridge source is outside
+    version control.
+11. No supervisor or autostart is verified for the live dispatcher (pid 34044).
 
 ## Chain of command and message tracking
 
