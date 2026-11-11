@@ -152,6 +152,24 @@ over a live identity lease.
 Not tested: an actual reboot of Nitro. It would end every agent session on the floor and needs
 someone at the machine to sign in, so it is the Founder's to schedule.
 
+## Sender fix live (Founder #19089), applied 2026-11-12
+
+`send.mjs` now addresses an owner named only in `--action-required`: if the body does not already
+mention that owner, one `To: @owner` line is put in front of it and a NOTE is printed. Without it
+such a post was stored as a broadcast FYI and woke nobody (21 posts between #18500 and #19051).
+
+- Files: `scriptsactionOwnerAddressing.mjs` (new, sha 8dccad5f5ae06241, the reviewed helper) and
+  `scriptssend.mjs` (one reviewed hunk; sha 53cb880be6474c1a). Reviewed PASS by Codex (#19065,
+  #19086). No restart: `send.mjs` is read on every call.
+- Live check: Room #19099 (owner only in the action text, naming the Founder) was stored
+  ACTION_REQUIRED to the Founder with the `To:` line, mirrored to Telegram, and woke no seat.
+- **Rollback:** `copy scriptssend.pre-owneraddressing-20261111.mjs scriptssend.mjs` (sha
+  8185191beff01c4f); or reverse the patch, verified with `git apply -R --check`. The helper file
+  may stay; nothing imports it once the old `send.mjs` is back.
+- Not covered: Founder messages that name an agent without an `@handle`
+  (`docs/design/FOUNDER_UNADDRESSED_MESSAGE_DESIGN.md`), and quota-blocked seats
+  (`docs/design/SEAT_CAPACITY_GATE_DESIGN.md`).
+
 ## Known defects still open (seen live on 2026-11-11)
 
 1. Fixed 2026-11-11 21:01 PKT: a quoted handle woke its seat [#19031, #19032]. Verified live

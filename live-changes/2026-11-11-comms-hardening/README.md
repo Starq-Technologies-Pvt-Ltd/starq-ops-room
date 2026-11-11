@@ -23,6 +23,11 @@ SHA-256 (first 16) after / before:
 - `start-starq-bot-if-needed.ps1` `d80aad07e3ea7455` / `98f050a38a6bdba4`
 - `keep-starq-comms.ps1` `b95fe71f36ef89f1` (new)
 
+**2026-11-12:** `send.mjs` carries the owner-addressing hunk (Founder #19089) and
+`scripts/actionOwnerAddressing.mjs` was added; `send.mjs` sha `53cb880be6474c1a` (backup
+`send.pre-owneraddressing-20261111.mjs`, sha `8185191beff01c4f`). The reviewed patch and helper are in
+`candidates/send-owner-addressing/`.
+
 Also created: `state/starq-bot-config.json` (`{"mirrorAll": true}`) and the scheduled task
 `StarqTech-StarqBot-Logon`.
 
