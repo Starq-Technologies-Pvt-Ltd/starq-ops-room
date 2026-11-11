@@ -1,16 +1,20 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Written at Room tail #18906. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18913. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
 
-Room #18903 (task `FOUNDER-OPS-STARTUP-20261111`), boundaries in #18905: this seat is Operations
-Room Deputy and Communications Engineering Lead. It owns the records in this repository — the
-Factory Startup SOP, the daily journal, handovers, roster and session recovery, cross-floor
-activity for StarqERP and Hoadhaa, and communications incidents and improvements. Codex is Chief
-Engineer; merges and releases stay with the Founder.
+Room #18903 (task `FOUNDER-OPS-STARTUP-20261111`), hierarchy in #18912 (Founder correction,
+supersedes #18905): this seat is Operations Deputy / Communications Engineering Lead and reports
+to Codex. It owns the records in this repository — the Factory Startup SOP, the daily journal,
+handovers, roster and session recovery, cross-floor activity for StarqERP and Hoadhaa, and
+communications incidents and improvements. Codex is Chief Engineer / Project Director with
+authority and accountability across every floor and department; delegation does not transfer
+that accountability. Completion and blockers from this seat go to Codex through Room. Merges and
+releases stay with the Founder. The full hierarchy is in
+`docs/operations/FACTORY_STARTUP_SOP.md`.
 
 ## Recovering this seat in a new session
 
@@ -63,6 +67,15 @@ Do not resume without a new direction.
 5. Herdr session values are stale for `w3:p1` and `w1:p5`.
 6. Copilot, OpenCode, Devin, Goose and OMP have no dispatcher seat enrolment.
 7. No logon task was found to relaunch StarqBot after a reboot.
+8. Herdr completion notification: finding incomplete, because Room #18912 is truncated
+   (`docs/incidents/2026-11-11-herdr-completion-notification.md`).
+9. A long Room body was cut off silently on posting (#18912). Read long posts back.
+
+## Other hosts
+
+XPS: reachable two-way from Nitro; JARVIS heads General Engineering Support with six on-demand
+profiles; no GitHub access to StarqERP; no assignment accepted [#18912]. Fold 4 / FORGE, Deadpool
+and the secondary WSL Claude are not yet reported.
 
 Detail for 1–3 and 6 is on the PR #3 branch under `docs/reviews/`.
 
