@@ -145,9 +145,9 @@ export function verifySeatBinding(seat, backend, source, processInfo) {
   const hold = (reason, detail = null) => ({ ok: false, reason, detail });
   if (seat.neverWake === true) return hold('SEAT_NEVER_WAKE');
   if (!backend) return hold('BACKEND_NOT_CONFIGURED', seat.backend);
+  if (backend.delivery !== 'verified') return hold('BACKEND_DELIVERY_UNVERIFIED', seat.backend);
   if (!source) return hold('SOURCE_NOT_DISCOVERED', seat.backend);
   if (!source.ok) return hold('SOURCE_UNAVAILABLE', String(source.reason || '').slice(0, 200));
-  if (backend.delivery !== 'verified') return hold('BACKEND_DELIVERY_UNVERIFIED', seat.backend);
 
   const agent = (source.agents || []).find((a) => lc(a.pane_id) === lc(seat.pane));
   if (!agent) return hold('PANE_NOT_FOUND', `${seat.backend} ${seat.pane}`);

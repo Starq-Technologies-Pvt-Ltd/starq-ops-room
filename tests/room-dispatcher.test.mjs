@@ -296,6 +296,7 @@ test('binding checks: agent kind, cwd, optional Herdr session, blocked agent, ne
   assert.equal(verifySeatBinding(seat, backend, src(agent), { pane_id: 'w1:p1', foreground_processes: [{ pid: 1031 }] }).reason, 'PID_UNVERIFIED');
   assert.equal(verifySeatBinding(seat, { ...backend, delivery: 'unverified' }, src(agent), pi).reason, 'BACKEND_DELIVERY_UNVERIFIED');
   assert.equal(verifySeatBinding(seat, backend, { ok: false, reason: 'down' }, pi).reason, 'SOURCE_UNAVAILABLE');
+  assert.equal(verifySeatBinding(seat, { ...backend, delivery: 'unverified' }, { ok: false, reason: 'down' }, null).reason, 'BACKEND_DELIVERY_UNVERIFIED');
   assert.equal(normalizeCwd('D:\\Work\\ERP\\'), normalizeCwd('d:/work/erp'));
   assert.notEqual(normalizeCwd('/mnt/d/Work/ERP'), normalizeCwd('/mnt/d/work/erp'), 'POSIX paths stay case-sensitive');
 
@@ -438,6 +439,30 @@ test('simulated crash after submit: outcome unknown is HELD, not re-sent, and a 
   assert.deepEqual(b.wakes, []);
 });
 
+test('timed-out pane submit is held as outcome unknown and never retried automatically', async () => {
+  const h = makeHarness();
+  const records = [rec(100, { actionRequired: 'NONE' }), rec(101, { sender: 'mustarq', senderInstance: 'starq-bot-gateway', actionRequired: '@codex: build' })];
+  await h.poll(records.slice(0, 1));
+  h.wakeResult = { ok: false, outcomeUnknown: true, reason: 'Command timed out' };
+  const first = await h.poll(records);
+  const key = 'evt-101::codex-inst-0001';
+  assert.equal(first.attempts[0].result, 'SUBMIT_OUTCOME_UNKNOWN');
+  assert.equal(h.persisted.deliveries[key].status, 'held');
+  assert.equal(h.persisted.holds[h.persisted.deliveries[key].holdKey].reason, 'SUBMIT_OUTCOME_UNKNOWN');
+  await h.poll(records);
+  assert.equal(h.wakes.length, 1, 'uncertain submission is never retried without a Room reply or operator action');
+});
+
+test('Herdr timeout or killed prompt subprocess is marked outcome unknown; definite CLI failure is not', async () => {
+  const seat = TABLE.seats[0]; const backend = TABLE.backends[0];
+  const timeout = Object.assign(new Error('Command timed out'), { code: 'ETIMEDOUT', killed: true });
+  const rtTimeout = makeHerdrRuntime({ runAsync: (_bin, _args, _opts, cb) => cb(timeout) });
+  assert.deepEqual(await rtTimeout.wake(seat, backend, 'pointer'), { ok: false, outcomeUnknown: true, reason: 'Command timed out' });
+  const rejected = Object.assign(new Error('Herdr rejected prompt'), { code: 2, killed: false });
+  const rtRejected = makeHerdrRuntime({ runAsync: (_bin, _args, _opts, cb) => cb(rejected) });
+  assert.deepEqual(await rtRejected.wake(seat, backend, 'pointer'), { ok: false, outcomeUnknown: false, reason: 'Herdr rejected prompt' });
+});
+
 test('submitted, delivered, agent-ACK and Room-response are separate states', async () => {
   const h = makeHarness();
   const base = [rec(100, { actionRequired: 'NONE' }), rec(101, { actionRequired: 'x', targets: [{ handle: 'claude', role: 'erp-floor-lead' }] })];
@@ -492,16 +517,46 @@ test('holds expire into dead-letter instead of living forever', async () => {
   assert.deepEqual(h.wakes, []);
 });
 
-test('any unavailable source freezes the checkpoint; nothing is consumed until it returns', async () => {
+test('unavailable unverified backend does not freeze verified routes; its target is durably held', async () => {
+  const h = makeHarness();
+  h.table.backends.find((b) => b.key === 'wsl/default').delivery = 'unverified';
+  const records = [
+    rec(100, { actionRequired: 'NONE' }),
+    rec(101, { sender: 'mustarq', senderInstance: 'starq-bot-gateway', targets: [{ handle: 'codex', role: 'chief-engineer' }] }),
+    rec(102, { sender: 'mustarq', senderInstance: 'starq-bot-gateway', targets: [{ handle: 'claude', role: 'erp-floor-lead' }, { handle: 'claude', role: 'erp-wsl-verification', instance: 'claude-wsl-0001', backend: 'wsl/default' }] }),
+  ];
+  await h.poll(records.slice(0, 1));
+  h.down.add('wsl/default');
+  const report = await h.poll(records);
+  assert.equal(report.status, 'PARTIAL');
+  assert.deepEqual(report.frozenSources, []);
+  assert.deepEqual(report.unverifiedUnavailableSources, ['wsl/default']);
+  assert.equal(h.persisted.checkpoint.lastSeq, 102);
+  assert.equal(h.persisted.sourceOutage, null);
+  assert.deepEqual(h.woken(), ['codex-chief', 'erp-floor-lead']);
+  const wslDelivery = h.persisted.deliveries['evt-102::claude-wsl-0001'];
+  assert.equal(wslDelivery.status, 'held');
+  assert.equal(h.persisted.holds[wslDelivery.holdKey].reason, 'BACKEND_DELIVERY_UNVERIFIED');
+  assert.ok(!h.wakes.some((w) => w.backend === 'wsl/default'), 'unverified WSL pane receives no prompt');
+
+  h.down.delete('wsl/default');
+  await h.poll(records);
+  assert.ok(!h.wakes.some((w) => w.backend === 'wsl/default'), 'backend discovery alone cannot enable delivery');
+  h.table.backends.find((b) => b.key === 'wsl/default').delivery = 'verified';
+  await h.poll(records);
+  assert.deepEqual(h.wakes.map((w) => w.backend), ['windows/default', 'windows/default', 'wsl/default']);
+});
+
+test('unavailable verified backend freezes ingestion until it returns', async () => {
   const h = makeHarness();
   const records = [rec(100, { actionRequired: 'NONE' }), rec(101, { sender: 'mustarq', senderInstance: 'starq-bot-gateway', actionRequired: '@codex: build' })];
   await h.poll(records.slice(0, 1));
-  h.down.add('wsl/default');                 // codex lives on windows, but one source is blind
+  h.down.add('windows/default');
   const report = await h.poll(records);
   assert.equal(report.status, 'FROZEN');
-  assert.deepEqual(report.frozenSources, ['wsl/default']);
+  assert.deepEqual(report.frozenSources, ['windows/default']);
   assert.equal(h.persisted.checkpoint.lastSeq, 100);
-  assert.equal(h.persisted.sourceOutage.sources, 'wsl/default');
+  assert.equal(h.persisted.sourceOutage.sources, 'windows/default');
   assert.deepEqual(h.wakes, []);
   const saves = h.saves; await h.poll(records);
   assert.equal(h.saves, saves, 'an unchanged outage is not rewritten every poll');

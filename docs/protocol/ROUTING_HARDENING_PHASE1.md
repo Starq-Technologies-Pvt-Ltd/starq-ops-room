@@ -110,9 +110,14 @@ corrupt or legacy-shaped file is an error, never a re-seed.
 | `held` | parked behind a HOLD |
 | `dead_letter` | attempts (5, backoff 5 s → 5 min) or hold lifetime exhausted |
 
-Idempotency key is `eventId::instance`. A delivery left `inflight` by a crash becomes HOLD
-`SUBMIT_OUTCOME_UNKNOWN` and is not re-sent; a Room reply from the target instance clears it.
-If any declared backend is unavailable the checkpoint is frozen and the outage is recorded.
+Idempotency key is `eventId::instance`. A delivery left `inflight` by a crash or whose Herdr
+prompt subprocess times out/is killed becomes HOLD `SUBMIT_OUTCOME_UNKNOWN` and is not re-sent;
+a Room reply from the target instance clears it. A definite non-timeout CLI rejection follows the
+bounded retry policy. An unavailable delivery-verified backend freezes the checkpoint and records
+the outage. Unavailable backends whose delivery path is still marked unverified are reported as
+partial coverage but do not stop verified seats from processing; explicitly targeted seats on
+those backends are durably held as `BACKEND_DELIVERY_UNVERIFIED` until an operator verifies and
+enables that route.
 
 ## 5. Modes
 

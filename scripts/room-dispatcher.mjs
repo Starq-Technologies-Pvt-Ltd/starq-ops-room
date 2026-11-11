@@ -204,12 +204,19 @@ export async function pollOnce(deps) {
 
   // B. Discovery of every declared backend.
   const discovery = discover();
-  const down = seatTable.backends.filter((b) => !discovery[b.key]?.ok).map((b) => b.key);
-  report.frozenSources = down;
-  const outageKey = down.join(',');
-  if (down.length) {
+  const down = seatTable.backends.filter((b) => !discovery[b.key]?.ok);
+  const downVerified = down.filter((b) => b.delivery === 'verified').map((b) => b.key);
+  const downUnverified = down.filter((b) => b.delivery !== 'verified').map((b) => b.key);
+  report.frozenSources = downVerified;
+  report.unverifiedUnavailableSources = downUnverified;
+  if (downUnverified.length) {
+    report.status = 'PARTIAL';
+    log(`UNVERIFIED SOURCE UNAVAILABLE ${downUnverified.join(',')}: affected recipients will be held; verified sources continue`);
+  }
+  const outageKey = downVerified.join(',');
+  if (downVerified.length) {
     if (state.sourceOutage?.sources !== outageKey) {
-      state.sourceOutage = { sources: outageKey, since: now, reasons: Object.fromEntries(down.map((k) => [k, String(discovery[k]?.reason || 'no answer').slice(0, 200)])) };
+      state.sourceOutage = { sources: outageKey, since: now, reasons: Object.fromEntries(downVerified.map((k) => [k, String(discovery[k]?.reason || 'no answer').slice(0, 200)])) };
       persist();
     }
     log(`SOURCE UNAVAILABLE ${outageKey}: checkpoint frozen`);
@@ -225,8 +232,10 @@ export async function pollOnce(deps) {
     return report;
   }
 
-  // D. Ingest new records, only while every source is available.
-  if (!down.length) {
+  // D. Ingest new records while every delivery-verified source is available.
+  // An unverified backend cannot deliver regardless of discovery; its targeted
+  // deliveries become durable holds without freezing unrelated verified seats.
+  if (!downVerified.length) {
     let pendingCheckpoint = false;
     for (const rec of records) {
       if (rec.brokerSequence <= state.checkpoint.lastSeq) continue;
@@ -297,13 +306,24 @@ export async function pollOnce(deps) {
     // SUBMITTED is durable before the pane is touched.
     Object.assign(d, recordAttempt(d, now), { submittedAt: now });
     persist();
-    let ok = false; let failure = 'wake failed';
-    try { const res = await wake(seat, backend, d.pointer); ok = res === true || res?.ok === true; if (!ok && res?.reason) failure = res.reason; }
-    catch (e) { failure = e.message; }
+    let ok = false; let ambiguous = false; let failure = 'wake failed';
+    try {
+      const res = await wake(seat, backend, d.pointer);
+      ok = res === true || res?.ok === true;
+      if (!ok && res?.reason) failure = res.reason;
+      ambiguous = !ok && res?.outcomeUnknown === true;
+    } catch (e) { failure = e.message; ambiguous = true; }
     if (ok) { Object.assign(d, recordTransportAck(d, now)); log(`DELIVERED #${d.seq} ${d.seatId} (${seat.backend} ${seat.pane})`); }
+    else if (ambiguous) {
+      const holdKey = `${key}::binding`;
+      addHold(state, { key: holdKey, stage: 'binding', eventId: d.eventId, seq: d.seq, handle: d.handle, deliveryKey: key,
+        reason: 'SUBMIT_OUTCOME_UNKNOWN', detail: `${failure}; not retried because prompt acceptance is uncertain` }, now, opts);
+      Object.assign(d, { status: 'held', holdKey, lastError: String(failure) });
+      log(`SUBMIT OUTCOME UNKNOWN #${d.seq} ${d.seatId}: held; no retry`);
+    }
     else { Object.assign(d, recordFailure(d, now, failure, opts)); log(`SUBMIT FAILED #${d.seq} ${d.seatId}: ${failure} -> ${d.status}`); }
     persist();
-    report.attempts.push({ key, seatId: d.seatId, seq: d.seq, result: ok ? 'DELIVERED' : d.status === 'dead_letter' ? 'DEAD_LETTER' : 'RETRY_SCHEDULED' });
+    report.attempts.push({ key, seatId: d.seatId, seq: d.seq, result: ok ? 'DELIVERED' : ambiguous ? 'SUBMIT_OUTCOME_UNKNOWN' : d.status === 'dead_letter' ? 'DEAD_LETTER' : 'RETRY_SCHEDULED' });
   }
 
   report.lastSeq = state.checkpoint.lastSeq;
@@ -342,7 +362,11 @@ export function makeHerdrRuntime({ run = execFileSync, runAsync = execFile } = {
     wake(seat, backend, text) {
       return new Promise((done) => {
         runAsync(backend.bin, herdrArgv(backend, ['agent', 'prompt', seat.pane, text]), { windowsHide: true, timeout: 20000 },
-          (err) => done(err ? { ok: false, reason: err.message } : { ok: true }));
+          (err) => {
+            if (!err) return done({ ok: true });
+            const outcomeUnknown = err.killed === true || Boolean(err.signal) || err.code === 'ETIMEDOUT';
+            done({ ok: false, outcomeUnknown, reason: err.message || String(err) });
+          });
       });
     },
   };
