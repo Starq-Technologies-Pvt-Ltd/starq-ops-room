@@ -47,6 +47,31 @@ registration or publishing; it does not derive recipients from message text. Omi
 preserves the legacy sender shape. An invalid identity is rejected before append; conflicting but
 well-formed selectors are recorded and held by the dispatcher, without waking either candidate.
 
+### Candidate ingress syntax (isolated; not wired to the live gateway)
+
+`protocol/v1/explicitAddress.mjs` defines an opt-in ingress contract for sources that do not
+already provide structured recipient metadata. The first line must be an exact `/to` header;
+targets are separated by semicolons, and optional selectors are exact `role=`, `instance=`, or
+`backend=` values:
+
+```text
+/to @claude role=ops-room-deputy; @antigravity role=hoadhaa-lead
+Please review the attached item. A quoted @cursor in this body is not a recipient.
+```
+
+The adapter receives validated `metadata.routing`, removes the header from the published body,
+and marks the event actionable. A first line that is not `/to` is unaddressed (`actionRequired`
+`NONE`), even if the body contains `@handles`, quoted text, or a forwarded `/to` line. A malformed
+`/to` header is rejected before publishing; there is no fallback to mention matching. An unqualified
+shared handle such as `@claude` remains unqualified and will HOLD unless the seat table has a
+documented unique default. `@mustarq` is treated as a Founder notice and is never emitted as a
+Herdr target; a mixed header routes only its explicit agent targets.
+
+This is candidate code only. The live Telegram gateway under `D:\StarqTech\agent-comms` is outside
+this repository and remains unchanged; its current loose-mention parser does not call this module
+or pass `--routing-file`. Do not deploy structured posts until ingress integration, Deadpool relay
+compatibility, independent review, WSL policy and controlled cutover are complete.
+
 ## 2. Which seat
 
 Decided by `protocol/v1/seatBinding.mjs` against a versioned seat table (`starq.seats/1`).

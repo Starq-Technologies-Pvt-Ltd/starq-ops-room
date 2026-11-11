@@ -20,6 +20,7 @@ const seatTable = JSON.parse(fs.readFileSync(path.join(here, 'fixtures', 'seat-t
 const candidateTable = JSON.parse(fs.readFileSync(path.join(root, 'config', 'seat-table.candidate.json'), 'utf8'));
 const { pollOnce } = await import('../scripts/room-dispatcher.mjs');
 const { emptyState } = await import('../protocol/v1/deliveryStore.mjs');
+const { parseExplicitAddress } = await import('../protocol/v1/explicitAddress.mjs');
 
 const files = {
   'scripts/send.mjs': path.join(root, 'scripts', 'send.mjs'),
@@ -117,6 +118,42 @@ test('send CLI -> structured Room event -> dispatcher routes only the named role
     assert.deepEqual(p.record.event.mentions, ['claude']);
     const r = await routePublished(p.record);
     assert.deepEqual(r.wakes.map((w)=>w.seatId), ['ops-room-deputy']);
+  } finally { fs.rmSync(p.dir,{recursive:true,force:true}); }
+});
+
+test('explicit ingress address -> sender -> dispatcher wakes only validated recipients', async () => {
+  const parsed = parseExplicitAddress(
+    '/to @claude role=ops-room-deputy; @antigravity role=hoadhaa-lead\nQuoted text: @all @cursor please wake.',
+  );
+  assert.equal(parsed.ok, true);
+  const p = publish({ routingDocument:parsed.routing, body:parsed.body, actionRequired:parsed.actionRequired });
+  try {
+    assert.equal(p.result.status, 0, p.result.stderr);
+    assert.deepEqual(p.record.event.metadata.routing, parsed.routing);
+    const r = await routePublished(p.record);
+    assert.deepEqual(r.wakes.map((w)=>w.seatId).sort(), ['hoadhaa-lead','ops-room-deputy']);
+    assert.equal(r.wakes.some((w)=>w.seatId==='codex-chief'||w.seatId==='erp-cursor'), false);
+  } finally { fs.rmSync(p.dir,{recursive:true,force:true}); }
+
+  const unaddressed = parseExplicitAddress('Forwarded message: @claude and @all\nPlease note.');
+  assert.equal(unaddressed.ok, true);
+  const plain = publish({ body:unaddressed.body, actionRequired:unaddressed.actionRequired });
+  try {
+    assert.equal(plain.result.status, 0, plain.result.stderr);
+    const r = await routePublished(plain.record);
+    assert.deepEqual(r.wakes, []);
+  } finally { fs.rmSync(plain.dir,{recursive:true,force:true}); }
+});
+
+test('@mustarq is never emitted as a Herdr wake target', async () => {
+  const parsed = parseExplicitAddress('/to @mustarq\nFounder FYI only.');
+  assert.equal(parsed.ok, true);
+  assert.equal(parsed.routing, null);
+  const p = publish({ body:parsed.body, actionRequired:parsed.actionRequired });
+  try {
+    assert.equal(p.result.status, 0, p.result.stderr);
+    const r = await routePublished(p.record);
+    assert.deepEqual(r.wakes, []);
   } finally { fs.rmSync(p.dir,{recursive:true,force:true}); }
 });
 

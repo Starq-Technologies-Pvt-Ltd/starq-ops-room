@@ -151,3 +151,25 @@ These are candidate-code tests; they do not exercise a production pane.
    resolve that compatibility before structured posts are used in production.
 5. PR #3 is open and unmerged. No production cutover or watcher activation has occurred; the live
    dispatcher must not be described as the hardened candidate.
+
+## Follow-up 2026-11-11 — strict ingress address candidate
+
+The PR candidate now includes `protocol/v1/explicitAddress.mjs`, a strict ingress adapter contract
+for an explicit first-line `/to` header. It accepts semicolon-separated recipients with optional
+exact `role=`, `instance=`, and `backend=` selectors, validates targets against the existing routing
+schema, and never scans message bodies for routing. Non-addressed or Founder-only messages produce
+no Herdr recipient; malformed headers fail closed. The candidate syntax and limits are documented
+in `docs/protocol/ROUTING_HARDENING_PHASE1.md`.
+
+The parser is exercised through the existing sender CLI and dispatcher in isolated integration
+tests: explicit multi-recipient headers wake only the validated target seats; quoted body mentions
+and `@mustarq`-only notices wake none. Focused verification passed 14/14 and the full suite passed
+112/112 with `COMMS_IDENTITIES_PATH=tests/fixtures/identities.json`.
+
+This does **not** wire the parser into the live Telegram gateway. The gateway remains outside this
+repository under `D:\StarqTech\agent-comms`; its current `telegramInboundStructuredMetadata()` and
+`founderSendArgv()` still use loose mention detection and do not pass `--routing-file`. The syntax
+is now a reviewable candidate, but production ingress integration still needs an owner change in the
+gateway's authoritative source, regression coverage there, a compatible Deadpool relay update,
+independent review of the latest PR head, WSL disposition, and controlled cutover approval. No
+live source, process, checkpoint, relay, or configuration was changed.
