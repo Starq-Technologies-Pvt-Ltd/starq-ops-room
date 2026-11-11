@@ -46,7 +46,8 @@ return to Founder-action-only delivery.
   connection refused, network unreachable) is certain not to have been delivered. It is marked
   failed, not ambiguous; the supervisor restarts the gateway and the record is sent once the
   network is back. Before this change, such a failure stopped the mirror until a person ran a
-  duplicate-confirmation (seen on 5 Nov). Takes effect at the gateway's next restart.
+  duplicate-confirmation (seen on 5 Nov). Active since 21:18 PKT on 2026-11-11 (gateway restarted
+  through the keeper; Room #19052, posted during the restart, was delivered once).
 - Any other failed send stops the mirror at that record until the gateway process restarts. The
   supervisor or the keeper restarts it and the record is retried. An ambiguous send (the call
   threw) is not retried automatically, by design: it could duplicate.
