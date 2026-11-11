@@ -1,0 +1,130 @@
+--- a/scripts/room-dispatcher.mjs
++++ b/scripts/room-dispatcher.mjs
+@@ -48,6 +48,7 @@
+ import { fileURLToPath, pathToFileURL } from 'node:url';
+ import { execFileSync, execFile } from 'node:child_process';
+ import { selectWakeTargets, DEFAULT_HERDR_AGENT_MAP } from '../protocol/v1/sessionRouting.mjs';
++import { isOutstandingAction, isActionAddressedTo } from '../protocol/v1/authorityPolicy.mjs';
+ 
+ const __dir = dirname(fileURLToPath(import.meta.url));
+ // State dir: per-machine runtime state under the deploy root (agent-comms/state).
+@@ -65,6 +66,49 @@
+ const DRY_RUN = process.argv.includes('--dry-run');
+ const POLL_MS = Number(process.env.COMMS_DISPATCH_POLL_MS || 2000);
+ const DELIVERED_KEEP = 2000;
++// Retention (Founder directive 2026-11-11): an addressed seat that is offline, or an
++// explicit target that is not live, keeps its message until the seat appears.
++// Ambiguous handles stay held and reported; they are never guessed or auto-delivered.
++const HOLD_TTL_MS = Number(process.env.COMMS_DISPATCH_HOLD_TTL_MS || 24 * 60 * 60_000);
++const NON_SEAT_HANDLES = new Set(['all', 'mustarq', 'ali', 'founder']);
++
++// Optional default seat for a shared handle, e.g. {"claude":"w1:p5"}. Absent by default:
++// which seat an unqualified shared handle means is a Founder decision, not a guess.
++// Applied only when that pane is one of the live ambiguous candidates.
++export function loadDefaultSeats(file = join(STATE_DIR, 'dispatch-default-seats.json')) {
++  try { const j = JSON.parse(readFileSync(file, 'utf8')); return j && typeof j === 'object' ? j : {}; } catch { return {}; }
++}
++export function applyDefaultSeats(routing, sessions, defaults, map = DEFAULT_HERDR_AGENT_MAP) {
++  const still = [];
++  for (const a of routing.ambiguous) {
++    const pane = defaults?.[a.handle];
++    const hit = pane && a.candidates.some((c) => c.pane === pane)
++      ? sessions.find((s) => s.pane_id === pane || s.pane === pane) : null;
++    if (!hit) { still.push(a); continue; }
++    const cand = a.candidates.find((c) => c.pane === pane);
++    routing.wake.push({ handle: a.handle, pane, sessionId: cand.sessionId, host: cand.host, _srcIndex: hit._srcIndex ?? 0 });
++  }
++  routing.ambiguous = still;
++  return routing;
++}
++
++/** Addressed agent handles of a record that the routing pass neither woke nor held. */
++export function offlineHandles(record, routing) {
++  if (!isOutstandingAction(record, null)) return [];
++  const aud = record?.evaluatedAudience ?? record?.targetAudience ?? [];
++  if (!Array.isArray(aud)) return [];
++  const sender = String(record?.event?.senderHandle || '').replace(/^@/, '').toLowerCase();
++  const seen = new Set([
++    ...routing.wake.map((s) => s.handle), ...routing.ambiguous.map((a) => a.handle), ...routing.unreachable.map((u) => u.handle),
++  ]);
++  const out = [];
++  for (const raw of aud) {
++    const h = String(raw).replace(/^@/, '').toLowerCase();
++    if (!h || NON_SEAT_HANDLES.has(h) || h === sender || seen.has(h) || out.includes(h)) continue;
++    if (isActionAddressedTo(record, h)) out.push(h);
++  }
++  return out;
++}
+ 
+ function log(line) {
+   const msg = `[${new Date().toISOString()}] ${line}`;
+@@ -168,9 +212,10 @@
+     const s = JSON.parse(readFileSync(STATE_FILE, 'utf8'));
+     s.delivered = Array.isArray(s.delivered) ? s.delivered : [];
+     s.pending = Array.isArray(s.pending) ? s.pending : [];
++    s.held = Array.isArray(s.held) ? s.held : [];
+     if (typeof s.lastSeq !== 'number') s.lastSeq = null;
+     return s;
+-  } catch { return { lastSeq: null, delivered: [], pending: [], createdAt: new Date().toISOString() }; }
++  } catch { return { lastSeq: null, delivered: [], pending: [], held: [], createdAt: new Date().toISOString() }; }
+ }
+ function saveState(s) {
+   try {
+@@ -212,12 +257,41 @@
+   state.pending = stillPending;
+ 
+   let maxSeq = state.lastSeq;
+-  const summary = { woke: 0, held: 0, unreachable: 0, unroutable: 0 };
++  const summary = { woke: 0, held: 0, unreachable: 0, unroutable: 0, retainedDelivered: 0, retained: 0, expired: 0 };
++  const now = Date.now();
++
++  // Re-route retained records: deliver to a waiting seat once it is live and unambiguous.
++  const bySeq = new Map(records.map((r) => [r.brokerSequence, r]));
++  const keepHeld = [];
++  for (const h of state.held) {
++    const rec = bySeq.get(h.seq);
++    if (!rec || now - h.firstHeldAt > HOLD_TTL_MS) { summary.expired++; log(`HOLD EXPIRED seq=${h.seq} waiting=${(h.waiting || []).join('|') || '-'} ambiguous=${(h.ambiguous || []).join('|') || '-'}`); continue; }
++    const routing = selectWakeTargets(rec, sessions, { map: AGENT_MAP, sessionExtra });
++    const stillUnreachable = new Set(routing.unreachable.map((u) => u.handle));
++    const nowAmbiguous = new Set(routing.ambiguous.map((a) => a.handle));
++    const waiting = [];
++    for (const handle of h.waiting || []) {
++      if (nowAmbiguous.has(handle)) { if (!(h.ambiguous || []).includes(handle)) (h.ambiguous ||= []).push(handle); log(`HELD seq=${h.seq} handle=${handle} became ambiguous while retained — not delivered`); continue; }
++      const targets = routing.wake.filter((s) => s.handle === handle);
++      if (targets.length === 0 || stillUnreachable.has(handle)) { waiting.push(handle); continue; }
++      for (const target of targets) {
++        const key = `${h.seq}:${target.sessionId || target.pane}`;
++        if (state.delivered.includes(key) || state.pending.some((p) => p.key === key)) continue;
++        const text = buildPointer(rec);
++        const ok = dry ? true : await doWake(sourceByIndex(target._srcIndex ?? 0), target.pane, text);
++        if (ok) { state.delivered.push(key); summary.retainedDelivered++; log(`RETAINED DELIVERED seq=${h.seq} -> ${handle}@${target.pane}`); }
++        else state.pending.push({ key, pane: target.pane, text, srcIndex: target._srcIndex ?? 0 });
++      }
++    }
++    h.waiting = waiting;
++    if (waiting.length || (h.ambiguous || []).length) keepHeld.push(h);
++  }
++  state.held = keepHeld;
+   for (const rec of records) {
+     const seq = rec.brokerSequence;
+     if (!Number.isInteger(seq)) continue;      // skip legacy/non-broker records
+     if (seq <= state.lastSeq) continue;
+-    const routing = selectWakeTargets(rec, sessions, { map: AGENT_MAP, sessionExtra });
++    const routing = applyDefaultSeats(selectWakeTargets(rec, sessions, { map: AGENT_MAP, sessionExtra }), sessions, loadDefaultSeats());
+     for (const target of routing.wake) {
+       const key = `${seq}:${target.sessionId || target.pane}`;
+       if (state.delivered.includes(key) || state.pending.some((p) => p.key === key)) continue;
+@@ -231,6 +305,13 @@
+     for (const a of routing.ambiguous) { summary.held++; log(`HELD seq=${seq} handle=${a.handle} project=${a.project || '-'} candidates=${a.candidates.map((c) => c.pane).join('|')} (ambiguous — reported, not delivered)`); }
+     for (const u of routing.unreachable) { summary.unreachable++; log(`UNREACHABLE seq=${seq} handle=${u.handle} target=${u.token} (explicit target not live)`); }
+     if (routing.unroutable.length) { summary.unroutable += routing.unroutable.length; }
++    const waiting = [...new Set([...routing.unreachable.map((u) => u.handle), ...offlineHandles(rec, routing)])];
++    const ambiguousHandles = routing.ambiguous.map((a) => a.handle);
++    if ((waiting.length || ambiguousHandles.length) && !state.held.some((h) => h.seq === seq)) {
++      state.held.push({ seq, eventId: rec.eventId || null, firstHeldAt: now, waiting, ambiguous: ambiguousHandles });
++      summary.retained++;
++      if (waiting.length) log(`RETAINED seq=${seq} waiting=${waiting.join('|')} (seat offline or explicit target not live; will deliver when it appears)`);
++    }
+     if (seq > maxSeq) maxSeq = seq;
+   }
+   state.lastSeq = maxSeq;
