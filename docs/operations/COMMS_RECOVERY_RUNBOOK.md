@@ -99,6 +99,20 @@ node D:\StarqTech\agent-comms\scripts\gateway-supervisor.mjs --status
 
 Healthy: three "running" lines; lock HELD by a live pid; safety hold NONE; relay HEALTHY.
 
+## After a reboot
+
+1. Sign in to Windows and open Herdr. Nothing else is needed.
+2. Wait up to 5 minutes for the keeper task, then run
+   `powershell -File D:StarqTechagent-commsscriptserify-comms-after-reboot.ps1`.
+   It is read-only and prints PASS or FAIL for: keeper task ran since boot, StarqBot running with
+   lock held and relay healthy, Herdr, dispatcher, Cloudroom app, mirror cursor at the Room tail,
+   no pending outbound failure. Exit code 0 means all passed.
+3. Gap test: post one Room record while Nitro is down or just after sign-in and confirm the
+   gateway log shows `delivered record #<seq>` once.
+
+Run on 2026-11-11 with no reboot: all 8 checks pass (the "since boot" checks compare with the
+last boot at 05:37).
+
 ## If something is wrong
 
 | Symptom | Do |
