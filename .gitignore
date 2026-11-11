@@ -8,6 +8,7 @@ room.jsonl
 inbox/
 cursors/
 identities.json
+!tests/fixtures/identities.json
 staff-state.json
 
 # Per-machine runtime state — never commit (see docs/handover/OPERATIONS_ROOM_HANDOVER_2026-11-07.md §5,§7).

@@ -1,0 +1,137 @@
+{
+  "$schema": "sanitized-test-fixture",
+  "_note": "SANITIZED TEST FIXTURE derived from the live identity registry. Authority-relevant fields only; avatars/notes/publicKeys/timestamps removed. NOT the live registry. CI points COMMS_IDENTITIES_PATH here.",
+  "version": "1.0.0",
+  "identities": [
+    {
+      "canonicalHandle": "ali",
+      "aliases": [
+        "@ali",
+        "ali"
+      ],
+      "status": "retired",
+      "authorityLevel": "NONE",
+      "authorityIdentityId": "founder",
+      "legacyAliasOf": "mustarq",
+      "identityId": "ident_01J6ALI0000000000000000001",
+      "displayName": "Mustarq (legacy handle)",
+      "role": "RETIRED — legacy Telegram gateway handle only. Canonical Founder identity is @mustarq.",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "mustarq",
+      "aliases": [
+        "@mustarq",
+        "@musthaq",
+        "mustarq",
+        "musthaq"
+      ],
+      "status": "active",
+      "authorityLevel": "ROOT_GENESIS",
+      "authorityIdentityId": "founder",
+      "identityId": "ident_01J6MST0000000000000000009",
+      "displayName": "Mustarq",
+      "role": "Founder & Mission Control (CANONICAL)",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "antigravity",
+      "aliases": [
+        "@ag",
+        "@antigravity",
+        "ag",
+        "antigravity"
+      ],
+      "status": "active",
+      "authorityLevel": "CORE_AGENT",
+      "identityId": "ident_01J6AG00000000000000000002",
+      "displayName": "AG",
+      "role": "Finance Kernel & Core Architecture",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "codex",
+      "aliases": [
+        "@codex",
+        "codex"
+      ],
+      "status": "active",
+      "authorityLevel": "CORE_AGENT",
+      "identityId": "ident_01J6CD00000000000000000003",
+      "displayName": "Codex",
+      "role": "Security Remediation & Migrations",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "claude",
+      "aliases": [
+        "@elder",
+        "@claude",
+        "claude",
+        "elder"
+      ],
+      "status": "active",
+      "authorityLevel": "CORE_AGENT",
+      "identityId": "ident_01J6CL00000000000000000004",
+      "displayName": "Elder",
+      "role": "Senior Engineer / Duty Operator",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "cursor",
+      "aliases": [
+        "@cursor",
+        "cursor"
+      ],
+      "status": "active",
+      "authorityLevel": "CORE_AGENT",
+      "identityId": "ident_01J6CU00000000000000000005",
+      "displayName": "Cursor",
+      "role": "Pair Programming & Live Refactoring",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "deadpool",
+      "aliases": [
+        "@deadpool",
+        "deadpool",
+        "@dp",
+        "dp",
+        "@hermes",
+        "hermes"
+      ],
+      "status": "active",
+      "authorityLevel": "CORE_AGENT",
+      "identityId": "ident_01J6DP00000000000000000016",
+      "displayName": "Deadpool / DP",
+      "role": "WSL Hermes Operator",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "vision",
+      "aliases": [
+        "@vision",
+        "vision"
+      ],
+      "status": "active",
+      "authorityLevel": "CORE_AGENT",
+      "identityId": "ident_01J6VI00000000000000000008",
+      "displayName": "Vision",
+      "role": "Windows Founder-Facing Comms, Status & Durable Handoffs",
+      "signatureAlgorithm": "none"
+    },
+    {
+      "canonicalHandle": "copilot",
+      "aliases": [
+        "@copilot",
+        "copilot"
+      ],
+      "status": "active",
+      "authorityLevel": "EXTERNAL_AGENT",
+      "identityId": "ident_01M6BP9BZSP9DDMJJB4B57B6C8",
+      "displayName": "Copilot",
+      "role": "Software Engineer — Platform & Usability",
+      "signatureAlgorithm": "none"
+    }
+  ]
+}

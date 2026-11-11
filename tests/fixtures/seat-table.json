@@ -1,0 +1,27 @@
+{
+  "schema": "starq.seats/1",
+  "note": "SYNTHETIC test fixture. Instances, pids and paths are invented; this is not the production seat table.",
+  "backends": [
+    { "key": "windows/default", "bin": "C:/synthetic/herdr.exe", "delivery": "verified" },
+    { "key": "wsl/default", "bin": "wsl.exe", "args": ["-d", "Ubuntu", "--", "/home/mustarq/.local/bin/herdr"], "delivery": "verified" },
+    { "key": "wsl/starq-wsl-deadpool", "bin": "wsl.exe", "args": ["-d", "Ubuntu", "--", "/home/mustarq/.local/bin/herdr"], "session": "starq-wsl-deadpool", "delivery": "verified" }
+  ],
+  "seats": [
+    { "seatId": "codex-chief", "enrollmentSeq": 11, "handle": "codex", "instance": "codex-inst-0001", "roles": ["chief-engineer"], "default": true,
+      "backend": "windows/default", "pane": "w1:p1", "herdrAgent": "codex", "pid": 1001, "cwd": "D:\\Work\\ERP", "evidence": "synthetic" },
+    { "seatId": "erp-floor-lead", "enrollmentSeq": 12, "handle": "claude", "instance": "claude-erp-0001", "roles": ["erp-floor-lead", "erp-architect"], "default": false,
+      "backend": "windows/default", "pane": "w1:p5", "herdrAgent": "claude", "pid": 1005, "cwd": "D:\\Work\\ERP", "evidence": "synthetic" },
+    { "seatId": "ops-room-deputy", "enrollmentSeq": 13, "handle": "claude", "instance": "claude-ops-0001", "roles": ["ops-room-deputy"], "default": false,
+      "backend": "windows/default", "pane": "w3:p1", "herdrAgent": "claude", "pid": 1031, "cwd": "D:\\Work\\ops-room", "evidence": "synthetic" },
+    { "seatId": "erp-wsl-verification", "enrollmentSeq": 14, "handle": "claude", "instance": "claude-wsl-0001", "roles": ["erp-wsl-verification"], "default": false,
+      "backend": "wsl/default", "pane": "w1:p4", "herdrAgent": "claude", "pid": 2004, "cwd": "/mnt/d/Work/ERP", "evidence": "synthetic" },
+    { "seatId": "erp-cursor", "enrollmentSeq": 15, "handle": "cursor", "instance": "cursor-inst-0001", "roles": ["erp-fullstack-studio-lead"], "default": false,
+      "backend": "windows/default", "pane": "w1:p6", "herdrAgent": "cursor", "pid": 1006, "cwd": "D:\\Work\\ERP", "evidence": "synthetic" },
+    { "seatId": "hoadhaa-lead", "enrollmentSeq": 16, "handle": "antigravity", "instance": "agy-hoa-0001", "roles": ["hoadhaa-lead"], "default": false,
+      "backend": "windows/default", "pane": "w2:p1", "herdrAgent": "agy", "pid": 1021, "cwd": "D:\\Work\\Hoadhaa", "evidence": "synthetic" },
+    { "seatId": "erp-ui-lead", "enrollmentSeq": 17, "handle": "antigravity", "instance": "agy-erp-0001", "roles": ["erp-ui-lead"], "default": false, "neverWake": true,
+      "backend": "windows/default", "pane": "w1:p3", "herdrAgent": "agy", "pid": 1003, "cwd": "D:\\Work", "evidence": "synthetic" },
+    { "seatId": "wsl-operator", "enrollmentSeq": 18, "handle": "deadpool", "instance": "deadpool-0001", "roles": ["wsl-operator"], "default": true,
+      "backend": "wsl/starq-wsl-deadpool", "pane": "w1:p1", "herdrAgent": "hermes", "pid": 2001, "cwd": "/home/synthetic", "evidence": "synthetic" }
+  ]
+}

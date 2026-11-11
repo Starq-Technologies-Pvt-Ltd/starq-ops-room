@@ -1,0 +1,42 @@
+{
+  "schema": "starq.seats/1",
+  "status": "CANDIDATE - not deployed, not armed. Snapshot of bindings verified 2026-11-10; pids change on every harness restart and must be re-verified before any canary.",
+  "task": "COMMS-ROUTING-20261110",
+  "backends": [
+    { "key": "windows/default", "bin": "env:HERDR_BIN_PATH", "delivery": "verified",
+      "note": "Nitro Windows, Herdr 0.9.5 default session. agent list, pane process-info and agent prompt all exercised from w3:p1 on 2026-11-10." },
+    { "key": "wsl/default", "bin": "wsl.exe", "args": ["-d", "Ubuntu", "--", "/home/mustarq/.local/bin/herdr"], "delivery": "unverified",
+      "note": "Ubuntu WSL, Herdr 0.9.5 default session. Read-only discovery verified from Windows. One identified canary on 2026-11-11 (Room #18795, recipient evidence #18797): agent prompt through wsl.exe to w1:p4 was accepted and arrived as a single prompt. Kept unverified, so seats here still HOLD (BACKEND_DELIVERY_UNVERIFIED), until Codex or the Founder decides whether a wsl.exe caller outside the WSL server is an accepted path; Herdr documents only --machine for cross-server control. See docs/reviews/WSL_DELIVERY_PATH_AND_FOUNDER_INGRESS_2026-11-11.md." }
+  ],
+  "seats": [
+    { "seatId": "codex-chief-engineer", "enrollmentSeq": 18737, "handle": "codex", "instance": "01a1c4c0-23ab-75d2-95cb-3a41fc2dc826", "roles": ["chief-engineer"], "default": true,
+      "backend": "windows/default", "pane": "w1:p1", "herdrAgent": "codex", "pid": 23024, "cwd": "D:\\StarqTech\\Projects\\StarqERP",
+      "evidence": "Room #18737 senderInstanceId; pane process-info read 2026-11-10. Sole codex default seat by Founder direction (a post directed to @codex wakes Codex), relayed by Codex on 2026-11-10." },
+    { "seatId": "erp-floor-lead", "enrollmentSeq": 18742, "handle": "claude", "instance": "claude-herdr-w1p5-20261110", "roles": ["erp-floor-lead", "erp-architect"], "default": false,
+      "backend": "windows/default", "pane": "w1:p5", "herdrAgent": "claude", "pid": 356, "cwd": "D:\\StarqTech\\Projects\\StarqERP",
+      "evidence": "Room #18742 (seat's own report); pane process-info read 2026-11-10. Lead asked for bare @claude to HOLD." },
+    { "seatId": "ops-room-deputy", "enrollmentSeq": 18733, "handle": "claude", "instance": "e97d7e67-fd68-40a1-9c4e-a7e8be387554", "roles": ["ops-room-deputy"], "default": false,
+      "backend": "windows/default", "pane": "w3:p1", "herdrAgent": "claude", "pid": 15944, "cwd": "D:\\StarqTech\\starq-ops-room",
+      "evidence": "Room #18733, #18734, #18737. Herdr agent_session for this pane is stale (7db2e99c...) and is deliberately NOT asserted." },
+    { "seatId": "erp-wsl-verification", "enrollmentSeq": 18728, "handle": "claude", "instance": "claudewsl-wsl-w1p4-20261110", "roles": ["erp-wsl-verification"], "default": false,
+      "backend": "wsl/default", "pane": "w1:p4", "herdrAgent": "claude", "pid": 280490, "cwd": "/mnt/d/StarqTech/projects/starqerp",
+      "evidence": "Room #18728 (seat's own startup record) and #18742 (Floor Lead). Seat itself was not contacted for this table." },
+    { "seatId": "hoadhaa-lead", "enrollmentSeq": 18741, "handle": "antigravity", "instance": "9629f477-1881-4439-892c-696810cd7f90", "roles": ["hoadhaa-lead"], "default": false,
+      "backend": "windows/default", "pane": "w2:p1", "herdrAgent": "agy", "pid": 11456, "cwd": "D:\\StarqTech\\Projects\\Hoadhaa",
+      "evidence": "Room #18741 (seat's own report); pane process-info read 2026-11-10. Lead asked for bare @antigravity to HOLD." },
+    { "seatId": "erp-cursor", "enrollmentSeq": 18718, "handle": "cursor", "instance": "cursor-session-fixed", "roles": ["erp-fullstack-studio-lead"], "default": false,
+      "backend": "windows/default", "pane": "w1:p6", "herdrAgent": "cursor", "pid": 26060, "cwd": "D:\\StarqTech\\Projects\\StarqERP",
+      "herdrAgentSession": "5778cc04-3b32-464b-8c17-ff2beaa73ba3",
+      "evidence": "Room #18750 (seat self-report); refreshed Herdr agent get and pane process-info on 2026-11-10. Explicitly addressed direct notification approved by ERP Floor Lead." },
+    { "seatId": "erp-antigravity", "enrollmentSeq": 18716, "handle": "antigravity", "instance": "102fe6e6-b017-4561-a93a-3d3285da96e8", "roles": [], "default": false, "neverWake": true,
+      "backend": "windows/default", "pane": "w1:p3", "herdrAgent": "agy", "pid": 29984, "cwd": "D:\\StarqTech",
+      "evidence": "Room #18742: Founder-operated, must never be woken by the dispatcher. Instance is the Herdr value, not confirmed by the seat; listed only so it can never be selected." }
+  ],
+  "unroutableSeats": [
+    { "seatId": "erp-copilot", "handle": "copilot", "role": "erp-independent-assurance-reviewer", "backend": "windows/default", "pane": "w1:p7", "herdrAgent": "copilot", "pid": 30492, "cwd": "D:\\StarqTech\\Projects\\StarqERP", "reason": "ROOM_INSTANCE_UNKNOWN; Herdr exposes no agent_session and seat has not supplied a current Room sender instance. Do not invent an instance; keep unregistered until the existing session supplies one. Independent review remains subject to DEC-072." },
+    { "seatId": "erp-opencode", "handle": "opencode", "role": "erp-flexible-engineering-agent", "backend": "windows/default", "pane": "w1:pY", "herdrAgent": "opencode", "pid": 22464, "cwd": "D:\\StarqTech", "reason": "UNPREPARED; wrong repository CWD, no verified Room instance, scratch and assignment readiness unconfirmed. Do not route." },
+    { "seatId": "hoadhaa-devin", "handle": "devin", "role": "hoadhaa-role-a", "backend": "windows/default", "pane": "w2:p2", "herdrAgent": "devin", "pid": 20148, "cwd": "D:\\StarqTech\\Projects\\Hoadhaa", "reason": "ROOM_INSTANCE_UNKNOWN; historical lease stale; do not route until the current session registers." },
+    { "seatId": "hoadhaa-goose", "handle": "goose", "role": "hoadhaa-role-b", "backend": "windows/default", "pane": "w2:p4", "herdrAgent": "goose", "pid": 4740, "cwd": "D:\\StarqTech\\Projects\\Hoadhaa", "reason": "ROOM_INSTANCE_UNKNOWN; historical lease stale; do not route until the current session registers." },
+    { "seatId": "hoadhaa-omp", "handle": "omp", "role": "hoadhaa-role-c", "backend": "windows/default", "pane": "w2:p5", "herdrAgent": "omp", "pid": 30816, "cwd": "D:\\StarqTech\\Projects\\Hoadhaa", "reason": "ROOM_INSTANCE_UNKNOWN; historical lease stale; do not route until the current session registers." }
+  ]
+}

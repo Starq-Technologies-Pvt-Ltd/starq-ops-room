@@ -324,6 +324,44 @@ if (tags.includes('pinned') && !hasPinAuthority(from)) {
   process.exit(1);
 }
 
+// --- Structured routing input (COMMS-ROUTING-20261110 phase 2) ---
+// --routing-file <json> lets the author name exact recipients by role and/or
+// instance: { "schema": "starq.routing/1", "targets": [ { handle, role?, instance?, backend? } ] }.
+// The document is validated in full BEFORE the lease is touched or anything is
+// published; any error refuses the send. Recipients are never inferred from the
+// body, subject or quoted text, and there is no broadcast form. The validated
+// document is written to metadata.routing, and its handles are passed to the
+// broker as explicit mentions so the existing ACTION_REQUIRED gate (unchanged)
+// sees a directed post. When the flag is absent nothing below runs and the
+// sender behaves exactly as before.
+let structuredRouting = null;
+let structuredRoutingHandles = [];
+if (args['routing-file'] != null) {
+  const refuseRouting = (lines) => {
+    console.error('REFUSED: --routing-file was not accepted; nothing was posted.');
+    for (const line of lines) console.error(`  ${line}`);
+    process.exit(1);
+  };
+  if (!(room || to === 'room')) refuseRouting(['--routing-file applies to Room posts only (use --room).']);
+  const { loadRoutingFile, routingHandles } = await import('../protocol/v1/routingInput.mjs');
+  const { evaluateEventRouting, isNoneActionRequired } = await import('../protocol/v1/authorityPolicy.mjs');
+  const loaded = loadRoutingFile(args['routing-file']);
+  if (!loaded.ok) refuseRouting(loaded.errors);
+  if (actionRequired == null || !String(actionRequired).trim() || isNoneActionRequired(actionRequired)) {
+    refuseRouting(['routing targets need a specific --action-required; a NONE or missing action is not delivered to anyone.']);
+  }
+  const handles = routingHandles(loaded.routing);
+  const preview = evaluateEventRouting(from, body, handles, {
+    actionRequired, action, status, routing: loaded.routing,
+    ...(onBehalfOf ? { onBehalfOf, delegated: true } : {}),
+  });
+  if (preview.deliveryType !== 'ACTION_REQUIRED') {
+    refuseRouting([`sender "${from}" cannot dispatch an ACTION_REQUIRED Room event, so these targets would never be delivered.`]);
+  }
+  structuredRouting = loaded.routing;
+  structuredRoutingHandles = handles;
+}
+
 // --- Identity Lease Protocol ---
 // Added 2026-09-08 after two separate sessions both posted as "claude" within
 // the same hour, unaware of each other. A live lease held by a DIFFERENT
@@ -392,6 +430,17 @@ if (!onBehalfOf) {
 
 // Check if this is a Room message
 if (room || to === 'room' || to === 'all') {
+  // COMMS_ROOM_PATH redirects the Room file (isolated test seam, see
+  // protocol/v1/ingressPaths.mjs). Never let that happen silently: a leaked
+  // variable would otherwise divert posts while the normal success line prints.
+  // stderr only, so stdout stays identical for callers that parse it.
+  const roomRedirect = process.env.COMMS_ROOM_PATH;
+  const isRedirected = roomRedirect != null && roomRedirect !== '';
+  if (isRedirected) {
+    console.error('WARNING: COMMS_ROOM_PATH is set. This post goes to an ISOLATED Room file, NOT the canonical Room:');
+    console.error(`  ${roomRedirect}`);
+    console.error('  Other agents and the Founder will not see it. Unset COMMS_ROOM_PATH for a real post.');
+  }
   try {
     const { emitEvent } = await import('../protocol/v1/ingress.mjs');
     const { evaluateEventRouting } = await import('../protocol/v1/authorityPolicy.mjs');
@@ -400,9 +449,10 @@ if (room || to === 'room' || to === 'all') {
       actionRequired,
       action,
       status,
+      ...(structuredRouting ? { routing: structuredRouting } : {}),
       ...(onBehalfOf ? { onBehalfOf, delegated: true } : {})
     };
-    const route = evaluateEventRouting(from, body, [], metadataForRouting);
+    const route = evaluateEventRouting(from, body, structuredRoutingHandles, metadataForRouting);
     const structured = buildStructuredRoomMetadata({
       subject, status, action, actionRequired, references, replyTo, telegramUpdateId,
       deliveryType: route.deliveryType,
@@ -415,12 +465,14 @@ if (room || to === 'room' || to === 'all') {
       action,
       threadId: thread,
       replyTo,
+      ...(structuredRouting ? { explicitMentions: structuredRoutingHandles } : {}),
       metadata: {
         task, action,
         subject: structured.subject,
         status: structured.status,
         actionRequired: structured.actionRequired,
         references: structured.references,
+        ...(structuredRouting ? { routing: structuredRouting } : {}),
         ...(args.project ? { project: args.project } : {}),
         ...(tags.length ? { tags } : {}),
         ...(telegramUpdateId != null ? { telegramUpdateId } : {}),
@@ -463,6 +515,9 @@ if (room || to === 'room' || to === 'all') {
       console.log(`  → Action Required tagged: ${tagged || 'UNKNOWN'}`);
     } else {
       console.log(`  → Broadcast to all agents (CC_CONTEXT)`);
+    }
+    if (isRedirected) {
+      console.error(`WARNING: record #${record.brokerSequence} was written to the ISOLATED Room at ${roomRedirect}, not the canonical Room.`);
     }
   } catch (err) {
     const { writeRoomPostFailure } = await import('../protocol/v1/ingress.mjs');
