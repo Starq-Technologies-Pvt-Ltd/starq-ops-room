@@ -1,7 +1,7 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18967. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18972. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
@@ -99,6 +99,10 @@ In Progress [#18964, #18965].
 
 At the next session start, verify StarqBot is HEALTHY before any work (SOP, "StarqBot
 recovery").
+
+Open assignment for this seat: `FOUNDER-STARQBOT-PRIMARY-DELIVERY-20261111` [#18971, ACK #18972]
+— make StarqBot the primary Room-to-Founder delivery path with the Deadpool relay secondary.
+Verification first; no live change, restart or replay without a reviewed, tested change.
 
 ## Chain of command and message tracking
 

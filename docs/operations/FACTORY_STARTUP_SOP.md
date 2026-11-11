@@ -131,7 +131,7 @@ and does not treat an earlier state as a later one.
 |---|---|
 | Delivered | The Herdr agent surface accepted the prompt, or the Room record is stored and reads back complete |
 | Working | The seat is observed working or blocked: Herdr state, or the live pane and process |
-| ACK | The seat's own task ACK in Room, under its own identity |
+| ACK | The seat's own task ACK in Room, under its own identity. An ACK seen in a terminal or pane, or relayed by a lead, shows the seat received the prompt; it is not the ACK [#18964, #18970] |
 | Done | The seat's own result record in Room |
 | Evidence | The commit, PR, file path or output that the result record names, checked by the receiver |
 
