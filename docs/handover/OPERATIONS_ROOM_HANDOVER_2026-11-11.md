@@ -1,7 +1,7 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18931. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18936. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
@@ -76,6 +76,16 @@ Do not resume without a new direction.
     `docs/incidents/2026-11-11-vision-review-bridge-blocked.md`. The bridge source is outside
     version control.
 11. No supervisor or autostart is verified for the live dispatcher (pid 34044).
+12. Vision could not post to Room from a second instance while its lease was held by its
+    Cloudroom instance; its PR #204 disposition reached Room only through Codex [#18935].
+
+## Reviews blocked at handover
+
+- PR #204 (StarqERP), head `808ad84`: independent review BLOCKED, no verdict. Founder to choose
+  a one-off interim solo Vision review or to keep the gate [#18935].
+- HOA-253 (Hoadhaa), candidate `4edf2dab`: independent review BLOCKED [#18923].
+- Bridge correction pass: assigned to Antigravity `w1:p3` under `VISION-BRIDGE-REPAIR`, ACKed,
+  not yet delivered [#18933, #18934]. Vision reviews it under #18642.
 
 ## Chain of command and message tracking
 

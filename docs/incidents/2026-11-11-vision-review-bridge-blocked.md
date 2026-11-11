@@ -7,7 +7,7 @@ from reading files and Room records at 15:25–15:35 PKT.
 ## Effect
 
 - Hoadhaa: HOA-253 independent review is blocked at candidate `4edf2dab` [#18923].
-- StarqERP: PR #204 review at head `808ad84` is routed to Vision [#18930] and meets the same gate.
+- StarqERP: the PR #204 review at head `808ad84` is BLOCKED with no verdict [#18930, #18935].
 - On 2026-11-08, PR #201 and PR #203 were reviewed only through Founder-authorised one-off
   interim reviews because of this bridge [#18611, #18614, #18639].
 
@@ -123,6 +123,18 @@ with a rollback hash. Builder independent of Vision; Vision accepts.
 
 Until step 6, an interim review of any package needs the Founder's explicit one-off
 authorisation, as on 2026-11-08.
+
+## Follow-up on 2026-11-11
+
+- 15:33 — Codex assigned a correction pass for the five defects above to the original builder,
+  Antigravity `w1:p3`, under the same task `VISION-BRIDGE-REPAIR`, in the existing isolated
+  candidate `D:\StarqTech\_worktrees\vision-hermes-bridge-repair-20261108`. Synthetic-only E2E;
+  no real Cloudroom task, no promotion, no runtime change. Vision reviews under #18642 [#18933].
+  This covers steps 2 to 4 of the plan above. Steps 1, 5 and 6 are still open.
+- 15:34 — Builder ACK; no edit yet [#18934].
+- 15:34 — The gate bit a second package: the PR #204 review at `808ad84` is BLOCKED with no
+  verdict. Founder to choose between a one-off interim solo review and keeping the gate
+  [#18935].
 
 ## Limits of this investigation
 
