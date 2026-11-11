@@ -30,6 +30,42 @@ and an authority below disagree, the authority wins and this file is corrected.
 - Every assignment has exactly one owner.
 - Merge and release authority stays with the Founder.
 
+## Save mode and delegated execution (Founder #18981)
+
+Codex commands. Floor Leads execute. Specialists assist. Operations Claude maintains continuity.
+Vision verifies.
+
+- Codex stays Chief Engineer and Project Director with overall accountability, and spends its
+  capacity on direction, delegation, critical decisions and short consolidation. It does not
+  redo delegated work or poll for updates.
+- Each lead owns execution on its floor and reports results in Room without being asked twice.
+- Operations Claude consolidates the Floor Leads' handovers and notifies the Founder when an
+  existing Command conversation is ready.
+- Escalate to Codex only what needs Chief Engineer judgement, and to the Founder only what
+  needs Founder authority.
+- The organisation keeps working when Codex is near its usage limit.
+
+## Addressing a message (Founder decision 4a)
+
+- Name the sender seat and every recipient explicitly. Use canonical handles; qualify a shared
+  handle with its pane, for example `@claude#w3:p1`.
+- For the Founder use `@mustarq` in the body, and begin the action-required text with
+  `mustarq:`. Until the gateway filter is corrected (4b), a record that names another owner
+  first is not sent to Telegram.
+- A missed record is reissued once, as a new record that cites the original sequence. History
+  is never replayed.
+
+## Delivery is not receipt
+
+| Level | Evidence | What it proves |
+|---|---|---|
+| Stored | the Room record reads back complete | the message exists |
+| Accepted | gateway cursor past the record with no failure, or the Telegram API returned ok | the transport took it |
+| **Received** | the recipient says so, in Room or by replying | the person or seat has it |
+
+Only the third is receipt. Cursor progress, an API ok and a pane showing text are never
+reported as receipt [Founder #18981].
+
 ## Hierarchy at startup (as of Room #18912)
 
 | Role | Holder | Seat | Reports to |

@@ -64,7 +64,16 @@ from Deadpool plus StarqBot's copy of each directed one.
   #18975 therefore passed the filter and was sent without error. This is inferred from state:
   there is no explicit success line, and Telegram itself was not read.
 - Deadpool: no delivered row on 2026-11-11; latest rows all failed. It did not duplicate.
-- Closing proof still needed: the Founder's confirmation of exactly one copy.
+- **Receipt is UNCONFIRMED.** The Founder ruled that receipt of #18975 stays unconfirmed until
+  he verifies it explicitly, and that delivery is not to be inferred from cursor progress
+  [#18981]. The lines above show gateway acceptance only.
+
+## Founder decisions [#18981]
+
+4a, 4b and 4c are authorised as work for Operations Claude: addressing standard and selective
+reissue (4a); prepare and test multi-recipient filtering (4b); design Deadpool as failover-only
+(4c). Review and production-activation gates are unchanged: nothing is activated, restarted or
+re-enabled without them [#18983].
 
 ## Decisions pending
 

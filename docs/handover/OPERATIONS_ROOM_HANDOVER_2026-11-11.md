@@ -1,7 +1,7 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18977. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18989. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
@@ -15,6 +15,22 @@ authority and accountability across every floor and department; delegation does 
 that accountability. Completion and blockers from this seat go to Codex through Room. Merges and
 releases stay with the Founder. The full hierarchy is in
 `docs/operations/FACTORY_STARTUP_SOP.md`.
+
+## Standing duties from Founder #18981 (assigned in #18983)
+
+1. Keep the SOP, roster, journal and handovers current.
+2. 4a — addressing standard; reissue a missed record only when one is identified.
+3. 4b — candidate multi-recipient filter with tests, in a reviewable PR; no activation.
+4. 4c — design for Deadpool as health-gated failover-only sender; do not enable the cron.
+5. Consolidate the ERP and Hoadhaa handover refreshes [#18984, #18985] and notify the Founder
+   at `@mustarq` when each existing Command conversation is ready.
+
+Codex is in save mode: report results in Room, do not wait to be polled. Receipt of #18975 by
+the Founder is UNCONFIRMED.
+
+**Unpushed work:** at #18989 the PR #5 branch had local commits not on GitHub (GitHub head
+`4350bbc`), because the harness at this pane denied the push. Check `git status -sb` in the
+worktree and push once the operator allows it.
 
 ## Recovering this seat in a new session
 
