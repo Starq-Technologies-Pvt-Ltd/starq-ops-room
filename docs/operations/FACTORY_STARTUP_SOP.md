@@ -63,8 +63,12 @@ an idle prompt, or Herdr's `agent_status` is not readiness.
    - `node agent-comms\scripts\gateway-supervisor.mjs --status` — StarqBot gateway.
    - `node 00_STARQ_HQ\operations\starq-command\scripts\command-lifecycle.mjs status` — Starq Command.
    - Room reader: `readRoomSnapshot()` returns `state: OK`, `stable: true`.
-   - A stopped service is started only by the seat authorised to do so, by the procedure in
-     `AGENTS.md`. Other seats report the state and do not restart it.
+   - **StarqBot must be HEALTHY before any new session starts assigned work** [Founder
+     direction, Room #18952, #18953]. If it is not, recover it as set out under "StarqBot
+     recovery" below, verify HEALTHY again, and only then proceed. If safe recovery does not
+     produce HEALTHY, report the exact blocker in Room and stop.
+   - Starq Command: a stopped or degraded Command is handled by the procedure in `AGENTS.md`.
+     A seat told not to restart services reports the state and leaves it.
 2. **Chief Engineer seat.** The Founder starts Codex. Codex completes the session startup gate and
    reads the Room tail.
 3. **Floor leads.** Codex posts each floor lead's assignment in Room, then sends a pane pointer to
@@ -86,6 +90,27 @@ an idle prompt, or Herdr's `agent_status` is not readiness.
    its tools work.
 7. **Work resumes.** Assignments are issued only to seats with a readiness record for the current
    session.
+
+## StarqBot recovery
+
+From `AGENTS.md`, Room #18952 and the incident of 2026-11-11
+(`docs/incidents/2026-11-11-starqbot-gateway-down-after-reboot.md`).
+
+1. Check: `node agent-comms\scripts\gateway-supervisor.mjs --status`.
+2. If not healthy, start it through the established wrapper,
+   `agent-comms\scripts\start-starq-bot-if-needed.ps1`, and check again.
+3. **Dead-pid stale lock.** The wrapper stops when the lock file names a process that no longer
+   exists; it does not clear that lock itself. This was the root cause on 2026-11-11 [#18950].
+   Only when both are confirmed — the recorded pid is dead, and no gateway or wrapper process
+   is running — clear that one stale lock with the supervisor, then run the wrapper again.
+   Never release a lock whose pid is alive.
+4. Preserve the safety hold, the relay cursor and any pending or ambiguous outbound state.
+   Never reset the cursor or replay the backlog as a routine startup step.
+5. Verify: lock held by a live pid, safety hold as before, relay HEALTHY, cursor advancing to
+   the Room tail. Record the recovery in Room.
+
+This rule does not override a specific instruction to a seat not to restart services; that seat
+reports the state to its lead instead.
 
 ## Per-seat gate (summary; the full text is in `AGENTS.md`)
 
