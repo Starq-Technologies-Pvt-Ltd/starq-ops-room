@@ -42,6 +42,11 @@ return to Founder-action-only delivery.
   gateway continues from the cursor, so records committed while it was down are sent then.
 - Telegram rate limit (429): the gateway waits the time Telegram asks for and sends again. A
   429 means the message was not accepted, so this cannot duplicate.
+- **Network down.** A send that fails before any connection to Telegram exists (DNS failure,
+  connection refused, network unreachable) is certain not to have been delivered. It is marked
+  failed, not ambiguous; the supervisor restarts the gateway and the record is sent once the
+  network is back. Before this change, such a failure stopped the mirror until a person ran a
+  duplicate-confirmation (seen on 5 Nov). Takes effect at the gateway's next restart.
 - Any other failed send stops the mirror at that record until the gateway process restarts. The
   supervisor or the keeper restarts it and the record is retried. An ambiguous send (the call
   threw) is not retried automatically, by design: it could duplicate.
@@ -118,6 +123,7 @@ over a live identity lease.
 | Quoted handles | only the addressee woken | Room #19041, dispatcher log 16:01:31Z |
 | Seat addressing its own pane | not woken | Room #19042 |
 | Founder's Telegram receipt | confirmed by the Founder | Room #19034 |
+| Network down during a send (unit tests with real Node error shapes) | retried and delivered once; mid-send reset stays ambiguous | `testsstarq-bot-gateway-network-retry.test.mjs`, 3 pass |
 | StarqBot crash with stale lock → restart by the scheduled task | recovered in about 30 s | keeper log 20:45:50 PKT |
 | Record committed while StarqBot was down | sent after restart | Room #19026, gateway log 15:46:23Z |
 | Mirror of ordinary records | #19026–#19030 each logged as delivered | gateway log |

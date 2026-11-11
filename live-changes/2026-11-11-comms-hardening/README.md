@@ -9,6 +9,7 @@ independently reviewed. Operation and rollback: `docs/operations/COMMS_RECOVERY_
 | `starq-bot-gateway.mjs.patch` | `scripts/starq-bot-gateway.mjs` | optional full mirror (`mirrorAll`), Telegram 429 back-off, a log line per delivered record |
 | `room-dispatcher.mjs.patch` | `scripts/room-dispatcher.mjs` | retain records for offline seats; wake only addressed handles; never wake the sender's own pane; default-seat reader (no file exists, by Founder decision #19034) |
 | `starq-bot-gateway-mobile-layout.mjs.patch` | `scripts/starq-bot-gateway.mjs` | Founder #19039: selectable mobile layout (`layout`), **off by default**; samples in `mobile-layout-samples.md` |
+| `starq-bot-gateway-network-retry.mjs.patch` | `scripts/starq-bot-gateway.mjs` | a send that fails before any connection to Telegram (DNS, refused, unreachable) is retried, not marked ambiguous; resets mid-send stay ambiguous |
 | `send.mjs.patch` | `scripts/send.mjs` | stamp `senderPane` / `senderHost` from `HERDR_PANE_ID` |
 | `start-starq-bot-if-needed.ps1.patch` | `scripts/start-starq-bot-if-needed.ps1` | clear a dead-pid stale lock when no gateway process exists |
 | `keep-starq-comms.ps1` | `scripts/keep-starq-comms.ps1` | new: idempotent keeper run by the scheduled task |
@@ -16,7 +17,7 @@ independently reviewed. Operation and rollback: `docs/operations/COMMS_RECOVERY_
 
 SHA-256 (first 16) after / before:
 
-- `starq-bot-gateway.mjs` `a89729a6ab4adc0b` / `1780cc0aeadeff09` (after the mirror step: `40df49bc7676c73a`, backup `starq-bot-gateway.pre-mobile-20261111.mjs`)
+- `starq-bot-gateway.mjs` `33fdcf331c5ab34b` (after mobile layout: `a89729a6ab4adc0b`, backup `.pre-netretry-20261111`) / `1780cc0aeadeff09` (after the mirror step: `40df49bc7676c73a`, backup `starq-bot-gateway.pre-mobile-20261111.mjs`)
 - `room-dispatcher.mjs` `71e6ede337c4abfa` / `a01aceb218458b32`
 - `send.mjs` `8185191beff01c4f` (backup `send.pre-senderpane-20261111.mjs`)
 - `start-starq-bot-if-needed.ps1` `d80aad07e3ea7455` / `98f050a38a6bdba4`
