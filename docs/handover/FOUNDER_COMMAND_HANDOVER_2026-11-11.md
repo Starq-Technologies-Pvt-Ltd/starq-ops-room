@@ -109,6 +109,16 @@ the #204 diff or verify the WSL brief.
 **Roster reported** — Antigravity `w2:p1` lead; Devin `w2:p2`, Goose `w2:p4`, OMP `w2:p5` online
 and idle [#18959].
 
+**State transition after the handover snapshot** [#18964, #18965, #18967]
+
+The table and the differences above are the position at 16:01 PKT. At 16:02 the floor lead
+reported five memory samples between 1.89 and 2.05 GiB free, the WP-3 worktree clean at
+`d493324`, and HOA-255 dispatched to Devin (`w2:p2`) as the single builder. Codex confirmed the
+conditional authorisation of #18917 satisfied and HOA-255 **In Progress**. Hoadhaa-Dev remains
+READY TO RESUME. PR #8 is untouched and still awaits the Founder. HOA-253 is still blocked and
+not accepted. Devin's ACK was relayed by the floor lead; Devin has not posted its own Room
+record for HOA-255.
+
 ## Recommended order of discussion [#18962]
 
 1. StarqERP: PR #204 review route and the P2P control policy.

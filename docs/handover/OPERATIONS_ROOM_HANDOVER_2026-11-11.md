@@ -1,7 +1,7 @@
 # Operations Room handover — 2026-11-11
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18964. The previous handover is
+`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #18967. The previous handover is
 `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
 
 ## Mandate
@@ -93,8 +93,9 @@ Do not resume without a new direction.
 
 Nothing pending. The Founder's execution-to-Command handover [#18948] is preserved in
 `docs/handover/FOUNDER_COMMAND_HANDOVER_2026-11-11.md`: StarqERP-Dev WAITING FOR CHECKPOINT
-(Founder: PR #204 review route); Hoadhaa-Dev READY TO RESUME for planning, HOA-255 conditional
-on stable memory [#18958, #18959, #18962].
+(Founder: PR #204 review route); Hoadhaa-Dev READY TO RESUME [#18958, #18959, #18962]. After
+that snapshot the HOA-255 gate opened and Devin (`w2:p2`) became its single builder; HOA-255 is
+In Progress [#18964, #18965].
 
 At the next session start, verify StarqBot is HEALTHY before any work (SOP, "StarqBot
 recovery").
