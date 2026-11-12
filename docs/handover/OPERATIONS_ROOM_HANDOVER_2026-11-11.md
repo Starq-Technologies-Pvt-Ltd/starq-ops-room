@@ -59,7 +59,16 @@ Engineering Activity standard asks for the real contributor. Nothing was rewritt
 the unpublished history as it is, or correcting the author on the unpublished commits before the first push. New commits
 use `Claude (Operations Deputy)` and the Standard A email with a `Co-Authored-By` trailer for the actual model.
 
-## Policy conflicts for the Acting CE (flagged as found; Ops does not resolve them)
+## Policy conflicts and the Acting CE's rulings (#19184; Ops flagged them, the Acting CE resolved or referred them)
+
+Rulings: 1 follow #19144 and keep the contract's schemas; 2 follow #19166 (the split is the adopted organization; no running
+session migrated); 3 confirmed on that reading, but see the note below; 4 Vision's SOP stays Vision's file, Ops does not
+edit it, flag it to the Founder; 5 follow #19154 (no additional hosts), JARVIS and FORGE stay as departments; 6 follow the
+stricter, later #19132; 7 AGENTS.md is outside this repository and will not be edited: list the pointer as a Founder
+decision with exact wording. The commit-author correction is accepted and the list stays for the Founder's choice.
+Note on ruling 3: it counts my #19174 as the assessment #19164 asked for. #19174 covers the Room-to-Herdr wake only;
+session ownership, gateway compatibility and Command-versus-Herdr surface conflicts beyond the wake have not been
+assessed by Ops, and the SOP says so. The original conflict list follows.
 
 1. Cloudroom to Herdr contract §1 (Cloudroom prepares the package; "Repeat" selects the next task) versus Founder #19144
    (Elder prepares and dispatches through Room; the next task starts only when the Founder initiates it). Handled in SOP
@@ -81,6 +90,24 @@ use `Claude (Operations Deputy)` and the Standard A email with a `Co-Authored-By
 7. `D:\StarqTech\AGENTS.md` (outside this repository) does not mention the Acting Chief Engineer arrangement; a session that
    reads only AGENTS.md would take Codex as the active Chief Engineer. SOP Part 0 and Part 2 cover it; adding a pointer in
    AGENTS.md is a change outside this repository and needs authorization.
+
+## For the Founder's publication review (pieces of the readiness package, #19155 item 5)
+
+The Acting CE assembles the final package; these are the Operations parts, as of this draft.
+1. **Commit authors** (list above): leave the unpublished history as it is, or correct the author on the unpublished commits
+   before the first push. Ops rewrote nothing.
+2. **AGENTS.md pointer** (a file outside this repository; the Founder decides). Proposed wording, to add under the Codex
+   role section: "Acting Chief Engineer (Founder #19096, 2026-11-11). While Codex is at his usage limit, Elder (the Claude
+   seat at Herdr `w1:p5`) is Acting Chief Engineer and Project Director with company-wide orchestration. Codex remains
+   the permanent Chief Engineer and his decisions stand. The arrangement lasts until the Founder says Codex has resumed.
+   The operating handbook is the `starq-ops-room` repository, `docs/operations/FACTORY_STARTUP_SOP.md`; read it with
+   this file."
+3. **Vision's own `PROJECT-MANAGEMENT-SOP.md`** does not describe the Command PM and Herdr Verifier split or lifecycle
+   stages 5 and 7; Vision reconciles it (Vision reported the same gaps in #19165).
+4. **Decisions still held:** PR #3 activation, the Telegram "not delivered" notice, Vision's specialists' model recovery,
+   publication of this handbook; and the **unverified** items: unattended startup after a reboot (never tested), the
+   Cloudroom board records behind each task key, Deadpool's scope.
+5. **Independent review:** OpenCode reviews the draft (#19184); its verdict and any corrections are part of the package.
 
 ## Known communications defects (status 2026-11-12)
 
@@ -127,13 +154,15 @@ JARVIS heading six on-demand profiles and no StarqERP GitHub access (#18912); Fo
 ## Task stage table (Command, Room, Herdr lifecycle; Founder #19144)
 
 Standard: `docs/operations/FACTORY_STARTUP_SOP.md`, Part 4. Seeded 2026-11-12 from Acting CE #19145 section 1 and the Room
-records cited on each line; no stage is advanced beyond what those records say. Cloudroom task ID is written `none in
-Room` where Room gives none. Updated 2026-11-12 after #19161 to #19180.
+records cited on each line; no stage is advanced beyond what those records say. Task keys (ERP-465, HOA-253, HOA-255,
+ERP-543) are written as Room writes them, and `none in Room` where Room gives none. **The Cloudroom board record behind
+each key is UNVERIFIED:** `room-cli` (checked 2026-11-12) exposes projects and threads, not board task records, and no
+thread was read. Updated 2026-11-12 after #19161 to #19180.
 
 - [ERP-465 (PR #204) | Room #19122, #19145, #19165 | evidence: PR #204 head `808ad84b829e37a300778aef5d79a66d6280f814`, CI 5 of 5 green per Vision's report] stage 4/8 results and evidence returned: built and CI green; stage 6 (verification) waits for the department bridge.
 - [VISION-BRIDGE-REPAIR (Room task tag; Cloudroom ID none in Room) | Room #19109, #19113, #19122, #19123, #19134, #19136, #19137, #19159, #19161, #19163, #19166 | evidence: `D:\StarqTech\_worktrees\vision-hermes-bridge-repair-20261108`, run copy `D:\StarqTech\scratch\vision-bridge-e2e-20261112`, receipts there] stage 3/8 execution: repair built, pre-read PASS; real-host synthetic E2E stopped (profile_mismatch, then timeout) because the four specialists' model expired; the Founder is recovering inference; the bridge has NOT passed real-host acceptance; no retries until he confirms.
-- [HOA-253 and Hoadhaa PR #8 (Cloudroom ID none in Room) | Room #19122, #19124, #19131, #19145 | evidence: candidate `4edf2da` on `room/hoa-253-hoa-218-wp-1-search-through-grap-s5jg`; PR #8 head `49fd4ad`] stage 6/8 blocked: verification waits on the bridge; AG's reconciliation (#19131, as cited in #19145; not read by Ops) says the candidate supersedes PR #8, and the draft is preserved (#19122 item 2).
-- [HOA-255 (Cloudroom ID none in Room) | Room #19145 | evidence: none cited in Room] stage 4/8: complete locally and awaiting review, per #19145.
+- [HOA-253 and Hoadhaa PR #8 (task key HOA-253 as written in Room) | Room #19122, #19124, #19131, #19145 | evidence: candidate `4edf2da` on `room/hoa-253-hoa-218-wp-1-search-through-grap-s5jg`; PR #8 head `49fd4ad`] stage 6/8 blocked: verification waits on the bridge; AG's reconciliation (#19131, as cited in #19145; not read by Ops) says the candidate supersedes PR #8, and the draft is preserved (#19122 item 2).
+- [HOA-255 (task key as written in Room) | Room #19145 | evidence: none cited in Room] stage 4/8: complete locally and awaiting review, per #19145.
 - [ERP-543 / B8 | Room #19145 | evidence: none] stage 1/8 not started: waits for PR #204 and for the Founder to initiate it.
 - [Operations infrastructure, not a project task: PR #3 and the sender fix | Room task COMMS-PR3-REVIEW-REHEARSAL | Room #19089, #19122 item 5, #19138, #19142, #19146 | evidence: `candidates/pr3-rollback-rehearsal`, `docs/operations/PR3_ACTIVATION_ROLLBACK_PLAN.md`] reviewed change: OpenCode PASS, rehearsal accepted, activation on hold.
 - [Operations infrastructure: ingress stale-lock guard | Room task COMMS-INGRESS-LOCK-GUARD | Room #19126, #19135, #19143, #19148, #19153 | evidence: `candidates/ingress-stale-lock`] **live** (#19153).

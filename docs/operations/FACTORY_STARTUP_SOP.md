@@ -101,11 +101,13 @@ floors or change task assignments, review gates, or merge and release authorizat
 | WSL `w1:p4` | Claude (WSL) | delegated engineering execution; the WSL Herdr is not covered by the live dispatcher | #19109 |
 | WSL | Deadpool | monitoring and reporting; its current scope is **UNVERIFIED** until its inventory (#19088) arrives | #19162 |
 | `w2:p2`, `w2:p4`, `w2:p5` | Devin, Goose, OMP | present in Herdr; their roles are **UNVERIFIED** (not established in the records Ops read) | `herdr agent list` |
+| XPS `w1:p1` | JARVIS | Head of General Engineering Support: a department, retained; its host is out of scope | #18912 |
+| Fold 4 `w1:p2` | FORGE | Head of X-Men Department, supplementary: a department, retained; its host is out of scope | #18912, #18915 |
 
 Several seats post as `claude` and two as `antigravity`; address a seat by pane (Part 7). The default Chief Engineer seat
-is Codex's when he is available; while he is out, the Acting CE holds the role and delegates execution. Other hosts
-(XPS/JARVIS, Fold 4/FORGE) and any expansion are out of scope for now (#19154 item 6); their earlier hierarchy entries
-are historical.
+is Codex's when he is available; while he is out, the Acting CE holds the role and delegates execution. JARVIS and FORGE
+stay as departments in the organization, with no new host work: other hosts and any expansion are out of scope for now
+(#19154 item 6; Acting CE ruling #19184).
 
 ### Rules that hold regardless of who holds a role
 
@@ -246,10 +248,17 @@ Vision's terminal is Herdr `w1:p0` (kind `hermes`). From 2026-11-12 a Room recor
 through the existing dispatcher (verified: #19178 woke `w1:p0`, #19179). The same established Vision environment
 supports both roles (#19164). The Founder asked the Acting CE for an assessment of feasibility, session ownership,
 gateway compatibility and conflicts between Vision's Command and Herdr surfaces, with a recommendation before any
-implementation (#19164): **open**. Two Founder records bear on it and are both kept: #19164 called it a proposed
-arrangement and "not authorization to migrate or change running sessions"; #19166, later the same day, says
-"Proceed with our planned separation" and to incorporate it into this SOP. Read together: the role split is the adopted
-organization; no running session is migrated or reconfigured until the assessment is done.
+implementation (#19164). Two Founder records bear on it and are both kept: #19164 called it a proposed arrangement and
+"not authorization to migrate or change running sessions"; #19166, later the same day, says "Proceed with our planned
+separation" and to incorporate it into this SOP. The Acting CE ruled (#19184): the role split is the adopted
+organization, and no running session has been migrated or is to be reconfigured until the assessment is done. What is
+done: the Room-to-Herdr wake for Vision's terminal (assessment #19174, implemented #19179). What is **not** covered by
+that and has not been assessed by Ops: session ownership, gateway compatibility and conflicts between the Command and
+Herdr operating surfaces beyond the wake (open; Ops has asked the Acting CE to confirm who owns it).
+
+**Vision's own SOP stays Vision's file.** `PROJECT-MANAGEMENT-SOP.md` does not describe the split or stages 5 and 7;
+Vision reconciles it, Ops does not edit it, and the gap is listed for the Founder in the readiness package
+(Acting CE #19184 ruling 4).
 
 **How verification runs** (Vision's `PROJECT-MANAGEMENT-SOP.md`, summarized; the file is the authority): bind the task
 and thread explicitly (never by title); one correlated group review dispatched to the existing Hermes group through the
@@ -481,7 +490,7 @@ survives a session.
 | Replaced text (v0.1 of this file, or the document named) | Replaced by | Why |
 |---|---|---|
 | "Chain of command: Founder, Codex, Floor or Department Lead, owned agents" as the only chain | Part 2 (Acting CE arrangement) | Founder #19096: Elder is Acting Chief Engineer while Codex is at his limit; Codex's decisions stand |
-| Hierarchy table as of #18912 listing JARVIS (XPS) and FORGE (Fold 4) | Part 2 seat table | Founder #19154 item 6: no additional hosts for now |
+| Hierarchy table as of #18912, which put the XPS and Fold 4 seats in the startup set | Part 2 seat table (JARVIS and FORGE kept as departments) and Part 8 step 6 | Founder #19154 item 6: no additional hosts for now; Acting CE #19184: the departments stay, with no new host work |
 | "Save mode" section as a standalone section | Part 2, last rule | Same practice, folded in; Codex-centred wording updated |
 | Addressing text saying a record naming another owner first is not sent to Telegram until filter 4b | Part 7 and Known traps | StarqBot now mirrors every record (`mirrorAll`, live) |
 | "Reaching the Founder" trap: only `@mustarq` plus `mustarq:` reaches Telegram | Part 8, Known traps | same |
