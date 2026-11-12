@@ -194,3 +194,14 @@ such a post was stored as a broadcast FYI and woke nobody (21 posts between #185
    between are mirrored and routed from the saved checkpoints.
 4. Records #18872 to #19025 were committed while the mirror was filtering and were not sent to
    Telegram. No backfill was run by the Ops seat; Codex holds that lane [#19025, #19027].
+
+## Herdr agent kind to handle mapping (2026-11-12)
+The live dispatcher routes a Herdr pane by its agent kind through `DEFAULT_HERDR_AGENT_MAP` in
+`agent-comms\protocol\v1\sessionRouting.mjs`; a kind that is not in the map falls back to the identity registry.
+Check before enrolling any new kind of pane: `mapHerdrAgentToHandle(<kind>)` must return the intended handle.
+`hermes` maps to `vision` (Vision's Herdr terminal, w1:p0); before 2026-11-12 it fell through to `deadpool` and
+woke the wrong pane (#19060, #19088). The `COMMS_HERDR_AGENT_MAP` environment override REPLACES the whole map, so it
+must list every kind; prefer a one-line addition to the default map. A map change takes effect only after one
+dispatcher restart (stop its pid, run `keep-starq-comms.ps1`; the state directory carries the checkpoint). Backup the
+file with sha256s first, test with a pure `selectWakeTargets` computation on the live `herdr agent list`, then one
+controlled post. Rollback: restore the backed-up file and restart the dispatcher the same way.
