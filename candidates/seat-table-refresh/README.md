@@ -39,3 +39,21 @@
   correction before activation. Not in the findings list of #19114, so left alone and reported.
 - The pid is still required by PR #3's validation and is checked live at every delivery; this tool is the
   activation-time refresh, and any later restart needs it again.
+
+## Update 2026-11-12 (Acting CE, Room #19118)
+
+The stale `codex-chief-engineer` row is folded in: instance `codex-herdr-w1p1-20261107`, enrollment
+Room #18461 (the first Codex record under that instance; the earlier `01a1c4c0` instance last posted
+#18871). Current patch: `D:\StarqTech\.worktrees\_patches\pr3-seat-table-refresh-codexrow-20261112.patch`,
+sha `28fb7de9cef4e3d2` (2 files; it supersedes `1e8a28d1f94e07ef`). Applies cleanly to pristine
+`cefafce`; `validateSeatTable` ok; `verifySeatEnrollment` ok for all six Windows seats against the live
+Room; full PR #3 suite 129/129 when run as CI does, with `COMMS_IDENTITIES_PATH=tests/fixtures/identities.json`
+(without it 20 identity tests fail on a missing `protocol/v1/identities.json`, pristine branch included).
+The refresh tool's refuse rules are unchanged.
+
+Reading the pid live (Cursor's recommendation): `verifySeatBinding` already receives the pane's live
+foreground processes at every wake and only compares them to the stored `seat.pid`. Replacing that
+comparison with the harness matcher used here (`HARNESS_MATCHERS`) would remove the stored pid and the
+re-run after every restart. Identity stays pinned by the enrollment record and instance, not by the pid.
+Cost: a restarted harness in the same pane would pass the binding check without a table edit, which is the
+intent. A PR #3 change, so not made here.
