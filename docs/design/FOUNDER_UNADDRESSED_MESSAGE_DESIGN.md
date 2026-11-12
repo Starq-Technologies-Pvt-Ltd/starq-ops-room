@@ -59,8 +59,9 @@ A message is a continuation only if **all** of: same sender (the Founder) and ch
 part here was 4,076); and
 it has no `@handle` of its own. Then it inherits the previous message's addressees and is stored
 with a reference to it (`references: telegram-update:<id>`). Anything else is "unaddressed" above.
-This is a length-and-time test about Telegram, not a reading of what the text says. Both #19023 and
-#19024 satisfy it; a short unaddressed message never does.
+This is a length-and-time test about Telegram, not a reading of what the text says. #19024 is the
+continuation of #19023, whose own 4,076 characters meet the length condition; a short unaddressed
+message never does.
 
 ## Where the change goes
 

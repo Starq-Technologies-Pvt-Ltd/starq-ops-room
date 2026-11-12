@@ -24,10 +24,25 @@ to a blocked seat and is lost. Two separate gaps: no signal, and no gate.
 | State | Meaning | Evidence required |
 |---|---|---|
 | `AVAILABLE` | can execute | fresh read, no banner in the last 12 non-empty lines, and the harness is one the pattern table knows |
-| `LOW` | works now, nearly exhausted | banner shows 95% used or more (Copilot) |
-| `QUOTA_BLOCKED` | cannot execute | banner matched in the last 12 non-empty lines **and** `agent_status` is not `working` |
+| `LOW` | works now, nearly exhausted | a percent-used banner at 95% or more, with **no hard-stop wording**, and no earlier rule applies |
+| `QUOTA_BLOCKED` | cannot execute | **hard-stop wording** matched in the last 12 non-empty lines **and** `agent_status` is not `working` |
 | `OFFLINE` | no live session | not in `herdr agent list` |
 | `UNKNOWN` | cannot tell | read failed, harness not in the table, or conflicting signals |
+
+**Precedence** (independent review, Room #19112, found that one Copilot pane could be both `LOW` and
+`QUOTA_BLOCKED`; one rule order fixes it). Evaluate top to bottom, first match wins:
+
+1. Pane absent from `herdr agent list`: `OFFLINE`.
+2. Read failed, or harness has no table row: `UNKNOWN`.
+3. `agent_status` is `working`: `AVAILABLE`. A working pane is never blocked, whatever text it shows.
+4. Hard-stop wording matched ("hit your usage limit", "Usage limit reached", "monthly quota",
+   an exhausted allowance such as 100% used or N / N units): `QUOTA_BLOCKED`.
+5. A percent-used banner at 95% or more, no hard-stop wording: `LOW`.
+6. Otherwise: `AVAILABLE`.
+
+Copilot at 1,497 of 1,500 units is 99.8% used with the pane idle and no hard-stop wording: `LOW`. It
+becomes `QUOTA_BLOCKED` only when its own wording says the plan is exhausted. Codex's "hit your usage
+limit" is a hard stop: `QUOTA_BLOCKED`.
 
 `UNKNOWN` is never `AVAILABLE`. This follows the standing rule that an unknown quota is an unknown
 metric, not a readiness claim (AGENTS.md).
@@ -91,7 +106,8 @@ Recommendation: option 1 with a fallback to option 2 when the Ops seat is itself
 
 ## Tests (fake Herdr, fixtures of the real banner text above)
 
-1. Each observed banner in its harness gives `QUOTA_BLOCKED` or `LOW`; the same text in a
+1. Each observed banner in its harness gives the state the precedence list assigns (Codex hard stop:
+   `QUOTA_BLOCKED`; Copilot 99% with no hard-stop wording: `LOW`); the same text in a
    `working` pane gives `AVAILABLE`.
 2. A pane with no banner is `AVAILABLE`; a harness with no table row is `UNKNOWN`.
 3. The pattern appearing only in older scrollback (line 13 and beyond) is ignored.
