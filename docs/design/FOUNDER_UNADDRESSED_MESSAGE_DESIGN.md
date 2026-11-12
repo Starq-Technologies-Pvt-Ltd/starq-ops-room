@@ -19,6 +19,16 @@ Nitro checkpoint), #18808 (the instruction to park the dispatcher work), #19023,
 continuation) and #19077. Three of the five were today or yesterday. #19077 was seen only because
 Codex happened to read the Room.
 
+**Seen again on 2026-11-12 (Room #19154 and #19155).** The Founder split one directive into two Telegram
+messages 16 seconds apart, marked `(1/2)` and `(2/2)`. Part 1 (2,579 characters, received 06:41:19Z) carried
+`To: @claude#w1:p5` and woke that seat at 06:41:22Z. Part 2 (2,029 characters, received 06:41:35Z) carried no
+`@handle` of its own, was stored with the Founder as its only audience (its signature line names him), and woke
+no agent. The Acting CE had already read it; this was found by this seat, not by the system. Of the 36 Founder
+records since #18500, only these two carry an `(n/m)` marker. Neither part reaches 4,000 characters, so the length
+rule below would not have caught it.
+
+A third cause, therefore: **a deliberate split with an explicit marker.**
+
 Two distinct causes:
 
 1. **No addressee at all in the first message.** The Founder wrote a name, not a handle.
@@ -62,6 +72,63 @@ with a reference to it (`references: telegram-update:<id>`). Anything else is "u
 This is a length-and-time test about Telegram, not a reading of what the text says. #19024 is the
 continuation of #19023, whose own 4,076 characters meet the length condition; a short unaddressed
 message never does.
+
+## Marker-based continuation rule (candidate, Acting CE #19158; not built, not live)
+
+Decided by the Acting CE as a candidate only; the Founder decides whether it is built, and the question is put to him
+in the SOP readiness package. It uses the sender, the time and an explicit marker. It never infers an addressee from
+the text, so it stays inside the Founder's rule of #19034.
+
+**Rule.** A Founder message M with a marker `(n/m)` inherits the explicit recipients of the previous Founder message P
+if all of these hold:
+1. Same sender (the Founder) and chat.
+2. The marker is the last non-blank text of the body, in the form `(n/m)` with 2 <= n <= m <= 9. A marker anywhere
+   else in the text does not count.
+3. P carries the matching marker `(n-1/m)` in the same position.
+4. M arrived within **120 seconds** of P (observed gap: 16 s; the bound is a proposal and is a constant, not a guess
+   about content).
+5. M has no registered `@handle` of its own, and P has explicit recipients (a registered `@handle` or a `To:` line).
+
+M is then stored with the same `To:` recipients as P, a reference to P's Room event and to both Telegram update ids,
+and the action text names the cause ("continuation (n/m) of #P"). Routing then treats M exactly as it treats P: a
+bare shared handle in P is held, not defaulted, in M too. Nothing else changes.
+
+**Failure cases, each held visibly and reported to the Founder** (the Telegram reply of the fail-safe above):
+
+| Case | What happens |
+|---|---|
+| Part `n/m` (n >= 2) with no earlier `(n-1/m)` message inside the bound (a missing part) | No inheritance. UNADDRESSED hold; the Founder is told "part n/m has no preceding part, NOT delivered; reply with @handle". |
+| Parts out of order (`2/2` arrives before `1/2`) | `2/2` is UNADDRESSED at arrival and the Founder is told. `1/2` is delivered on its own. No retroactive delivery in the first version: the Founder resolves it with a reply that names the recipient. |
+| `(1/m)` with no recipients of its own | It is unaddressed under the existing rule, so there is nothing to inherit; every later part is held too, and the Founder is told once, for the series. |
+| A marker with no earlier part at all (`(2/2)` as the first message, or a stray `(3/3)`) | Same as a missing part: UNADDRESSED hold, Founder told. |
+| The same `(n/m)` sent twice inside the bound | The first inherits; the second is held and the Founder is told (a repeated paste never fans out a second delivery). |
+| `m` differs between parts, or n > m, or the marker is not last | No inheritance. UNADDRESSED hold, Founder told. |
+| Bound exceeded (more than 120 s) | No inheritance. UNADDRESSED hold, Founder told. |
+| P's recipients cannot be delivered (offline, ambiguous seat, quota) | Inherited as they are, so M is held or retained exactly like P; it is never routed elsewhere. |
+| Sender is not the Founder | The rule never applies. |
+
+Interaction with the 4,000-character rule above: the two are independent and either one qualifying is enough; neither
+widens the other. A message that carries a marker and also follows a 4,000+ character part is handled by whichever
+rule matches first, and the result is the same inherited recipients.
+
+**Where it would go, if the Founder approves building it.** The gateway's inbound path (`starq-bot-gateway.mjs`,
+which already formats the `To:` line and the acknowledgement) and `room-structured-metadata.mjs`, the same two
+live-only files as the rest of this design, plus an independent review before any live change.
+
+**Interim rule until it exists** (Acting CE #19158): the Acting CE writes the recipient seat in the first line of
+everything posted, and the Founder's `@claude#w1:p5` line is what wakes the Acting CE.
+
+**Tests for the marker rule** (fixtures from the real records):
+1. #19154 and #19155 as recorded (2,579 and 2,029 characters, 16 s apart): #19155 inherits `To: @claude#w1:p5` and
+   would have woken that seat.
+2. Each row of the failure table above: no inheritance, hold visible, Founder notice produced once, nothing delivered
+   to any agent.
+3. Boundaries: 119 s inherits, 121 s does not; `(2/2)` not last in the text does not count; n = 1 never inherits;
+   n > m, m = 10 and a marker with spaces other than the allowed ones follow the stated pattern exactly.
+4. A non-Founder sender with a marker never inherits.
+5. A Founder message with no marker never inherits, whatever it says.
+6. Replay over #18500 onward: the 36 Founder records change nowhere except #19155; #19154 and the other 34 are
+   unchanged. (Verified by scan on 2026-11-12: only #19154 and #19155 carry a marker.)
 
 ## Where the change goes
 
