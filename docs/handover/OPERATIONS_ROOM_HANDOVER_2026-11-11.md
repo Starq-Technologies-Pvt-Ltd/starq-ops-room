@@ -145,6 +145,20 @@ Codex oversees it and does not repeat the lead's activation.
 
 Detail for 1–3 and 6 is on the PR #3 branch under `docs/reviews/`.
 
+## Task stage table (Command, Room, Herdr lifecycle; Founder #19144)
+
+Standard: `docs/operations/FACTORY_STARTUP_SOP.md`, "Task lifecycle". Seeded 2026-11-12 from Acting CE #19145
+section 1 and the Room records cited on each line; no stage is advanced beyond what those records say.
+Cloudroom task ID is written `none in Room` where Room gives none.
+
+- [ERP-465 (PR #204) | Room #19122, #19145 | evidence: PR #204, CI green per #19145] stage 4/8 results and evidence returned: built and CI green; stage 6 (Vision verification) is blocked on the bridge repair.
+- [VISION-BRIDGE-REPAIR (Room task tag; Cloudroom ID none in Room) | Room #19109, #19113, #19115, #19122, #19123, #19136, #19137 | evidence: `D:\StarqTech\_worktrees\vision-hermes-bridge-repair-20261108`, run copy `D:\StarqTech\scratch\vision-bridge-e2e-20261112`] stage 3/8 execution: repair built (#19109), pre-read PASS (#19113), real-host synthetic E2E authorized (#19122 item 4); first Cursor attempt stopped on profile_mismatch, one fresh retry authorized (#19136) and running per #19145; its evidence then goes to Vision for formal acceptance.
+- [HOA-253 and Hoadhaa PR #8 (Cloudroom ID none in Room) | Room #19122, #19124, #19131, #19145 | evidence: candidate 4edf2da on room/hoa-253-hoa-218-wp-1-search-through-grap-s5jg; PR #8 head 49fd4ad] stage 6/8 blocked: Vision review waits on the bridge; AG's reconciliation (#19131, as cited in #19145) says the candidate supersedes PR #8, and the existing draft is preserved (#19122 item 2).
+- [HOA-255 (Cloudroom ID none in Room) | Room #19145 | evidence: none cited in Room] stage 4/8: complete locally and awaiting review, per #19145.
+- [ERP-543 / B8 | Room #19145 | evidence: none] stage 1/8 not started: waits for PR #204 and for the Founder to initiate it.
+- [Operations infrastructure, not a project task: PR #3 and the sender fix | Room task COMMS-PR3-REVIEW-REHEARSAL | Room #19084, #19117, #19119, #19121, #19122 item 5, #19125, #19138, #19139, #19142, #19146 | evidence: `candidates/pr3-rollback-rehearsal`, `docs/operations/PR3_ACTIVATION_ROLLBACK_PLAN.md`] reviewed change: OpenCode PASS (#19138), rehearsal accepted (#19146), activation on hold for separate Founder authorization.
+- [Operations infrastructure: ingress stale-lock guard | Room task COMMS-INGRESS-LOCK-GUARD | Room #19135, #19143, #19145, #19146 | evidence: `candidates/ingress-stale-lock`] reviewed change: OpenCode PASS (#19143); live only on separate Founder authorization (asked in #19145).
+
 ## What this seat may do without asking
 
 Documentation, journal, handover and incident records; read-only status commands and Room reads;

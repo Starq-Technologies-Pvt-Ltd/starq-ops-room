@@ -18,6 +18,7 @@ and an authority below disagree, the authority wins and this file is corrected.
 | Room-first coordination and metadata | Room directives #10664, #10665 |
 | Durable engineering activity | `projects/starqerp/docs/governance/DURABLE_ENGINEERING_ACTIVITY_STANDARD_2026-11-06.md` |
 | Current hierarchy | Room #18912 (Founder correction; supersedes #18905), #18915, #18903 (Ops Deputy) |
+| Task lifecycle (Command, Room, Herdr) | Founder #19144 (2026-11-12) |
 
 ## Chain of command
 
@@ -44,6 +45,41 @@ Vision verifies.
 - Escalate to Codex only what needs Chief Engineer judgement, and to the Founder only what
   needs Founder authority.
 - The organisation keeps working when Codex is near its usage limit.
+
+## Task lifecycle: Command, Room, Herdr (Founder #19144, 2026-11-12)
+
+**Command directs. Room connects. Herdr executes. Vision verifies. Founder accepts.**
+
+Starq Command (Cloudroom) is the management environment. Room is the communication bridge: authorized work
+packages, assignments, acknowledgments, results and evidence. Herdr is the execution factory. This is the standard
+for every project task; it adds no structure to the chain of command above. Operations Claude's part is the
+communications, routing, infrastructure and operational continuity that make the stages hold together.
+
+| # | Stage | Who |
+|---|---|---|
+| 1 | The Founder initiates the task in its Command project conversation (StarqERP-Dev or Hoadhaa-Dev). | Founder |
+| 2 | Elder prepares the work package and dispatches it through Room. | Elder (Acting Chief Engineer) |
+| 3 | Herdr floor leads coordinate execution. | Floor leads |
+| 4 | Results and evidence return through Room. | Floor leads, executors |
+| 5 | Elder picks up the handover in Command and creates a task-specific child thread with Vision. | Elder |
+| 6 | Vision verifies independently; the outcome and the final decision are discussed with the Founder. | Vision, Founder |
+| 7 | After acceptance, Vision updates and closes the board task, and the child thread closes. | Vision |
+| 8 | The next task starts only when the Founder initiates it through Command. | Founder |
+
+Rules for this seat's records:
+- **Stage line.** Every task that appears in the journal or the handover carries one stage line:
+  `[<Cloudroom task ID> | Room #<seq>[, #<seq>...] | evidence <path>] stage <n>/8 <stage name>: <state, one sentence>`.
+  The task ID is the Cloudroom task ID. If Room does not give one, write `none in Room`; never invent one.
+- **Task ID on every packet.** Every work package, acknowledgment and result carries its task ID in the `--task`
+  field, so a result closes the task it belongs to (see the `--task` and `--action` rules in `AGENTS.md`).
+- **Evidence only from Room.** A stage line cites Room sequences and an evidence path; a stage is not advanced on
+  the strength of a status label.
+- **No self-started work.** This seat does not launch StarqERP or Hoadhaa work packages on its own. It reconciles
+  and hardens what is already assigned. Operations infrastructure changes (comms, routing, locks) are not project
+  tasks; they run as reviewed changes with their own Room task tag and wait for separate Founder authorization.
+- **Scope for now.** The existing Nitro Windows and WSL environments, the two project floors and Operations Room.
+  Other hosts and expansion are out of scope.
+- Where this section and `AGENTS.md` disagree, `AGENTS.md` wins.
 
 ## Addressing a message (Founder decision 4a)
 
