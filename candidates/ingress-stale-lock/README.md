@@ -48,3 +48,10 @@ live `ingress.mjs`; `node --check` ok. Not applied to anything live.
 ## Activation (only after review and authorization)
 Back up `protocol/v1/ingress.mjs`, copy `ingressLock.mjs` beside it, apply the patch, run one `send.mjs` post,
 and check no lock file remains. Rollback: restore the backup and delete `ingressLock.mjs`.
+
+## LIVE since 2026-11-12 (Founder #19148, Acting CE #19149, result in Room)
+Applied with `apply-live.sh` (phase1 backup, phase2 apply and test). Before: `ingress.mjs` `ef9c84781e7831a3`;
+after: `ingress.mjs` `3a15ee3a57c1ad82`, `ingressLock.mjs` `2f100588e2c4af84`. Backup:
+`D:\StarqTech\agent-comms\backups\ingress-lock-20261112T063304Z`. Live check: two racing posts (#19151, #19152),
+no lock file left. Rollback: `rollback-live.sh <backup dir>`, no restart. The gateway and dispatcher keep the old
+`withLock` until they restart. No dead lock is planted in the live locks folder (Acting CE gate).
