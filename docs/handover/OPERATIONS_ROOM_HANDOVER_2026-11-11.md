@@ -1,7 +1,7 @@
 # Operations Room handover (current; refreshed 2026-11-12, file named for its first date)
 
 From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session `509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to
-Room tail #19180 (2026-11-12). This is the **single current handover**: refreshed in place, no third dated copy. The
+Room tail #19189 (2026-11-12); the Room tail moves on, so re-read it. This is the **single current handover**: refreshed in place, no third dated copy. The
 previous one is `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`, kept as history. Read `docs/operations/FACTORY_STARTUP_SOP.md`
 (Parts 0 to 10) first, then `docs/operations/COMMS_RECOVERY_RUNBOOK.md` if anything in communications is broken.
 
@@ -46,15 +46,17 @@ blockers go to the Acting Chief Engineer through Room. Merges and releases stay 
 | `.worktrees\starq-ops-room-durable-foundation` | PR #3 branch | `99fe117` (open, mergeable, reviewed, held) |
 | `.worktrees\starq-ops-room-sender-fix-pr3` | `claude/pr3-owner-routing-reconcile-20261111` (receiver candidate) | `cefafce` |
 | `.worktrees\starq-ops-room-v2-protocol` | PR #4 branch | `acd8e4b` (open, unreviewed, preserved) |
-| `.worktrees\starq-ops-room-ops-records` | `claude/ops-records-20261111`, **PR #5** (these records) | local, 30 commits ahead of GitHub's `4350bbc`; see below |
+| `.worktrees\starq-ops-room-ops-records` | `claude/ops-records-20261111`, **PR #5** (these records) | local, 32 commits ahead of GitHub's `4350bbc` at `dbf77d3` (later commits add to that); see below |
 
 **Unpublished work.** The harness at this pane denies `git push`; the Founder holds the push and merge of this
 consolidation for his review (#19155 item 5). Check `git status -sb` and the commit list below before publication.
 
-**Commit authors for the publication review (decision for the Founder, flagged by the Acting CE in #19162).** Of the 30
-unpublished commits, 6 carry the author name `Mustarq` (made with the machine's default Git identity after a session
+**Commit authors for the publication review (decision for the Founder, flagged by the Acting CE in #19162).** Of the 32
+unpublished commits as of `dbf77d3` (counted by `git log 4350bbc..dbf77d3`; the list was first written at 30, before the
+consolidation commits), 6 carry the author name `Mustarq` (made with the machine's default Git identity after a session
 reset): `6dc3be0`, `20cd01b`, `fc62d68`, `3efc68a`, `ef6079f`, `4ba5293`. 23 carry `Claude (Ops Room Deputy)` (the name used
-before the Acting CE specified `Claude (Operations Deputy)`), and 1 carries `Claude (Operations Deputy)`. The Durable
+before the Acting CE specified `Claude (Operations Deputy)`), and 3 carry `Claude (Operations Deputy)`. Every later commit
+carries `Claude (Operations Deputy)`; recount with `git log 4350bbc..HEAD --format=%an | sort | uniq -c` before the review. The Durable
 Engineering Activity standard asks for the real contributor. Nothing was rewritten; the Founder chooses between leaving
 the unpublished history as it is, or correcting the author on the unpublished commits before the first push. New commits
 use `Claude (Operations Deputy)` and the Standard A email with a `Co-Authored-By` trailer for the actual model.

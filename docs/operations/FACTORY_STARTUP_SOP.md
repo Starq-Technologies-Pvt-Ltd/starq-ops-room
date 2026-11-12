@@ -1,8 +1,9 @@
 # Starq Technologies Engineering Operating Handbook (Factory Startup SOP)
 
 Status: **DRAFT v0.2 (2026-11-12), consolidation under Founder #19154 and #19155, assigned by the Acting Chief
-Engineer in #19156 and #19162.** Written by the Operations Room Deputy. Not yet independently reviewed. The push and
-the merge of this draft are held for the Founder's review (#19155 item 5).
+Engineer in #19156 and #19162.** Written by the Operations Room Deputy. Independently reviewed by OpenCode (#19189): PASS
+on 7 of 8 files, one docs correction (commit counts in the handover) applied. The push and the merge of this draft are
+held for the Founder's review (#19155 item 5).
 
 This is the first operational reference for Codex, every Acting Chief Engineer, deputies and Floor Leads. A fresh
 leadership session should be able to recover how Starq operates from this repository without any chat memory. It
@@ -254,7 +255,8 @@ separation" and to incorporate it into this SOP. The Acting CE ruled (#19184): t
 organization, and no running session has been migrated or is to be reconfigured until the assessment is done. What is
 done: the Room-to-Herdr wake for Vision's terminal (assessment #19174, implemented #19179). What is **not** covered by
 that and has not been assessed by Ops: session ownership, gateway compatibility and conflicts between the Command and
-Herdr operating surfaces beyond the wake (open; Ops has asked the Acting CE to confirm who owns it).
+Herdr operating surfaces beyond the wake (open; owned by the Acting CE, who will post that assessment as its own
+record, #19187).
 
 **Vision's own SOP stays Vision's file.** `PROJECT-MANAGEMENT-SOP.md` does not describe the split or stages 5 and 7;
 Vision reconciles it, Ops does not edit it, and the gap is listed for the Founder in the readiness package
