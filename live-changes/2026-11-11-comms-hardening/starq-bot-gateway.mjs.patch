@@ -1,0 +1,175 @@
+--- a/scripts/starq-bot-gateway.mjs
++++ b/scripts/starq-bot-gateway.mjs
+@@ -35,6 +35,51 @@
+ const NODE_BIN = process.env.NODE_BIN || process.execPath;
+ const SEND = path.join(AGENT_COMMS, 'scripts', 'send.mjs');
+ 
++// Founder directive 2026-11-11: permanent StarqBot mirror. When enabled, every new
++// committed Room record is forwarded to the Founder's Telegram, not only records
++// that are ACTION_REQUIRED for the Founder. STARQ_BOT_MIRROR_ALL=1/0 overrides the
++// non-secret config file agent-comms/state/starq-bot-config.json {"mirrorAll": true}.
++const MIRROR_CONFIG_FILE = path.join(AGENT_COMMS, 'state', 'starq-bot-config.json');
++export function isMirrorAllEnabled(env = process.env, configPath = MIRROR_CONFIG_FILE) {
++  const flag = String(env?.STARQ_BOT_MIRROR_ALL ?? '').trim();
++  if (flag === '1') return true;
++  if (flag === '0') return false;
++  try { return JSON.parse(readFileSync(configPath, 'utf8')).mirrorAll === true; }
++  catch { return false; }
++}
++
++// Mirror pacing: Telegram throttles bursts to one chat. A 429 means the message
++// was NOT accepted, so waiting retry_after and sending again cannot duplicate.
++// A network error raised before a connection to Telegram exists means the request never
++// left this machine, so the record was certainly not delivered and a retry cannot
++// duplicate it. Anything else (reset, socket error, timeout after connect) stays ambiguous.
++const NOT_SENT_CODES = new Set([
++  'ENOTFOUND', 'EAI_AGAIN', 'EAI_FAIL', 'ECONNREFUSED', 'ENETUNREACH', 'ENETDOWN',
++  'EHOSTUNREACH', 'EHOSTDOWN', 'EADDRNOTAVAIL', 'UND_ERR_CONNECT_TIMEOUT',
++]);
++export function isDefinitelyNotSent(error) {
++  const cause = error?.cause ?? error;
++  const codes = Array.isArray(cause?.errors) && cause.errors.length
++    ? cause.errors.map((e) => e?.code)
++    : [cause?.code ?? error?.code];
++  return codes.length > 0 && codes.every((c) => NOT_SENT_CODES.has(c));
++}
++
++export async function sendWithTelegramBackoff(send, params, {
++  sleep = (ms) => new Promise((r) => setTimeout(r, ms)), maxAttempts = 4, maxWaitSeconds = 60, log: logFn = () => {},
++} = {}) {
++  let res;
++  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
++    res = await send(params);
++    const retryAfter = Number(res?.parameters?.retry_after);
++    if (res?.ok || res?.error_code !== 429 || !Number.isFinite(retryAfter) || attempt === maxAttempts) return res;
++    const wait = Math.min(Math.max(retryAfter, 1), maxWaitSeconds);
++    logFn(`Telegram rate limit (429); waiting ${wait}s before retry ${attempt + 1}/${maxAttempts}`);
++    await sleep(wait * 1000);
++  }
++  return res;
++}
++
+ function loadEnv(file) {
+   const out = {};
+   if (!existsSync(file)) return out;
+@@ -1229,7 +1274,73 @@
+   return [...text].map((ch) => (ch >= 'A' && ch <= 'Z' ? String.fromCodePoint(0x1D5D4 + ch.charCodeAt(0) - 65) : ch)).join('');
+ }
+ 
++// Founder #19039: readable phone layout. Selected by STARQ_BOT_LAYOUT=mobile|classic or
++// {"layout":"mobile"} in state/starq-bot-config.json. Default stays "classic" (unchanged).
++export function telegramLayout(env = process.env, configPath = MIRROR_CONFIG_FILE) {
++  const flag = String(env?.STARQ_BOT_LAYOUT ?? '').trim().toLowerCase();
++  if (flag === 'mobile' || flag === 'classic') return flag;
++  try { return JSON.parse(readFileSync(configPath, 'utf8')).layout === 'mobile' ? 'mobile' : 'classic'; }
++  catch { return 'classic'; }
++}
++
++function unicodeBold(text) {
++  return [...text].map((ch) => {
++    const c = ch.codePointAt(0);
++    if (c >= 65 && c <= 90) return String.fromCodePoint(0x1D5D4 + c - 65);
++    if (c >= 97 && c <= 122) return String.fromCodePoint(0x1D5EE + c - 97);
++    if (c >= 48 && c <= 57) return String.fromCodePoint(0x1D7EC + c - 48);
++    return ch;
++  }).join('');
++}
++
++function pktStamp(iso) {
++  const ms = Date.parse(iso ?? '');
++  if (!Number.isFinite(ms)) return null;
++  const d = new Date(ms + 5 * 3600 * 1000); // PKT = UTC+5, no DST
++  const mon = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][d.getUTCMonth()];
++  const hh = String(d.getUTCHours()).padStart(2, '0');
++  const mm = String(d.getUTCMinutes()).padStart(2, '0');
++  return `${d.getUTCDate()} ${mon}, ${hh}:${mm} PKT`;
++}
++
++/**
++ * Mobile layout. Envelope values come only from the authenticated event and the broker
++ * decision, exactly as in the classic layout; the body is passed through verbatim.
++ */
++export function formatTelegramOutboundMobile(rec) {
++  const sender = rec?.event?.senderHandle || rec?.from || 'unknown';
++  const fromHandle = sender.startsWith('@') ? sender : `@${sender}`;
++  const rawBody = unescapeLiteralNewlinesForTelegram(String(rec?.event?.body ?? rec?.body ?? ''));
++  const metadata = rec?.event?.metadata && typeof rec.event.metadata === 'object' ? rec.event.metadata : {};
++  const founder = isFounderNotificationEligible(rec);
++  const deliveryType = String(rec?.evaluatedDeliveryType || 'UNKNOWN');
++  const kind = deliveryType === 'ACTION_REQUIRED' ? 'Action required' : (deliveryType === 'CC_CONTEXT' ? 'FYI' : deliveryType);
++  const toVal = outboundToFromBroker(rec);
++  const when = pktStamp(rec?.event?.createdAt ?? rec?.receivedAt);
++  const subject = String(metadata.subject ?? '').replace(/\s+/g, ' ').trim();
++  const action = metadata.actionRequired == null ? '' : String(metadata.actionRequired).trim();
++  const actionIsNone = action === '' || /^(none|unknown)\b/i.test(action);
++  const status = metadata.status == null ? '' : String(metadata.status).trim();
++  const refs = metadata.references ?? (rec?.event?.replyTo ? [`room-event:${rec.event.replyTo}`] : null);
++  const refText = Array.isArray(refs) ? refs.map(String).join(', ') : (refs == null ? '' : String(refs));
++
++  const out = [];
++  if (founder) out.push(`🚨 ${unicodeBold('ACTION FOR YOU')}`, '━━━━━━━━━━━━━━━━━━━━');
++  out.push(subject ? unicodeBold(subject) : unicodeBold('(no subject)'));
++  out.push(`#${rec?.brokerSequence ?? '?'} · ${fromHandle}${toVal ? ` → ${toVal}` : ''}`);
++  out.push([when, kind].filter(Boolean).join(' · '));
++  if (!actionIsNone) {
++    out.push('');
++    out.push(founder ? `👉 ${unicodeBold('Your action:')} ${action}` : `▸ Action: ${action}`);
++  }
++  if (rawBody.trim() !== '') { out.push('', '━━━━━━━━━━', '', rawBody.replace(/\s+$/, '')); }
++  const footer = [status && `Status: ${status}`, refText && refText !== 'NONE' && `Ref: ${refText}`, metadata.blocker != null && `Blocker: ${metadata.blocker}`, metadata.nextStep != null && `Next: ${metadata.nextStep}`].filter(Boolean);
++  if (footer.length) out.push('', '──────────', ...footer);
++  return out.join('\n');
++}
++
+ export function formatTelegramOutbound(rec) {
++  if (telegramLayout() === 'mobile') return formatTelegramOutboundMobile(rec);
+   const sender = rec?.event?.senderHandle || rec?.from || 'unknown';
+   const fromHandle = sender.startsWith('@') ? sender : `@${sender}`;
+   const rawBody = unescapeLiteralNewlinesForTelegram(String(rec?.event?.body ?? rec?.body ?? ''));
+@@ -1425,7 +1536,7 @@
+   // requires broker ACTION_REQUIRED routing to the Founder plus explicit
+   // actionRequired metadata. Never skip a record whose chunks are already
+   // partially in flight: resume that exact delivery first.
+-  if (!isFounderNotificationEligible(rec)) {
++  if (!isFounderNotificationEligible(rec) && !isMirrorAllEnabled()) {
+     const pending = state?.outboundProgress;
+     if (pending && pending.sequence !== seq) {
+       const reason = `refusing suppression: partial delivery pending for #${pending.sequence} while current record is #${seq}`;
+@@ -1550,6 +1661,16 @@
+     try {
+       res = await sendMessage({ chat_id: state.knownChatId, text: chunks[i] });
+     } catch (error) {
++      if (isDefinitelyNotSent(error)) {
++        const code = error?.cause?.code ?? error?.code ?? 'network';
++        state.outboundProgress.status = 'failed';
++        state.outboundProgress.pendingChunkIndex = i;
++        state.outboundProgress.lastError = `network unreachable before send (${code})`;
++        recordOutboundFailure(state, { sequence: seq, status: 'failed', error: `network unreachable before send (${code})` });
++        try { persistState?.(state); } catch {}
++        logFn(`sendMessage not sent for chunk ${i}: network unreachable (${code}); will retry, not ambiguous`);
++        return { delivered: false, failed: true, reason: `network unreachable (${code})` };
++      }
+       state.outboundProgress.status = 'ambiguous';
+       state.outboundProgress.lastError = `sendMessage threw: ${error.message}`;
+       recordOutboundFailure(state, { sequence: seq, status: 'ambiguous', error: `sendMessage threw: ${error.message}` });
+@@ -1601,6 +1722,7 @@
+     return { delivered: false, failed: true, reason: error.message };
+   }
+ 
++  logFn(`delivered record #${seq} (${eventId.slice(0, 8)}) to Founder Telegram in ${chunkCount} chunk(s); cursor advanced`);
+   return {
+     delivered: true,
+     failed: false,
+@@ -2025,7 +2147,11 @@
+     return await runGatewayTick(state, {
+       allowedUserId,
+       getUpdates: (params) => tgCall('getUpdates', params),
+-      sendMessage: (params) => tgCall('sendMessage', params),
++      sendMessage: async (params) => {
++        const res = await sendWithTelegramBackoff((p) => tgCall('sendMessage', p), params, { log });
++        if (isMirrorAllEnabled()) await new Promise((r) => setTimeout(r, 1100)); // stay under the per-chat rate
++        return res;
++      },
+       appendAuthorizedMessage: (msg) => productionAppendAuthorized(msg, NODE_BIN, SEND),
+       findExistingByTelegramUpdateId: (updateId) => findRecordByTelegramUpdateId(readRoomTail(ROOM), updateId),
+       verifyFirstSuccessor: (record) => verifyDurableFirstSuccessor(record, {

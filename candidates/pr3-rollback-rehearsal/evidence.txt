@@ -1,0 +1,52 @@
+== A. export pristine PR #3 head and candidate (git archive, no worktree touched)
+export 99fe117 -> R0                                          121 ms
+export 99fe117 -> R1 (working copy)                           108 ms
+export cefafce -> RC (reference)                              216 ms
+tree R0=5520223e6a1d288e R1=5520223e6a1d288e RC=de2425b75b607202
+make candidate patch 99fe117..cefafce                         578 ms
+candidate.patch sha256 417492c7b9ce273a lines 616
+seat patch sha256 1dda9fa304a812a6
+== B. apply, check fidelity, run suite
+candidate applied
+apply candidate patch                                         355 ms
+tree R1 after candidate=de2425b75b607202  reference RC=de2425b75b607202
+FIDELITY OK: applied tree == cefafce export
+seat patch applied
+apply seat-table patch v3                                     681 ms
+tree R1 with seat table=e779ff4d4df5cdf1
+ℹ tests 129
+ℹ pass 129
+ℹ fail 0
+full suite on applied copy                                   5221 ms
+== C. revert (reverse-apply in opposite order) and prove byte-identity with the pristine export
+seat patch reverted
+revert seat-table patch                                        71 ms
+candidate reverted
+revert candidate patch                                         89 ms
+tree R1 after rollback=5520223e6a1d288e  pristine R0=5520223e6a1d288e
+ROLLBACK IDENTICAL to pristine
+== D. dispatcher file + state procedure per the amended plan (stand-ins in ./live; nothing live is written)
+stand-in live dispatcher + synthetic OLD state (lastSeq 19000)   1437 ms
+Amendment B: backup taken before cutover, with SHA256SUMS     231 ms
+71e6ede337c4abfa *./room-dispatcher.mjs
+41c5329d3d2c764e *./state/room-dispatch.json
+cutover (stand-in): PR3 dispatcher; NEW v2 state; old dir untouched    128 ms
+old dir lastSeq still: "lastSeq":19000  (frozen at cutover)
+./room-dispatcher.mjs: OK
+./state/room-dispatch.json: OK
+restored dispatcher sha 71e6ede337c4abfa == live original 71e6ede337c4abfa
+lastSeq 19000 -> 19141; kept: delivered=1 pending=0 held=1
+rollback: file restored+verified, old lastSeq advanced to tail, seat table removed    453 ms
+old state lastSeq now "lastSeq":19141; delivered/pending/held kept: 1 ; evidence copy: "lastSeq":19000; new v2 file kept: room-dispatch.v2.json
+ALTERNATIVE (not chosen): leaving the old state as it was would re-plan records 19001..19141 = 141 records on the first poll
+== E. seat-table checks on the applied copy
+(R1 is back to pristine; checks below run on a fresh applied copy)
+validateSeatTable {"ok":true,"errors":[]}
+codex-chief-engineer {"ok":true,"reason":null,"detail":null}
+erp-floor-lead {"ok":true,"reason":null,"detail":null}
+ops-room-deputy {"ok":true,"reason":null,"detail":null}
+hoadhaa-lead {"ok":true,"reason":null,"detail":null}
+erp-cursor {"ok":true,"reason":null,"detail":null}
+erp-antigravity {"ok":true,"reason":null,"detail":null}
+validateSeatTable + verifySeatEnrollment on v3               1073 ms
+== DONE

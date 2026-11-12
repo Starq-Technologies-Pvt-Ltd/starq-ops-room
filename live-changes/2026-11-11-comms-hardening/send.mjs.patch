@@ -1,0 +1,13 @@
+--- a/scripts/send.mjs
++++ b/scripts/send.mjs
+@@ -431,6 +431,10 @@
+         // gap. Omitted when --instance was not supplied so historical
+         // single-instance records remain byte-identical in shape.
+         ...(senderInstanceIdForMetadata ? { senderInstanceId: senderInstanceIdForMetadata } : {}),
++        ...(/^w\d+:p[\w-]+$/i.test(String(process.env.HERDR_PANE_ID || '')) ? {
++          senderPane: process.env.HERDR_PANE_ID,
++          senderHost: process.platform === 'win32' ? 'windows' : 'wsl',
++        } : {}),
+         // DEC-072 verdict travels with the event so the ledger shows WHO reviewed
+         // and on what basis. A Founder override is permanently marked here.
+         ...(args.__dec072 ? {

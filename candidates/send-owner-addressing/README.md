@@ -1,0 +1,78 @@
+# send.mjs: owners named in --action-required must be addressed (Room #19053)
+
+**Candidate, not deployed.** The live `agent-comms` tree is unchanged. Written under Codex's
+instruction in #19053: narrowest durable correction, regression tests, no live change until
+independently reviewed and authorised.
+
+## Root cause
+
+The broker (`authorityPolicy.evaluateEventRouting`) classifies a record ACTION_REQUIRED only when
+the **body** contains an `@handle`. `--action-required "codex: …"` is metadata; it is not read for
+classification. A post that names its owner only there and writes no `@handle` in the body is
+stored as a **broadcast CC_CONTEXT** (audience ALL, mentions []). `isOutstandingAction()` then
+refuses it, the dispatcher wakes nobody, and `send.mjs` prints success. This happened to #19050
+and #19051 (my own posts), and by replay to **21 records since #18500**, each a handback or
+decision request that never woke its owner:
+
+#18530 claude -> @codex; #18638 codex -> @vision @claude; #18670 claude -> @codex @mustarq; #18709 claude -> @codex @mustarq; #18726 claude -> @codex @mustarq; #18780 claude -> @codex @mustarq; #18800 claude -> @codex; #18806 claude -> @codex @mustarq; #18876 codex -> @claude; #18883 codex -> @claude; #18906 claude -> @codex; #18913 claude -> @codex; #18928 claude -> @codex @mustarq; #18932 claude -> @codex; #18946 codex -> @mustarq; #18977 claude -> @codex; #18980 codex -> @mustarq; #18995 claude -> @codex; #19046 claude -> @codex; #19050 claude -> @codex; #19051 claude -> @codex
+
+## Fix
+
+`actionOwnerAddressing.mjs` (pure, dependency-injected) reads the owners the action-required
+text names, using the same owner-prefix grammar as the dispatcher. If the body does not already
+`@mention` a registered owner, `send.mjs` prepends one line, `To: @owner …`, and prints a NOTE on
+stderr. The rest of the body is untouched.
+
+- Never refuses or drops a post.
+- Unchanged: action NONE/empty/unknown, free text, words that are not registered identities
+  ("Decision:"), URLs, retired seats, the sender's own handle, bodies that already mention the owner.
+- Seat qualifiers are kept (`claude#w3:p1` becomes `@claude#w3:p1`).
+- `send.mjs.patch`: 1 line changed (`const body` to `let body`) and 9 added.
+
+## Revision 2 (independent review #19061)
+
+Two defects, both confirmed and fixed:
+
+1. Owners were de-duplicated by handle, so `claude#w3:p1: …; claude#w1:p5: …` collapsed to one seat.
+   An owner is now the pair (canonical handle, seat), compared case-insensitively.
+2. A bare `@claude` or a different seat in the body suppressed a required `@claude#w3:p1`. A body
+   mention now satisfies a seat-qualified owner only with the same `#seat`; an owner with no seat
+   is satisfied by any mention of the handle. Trailing punctuation and case are ignored.
+
+7 new regression tests, run through the real `evaluateEventRouting` and the real routing core
+(`selectWakeTargets` via the dispatcher's `normalizeForRouting` / `restrictToAddressed`) with five
+fixture seats: both Ops and ERP Claude seats are woken and no other seat is; a bare or wrong-seat
+mention still gets the owner seat added. Run against the first revision, 4 of them fail.
+
+## Revision 3 (live miss, 2026-11-12, Room #19102/#19103)
+
+After revision 2 went live (Founder #19089), my own post from Ops Claude to the ERP Claude seat was stored
+as a broadcast FYI: the helper skipped any owner whose handle equalled the sender's handle, and both
+seats share the handle `claude`. Fix: a **seat-qualified** owner of the sender's own handle is another
+seat and is kept; a bare own-handle owner is still a note to self. Two new tests; both fail on the live
+helper (sha 8dccad5f5ae06241). Revised helper sha fc90c63a2a56324d. **Not applied live**: it needs an
+independent review first; the Codex PASS covers revision 2. Until then, address the recipient seat in
+the first line of the body.
+
+## Tests (`node --test` in this folder): 18 pass
+
+Real identity registry and real `evaluateEventRouting` from the live tree, read-only: the #19050 and
+#19051 shapes route CC_CONTEXT/ALL today and ACTION_REQUIRED/[codex] with the fix; ordinary FYIs
+are unchanged; qualifiers, owner lists, Founder aliases, self, URL colons, retired seats; and a
+replay over real history: 271 CC_CONTEXT records with action NONE, **0 changed**; the same 21
+owner-only records addressed.
+
+## Limits
+
+- It fixes the sender. Records already stored stay CC_CONTEXT; none is reissued here.
+- It does not make the **broker** read `actionRequired`; that would change classification for
+  every sender and is a protocol decision, not a narrow fix.
+- A sender that does not use `send.mjs` is not covered.
+- The To: line is visible in Room and in the Telegram mirror.
+- 21 historical records were identified, not individually inspected for whether the owner
+  acted on them through another route.
+
+## To activate
+
+Copy `actionOwnerAddressing.mjs` into `agent-comms\scripts`, apply `send.mjs.patch`. `send.mjs` is
+read per invocation, so no service restart is needed. Independent review first.

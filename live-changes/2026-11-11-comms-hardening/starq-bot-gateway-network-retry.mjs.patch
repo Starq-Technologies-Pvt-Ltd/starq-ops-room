@@ -1,0 +1,41 @@
+--- a/scripts/starq-bot-gateway.mjs
++++ b/scripts/starq-bot-gateway.mjs
+@@ -50,6 +50,21 @@
+ 
+ // Mirror pacing: Telegram throttles bursts to one chat. A 429 means the message
+ // was NOT accepted, so waiting retry_after and sending again cannot duplicate.
++// A network error raised before a connection to Telegram exists means the request never
++// left this machine, so the record was certainly not delivered and a retry cannot
++// duplicate it. Anything else (reset, socket error, timeout after connect) stays ambiguous.
++const NOT_SENT_CODES = new Set([
++  'ENOTFOUND', 'EAI_AGAIN', 'EAI_FAIL', 'ECONNREFUSED', 'ENETUNREACH', 'ENETDOWN',
++  'EHOSTUNREACH', 'EHOSTDOWN', 'EADDRNOTAVAIL', 'UND_ERR_CONNECT_TIMEOUT',
++]);
++export function isDefinitelyNotSent(error) {
++  const cause = error?.cause ?? error;
++  const codes = Array.isArray(cause?.errors) && cause.errors.length
++    ? cause.errors.map((e) => e?.code)
++    : [cause?.code ?? error?.code];
++  return codes.length > 0 && codes.every((c) => NOT_SENT_CODES.has(c));
++}
++
+ export async function sendWithTelegramBackoff(send, params, {
+   sleep = (ms) => new Promise((r) => setTimeout(r, ms)), maxAttempts = 4, maxWaitSeconds = 60, log: logFn = () => {},
+ } = {}) {
+@@ -1646,6 +1661,16 @@
+     try {
+       res = await sendMessage({ chat_id: state.knownChatId, text: chunks[i] });
+     } catch (error) {
++      if (isDefinitelyNotSent(error)) {
++        const code = error?.cause?.code ?? error?.code ?? 'network';
++        state.outboundProgress.status = 'failed';
++        state.outboundProgress.pendingChunkIndex = i;
++        state.outboundProgress.lastError = `network unreachable before send (${code})`;
++        recordOutboundFailure(state, { sequence: seq, status: 'failed', error: `network unreachable before send (${code})` });
++        try { persistState?.(state); } catch {}
++        logFn(`sendMessage not sent for chunk ${i}: network unreachable (${code}); will retry, not ambiguous`);
++        return { delivered: false, failed: true, reason: `network unreachable (${code})` };
++      }
+       state.outboundProgress.status = 'ambiguous';
+       state.outboundProgress.lastError = `sendMessage threw: ${error.message}`;
+       recordOutboundFailure(state, { sequence: seq, status: 'ambiguous', error: `sendMessage threw: ${error.message}` });

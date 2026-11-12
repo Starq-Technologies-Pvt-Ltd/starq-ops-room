@@ -1,0 +1,23 @@
+--- a/scripts/start-starq-bot-if-needed.ps1
++++ b/scripts/start-starq-bot-if-needed.ps1
+@@ -77,7 +77,19 @@
+                 exit 0
+             }
+         } else {
+-            Write-Output "Stale lock detected (pid $($lock.pid) not alive). Supervisor will safely reclaim."
++            Write-Output "Stale lock detected (pid $($lock.pid) not alive)."
++            # 2026-11-11 (Room #18950, #18952): the supervisor preflight refuses to start while a
++            # dead-pid lock exists, so an unattended restart after a reboot or crash never recovers.
++            # Clear ONLY that stale mutex, and only when no gateway, supervisor or wrapper process
++            # exists. The safety hold, cursor and outbound state are not touched.
++            $liveGateway = Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
++                Where-Object { $_.CommandLine -and ($_.CommandLine -like "*starq-bot-gateway.mjs*" -or $_.CommandLine -like "*gateway-supervisor.mjs*--supervised*" -or $_.CommandLine -like "*run-persistent-starq-bot.cmd*") }
++            if (-not $liveGateway) {
++                Write-Output "No gateway, supervisor or wrapper process is running; releasing the stale mutex through the supervisor."
++                & $node $supervisor --release-lock
++            } else {
++                Write-Output "A gateway-related process is still running; stale mutex left in place."
++            }
+         }
+     } catch {
+         Write-Warning "Could not parse existing lock file: $_"

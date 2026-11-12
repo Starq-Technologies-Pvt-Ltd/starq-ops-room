@@ -1,0 +1,27 @@
+--- a/scripts/send.mjs
++++ b/scripts/send.mjs
+@@ -190,7 +190,7 @@
+   console.error('Pass only one of --body or --body-file, not both.');
+   process.exit(1);
+ }
+-const body = args['body-file'] != null
++let body = args['body-file'] != null
+   ? readFileSync(args['body-file'], 'utf8').replace(/\r?\n$/, '')
+   : args.body;
+ const thread = args.thread;
+@@ -402,6 +402,15 @@
+       status,
+       ...(onBehalfOf ? { onBehalfOf, delegated: true } : {})
+     };
++    // Room #19053: owners named only in --action-required must also be addressed in the body,
++    // otherwise the broker classifies the record as a broadcast CC_CONTEXT and nobody is woken.
++    const { ensureOwnersAddressed } = await import('./actionOwnerAddressing.mjs');
++    const { resolveIdentity } = await import('../protocol/v1/identityProvider.mjs');
++    const addressed = ensureOwnersAddressed({ body, actionRequired, sender: from, resolveIdentity });
++    if (addressed.changed) {
++      body = addressed.body;
++      console.error(`NOTE: --action-required names ${addressed.added.join(' ')} but the body did not address them; a "To:" line was added so the record routes as ACTION_REQUIRED to them.`);
++    }
+     const route = evaluateEventRouting(from, body, [], metadataForRouting);
+     const structured = buildStructuredRoomMetadata({
+       subject, status, action, actionRequired, references, replyTo, telegramUpdateId,
