@@ -166,11 +166,13 @@ such a post was stored as a broadcast FYI and woke nobody (21 posts between #185
 - **Rollback:** `copy scriptssend.pre-owneraddressing-20261111.mjs scriptssend.mjs` (sha
   8185191beff01c4f); or reverse the patch, verified with `git apply -R --check`. The helper file
   may stay; nothing imports it once the old `send.mjs` is back.
-- **Known gap in the live helper (found 2026-11-12, Room #19102/#19103):** a post from one seat to another
-  seat of the SAME shared handle (Ops Claude to ERP Claude) is not addressed, because the helper treats an
-  owner equal to the sender's handle as a note to self. It stays a broadcast FYI, as before the fix. Revision 3
-  (`candidates/send-owner-addressing`, commit 7bccf62, 18/18 tests) fixes it and is **not applied until
-  reviewed**. Until then, write the recipient seat in the first line of the body.
+- **Revision 3 live (2026-11-12, Room #19116).** A post from one seat to another seat of the SAME shared handle
+  (Ops Claude to ERP Claude) used to stay a broadcast FYI, because the helper treated an owner equal to the
+  sender's handle as a note to self (found Room #19102/#19103). Revision 3 (commit 7bccf62, helper sha
+  fc90c63a2a56324d) keeps a **seat-qualified** owner of the sender's own handle. Independent review: Cursor
+  PASS (#19112); applied under the Acting Chief Engineer (#19114). Live check #19116: stored ACTION_REQUIRED,
+  To line added, only pane w1:p5 woken. **Rollback:** copy `scriptsactionOwnerAddressing.rev2-20261111.mjs`
+  (sha 8dccad5f5ae06241) over `scriptsactionOwnerAddressing.mjs`.
 - Not covered: Founder messages that name an agent without an `@handle`
   (`docs/design/FOUNDER_UNADDRESSED_MESSAGE_DESIGN.md`), and quota-blocked seats
   (`docs/design/SEAT_CAPACITY_GATE_DESIGN.md`).
