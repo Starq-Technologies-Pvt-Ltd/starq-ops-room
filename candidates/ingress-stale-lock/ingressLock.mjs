@@ -1,0 +1,133 @@
+// CANDIDATE - not deployed. Room #19126 (Acting CE): stale-lock guard for withLock in protocol/v1/ingress.mjs.
+//
+// Incident, 2026-11-12: a process (pid 53228) died holding agent-comms\locks\ingress.lock. The lock has no
+// stale-holder check, so every Room post failed after 50 attempts (about one second) until a person removed
+// the file by hand. Two further defects in the live version: the release unlinks the lock even when it is no
+// longer ours, and the wait is a busy loop.
+//
+// Rules of this candidate:
+//  1. A held lock is reclaimed only when its holder is provably gone:
+//     - DEAD_HOLDER: the recorded pid is not running AND the lock is at least staleAfterMs old;
+//     - UNREADABLE: the lock content is empty or garbled AND it is at least staleAfterMs old (a writer that
+//       died between creating the file and writing its pid);
+//     - AGE_CEILING: the lock is older than maxHoldMs even if the pid is alive (pid reuse; the critical section
+//       is a file append of milliseconds, so 30 s means the holder is gone or hung).
+//     A lock younger than staleAfterMs is never reclaimed, whatever its pid says.
+//  2. Reclaiming is serialized by a second exclusive file (<lock>.reap). Only its holder may remove the stale
+//     lock, and it re-reads the lock and removes it only if the content is exactly what was judged stale. This
+//     closes the race where two reclaimers both judged the same stale lock and the second removes a NEW live
+//     lock that the first one's successor had just created. A dead reaper's file is itself reclaimed after
+//     reapStaleMs.
+//  3. Release removes the lock only if it still holds our own content.
+//  4. Windows reports EPERM, EACCES or EBUSY (not EEXIST) when another process is mid-delete of the lock file.
+//     The live code throws on those; here they count as contention and are retried until the deadline.
+//  5. Waiting uses Atomics.wait (no busy loop) up to waitMs; the failure message keeps the original prefix
+//     "Could not acquire ingress lock" and now names the holder.
+// Nothing is deleted unless it is judged stale by rule 1, and every reclaim is reported through onReclaim.
+
+import fs from 'node:fs';
+
+export const DEFAULTS = Object.freeze({ staleAfterMs: 2000, maxHoldMs: 30000, reapStaleMs: 5000, waitMs: 5000 });
+
+export function pidAlive(pid) {
+  try { process.kill(pid, 0); return true; } catch (e) { return e.code === 'EPERM'; }
+}
+
+const CONTENTION = new Set(['EEXIST', 'EPERM', 'EACCES', 'EBUSY']);
+const sleep = (ms) => Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+
+function readHolder(lockFile) {
+  try {
+    const raw = fs.readFileSync(lockFile, 'utf8');
+    const st = fs.statSync(lockFile);
+    const [p, t] = raw.split('\n');
+    const pid = /^\d+$/.test(p ?? '') ? Number(p) : null;
+    const ts = /^\d+$/.test(t ?? '') ? Number(t) : null;
+    return { raw, pid, ts, mtime: st.mtimeMs };
+  } catch (e) {
+    if (e.code === 'ENOENT' || CONTENTION.has(e.code)) return null;
+    throw e;
+  }
+}
+
+/** @returns {null | 'DEAD_HOLDER' | 'UNREADABLE' | 'AGE_CEILING'} */
+export function staleReason(holder, now, o, isAlive) {
+  const age = now - (holder.ts ?? holder.mtime);
+  if (age > o.maxHoldMs) return 'AGE_CEILING';
+  if (age < o.staleAfterMs) return null;
+  if (holder.pid === null) return 'UNREADABLE';
+  return isAlive(holder.pid) ? null : 'DEAD_HOLDER';
+}
+
+function unlinkRetry(file) {
+  for (let i = 0; ; i++) {
+    try { fs.unlinkSync(file); return; } catch (e) {
+      if (e.code === 'ENOENT') return;
+      if (!CONTENTION.has(e.code) || i >= 20) throw e;
+      sleep(5);
+    }
+  }
+}
+
+function reap(lockFile, observed, o, now) {
+  const reapFile = `${lockFile}.reap`;
+  let fd;
+  try {
+    fd = fs.openSync(reapFile, 'wx');
+  } catch (e) {
+    if (!CONTENTION.has(e.code)) throw e;
+    try { if (now() - fs.statSync(reapFile).mtimeMs > o.reapStaleMs) fs.unlinkSync(reapFile); } catch { /* raced */ }
+    return false;
+  }
+  try {
+    const cur = readHolder(lockFile);
+    if (cur && cur.raw === observed.raw) { unlinkRetry(lockFile); return true; }
+    return false;
+  } finally {
+    fs.closeSync(fd);
+    try { fs.unlinkSync(reapFile); } catch { /* already gone */ }
+  }
+}
+
+export function createWithLock(lockFile, opts = {}) {
+  const o = { ...DEFAULTS, ...opts };
+  const now = opts.now ?? Date.now;
+  const isAlive = opts.isAlive ?? pidAlive;
+  const pid = opts.pid ?? process.pid;
+  const onReclaim = opts.onReclaim ?? ((info) => console.error(`ingress lock: reclaimed stale lock (${info.reason}, holder pid ${info.pid ?? 'unknown'}, age ${info.ageMs} ms)`));
+
+  return function withLock(action) {
+    const deadline = now() + o.waitMs;
+    for (;;) {
+      let fd;
+      try {
+        fd = fs.openSync(lockFile, 'wx');
+      } catch (e) {
+        if (!CONTENTION.has(e.code)) throw e;
+        const holder = readHolder(lockFile);
+        if (holder) {
+          const reason = staleReason(holder, now(), o, isAlive);
+          if (reason && reap(lockFile, holder, o, now)) {
+            onReclaim({ reason, pid: holder.pid, ageMs: now() - (holder.ts ?? holder.mtime) });
+            continue;
+          }
+        }
+        if (now() >= deadline) {
+          const h = holder ? `held by pid ${holder.pid ?? 'unknown'}, age ${now() - (holder.ts ?? holder.mtime)} ms` : 'holder vanished';
+          throw new Error(`Could not acquire ingress lock after ${o.waitMs} ms (${h})`);
+        }
+        sleep(10 + Math.floor(Math.random() * 20));
+        continue;
+      }
+      const mine = `${pid}\n${now()}`;
+      try {
+        fs.writeFileSync(fd, mine);
+        return action();
+      } finally {
+        fs.closeSync(fd);
+        const cur = readHolder(lockFile);
+        if (cur && cur.raw === mine) unlinkRetry(lockFile);
+      }
+    }
+  };
+}
