@@ -186,3 +186,25 @@ credentials, gateway or configuration (Founder only).
 ## Open decisions
 
 Listed in `docs/operations/DECISIONS_AND_LESSONS_2026-11-10_to_12.md` ("Open") and in `docs/journal/2026-11-11.md` ("Open decisions").
+
+## Author rewrite: old-to-new hash map (Founder #19192, Acting CE #19193)
+
+The six commits authored `Mustarq <a.musthaq@gmail.com>` were re-authored in place as `Claude (Operations Deputy)`
+with the Standard A email. Content and commit messages are unchanged. Each was rewritten by an interactive-free
+rebase onto its own parent (`git rebase -i 8ff321e` with an explicit todo, one `commit --amend --reset-author`
+after each of the six picks). The tree at the pre-rewrite head `9ecb0b4` equals the tree after the rewrite, so the
+range diff is empty. The pre-rewrite head is kept as the local branch `backup-pre-author-rewrite-20261112`; the
+old hashes below are valid only there.
+
+| Old (Mustarq) | New (Operations Deputy) | Subject |
+|---|---|---|
+| `4ba5293` | `bf4f283` | ops(comms): fold stale codex seat row into seat-table candidate (Room #19118) |
+| `ef6079f` | `6d9c4b6` | ops(comms): stale ingress lock guard candidate with tests and patch (Room #19126) |
+| `3efc68a` | `957550e` | ops(comms): amended PR #3 rollback plan, seat-table patch v3, rehearsal (Room #19139) |
+| `fc62d68` | `f64251f` | docs(ops): Command-Room-Herdr lifecycle standard, stage table, journal (Founder #19144) |
+| `20cd01b` | `aa37afc` | ops(comms): ingress stale-lock guard applied live (Room #19149) |
+| `6dc3be0` | `bedc2b3` | docs(design): marker-based continuation rule, candidate only (Acting CE #19158) |
+
+Verification (taken before this note was added): no commit in `4350bbc..HEAD` is authored by `Mustarq` (0); the tree
+equals the pre-rewrite tree; `git diff 9ecb0b4 HEAD` is empty; 33 commits in the range, the same as before; linear,
+no merges; the subject list is identical to the pre-rewrite list; `main` is untouched at `2d56dd4`.
