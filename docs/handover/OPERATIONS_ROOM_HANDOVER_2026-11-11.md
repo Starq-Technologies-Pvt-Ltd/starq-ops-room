@@ -1,175 +1,157 @@
-# Operations Room handover — 2026-11-11
+# Operations Room handover (current; refreshed 2026-11-12, file named for its first date)
 
-From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session
-`509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to Room tail #19030. **Read `docs/operations/COMMS_RECOVERY_RUNBOOK.md` first:** the live comms stack changed on the evening of 2026-11-11 (full StarqBot mirror, autostart keeper task, dispatcher retention; dispatcher pid and StarqBot pids in the table below are superseded). The previous handover is
-`OPERATIONS_ROOM_HANDOVER_2026-11-07.md`.
+From: Operations Room Deputy (Claude, Nitro Windows `w3:p1`, session `509bf943-f40a-463e-9912-6e8cc3a7ded3`). Current to
+Room tail #19180 (2026-11-12). This is the **single current handover**: refreshed in place, no third dated copy. The
+previous one is `OPERATIONS_ROOM_HANDOVER_2026-11-07.md`, kept as history. Read `docs/operations/FACTORY_STARTUP_SOP.md`
+(Parts 0 to 10) first, then `docs/operations/COMMS_RECOVERY_RUNBOOK.md` if anything in communications is broken.
+
+## As of 2026-11-12
+
+| Item | State | Source |
+|---|---|---|
+| Acting Chief Engineer | Elder, Claude ERP seat `w1:p5`; Codex is the permanent Chief Engineer and was at his usage limit until about 2026-11-14 | #19096, SOP Part 2 |
+| Founder holds | Push and merge of this handbook; PR #3 activation, receiver cutover, seat-table activation, replay; Vision's models and configuration; bridge retries; new project work packages | #19089, #19122, #19155, #19163, #19166 |
+| StarqBot | gateway pids 38284 and 47608 (unchanged by today's changes); mirror of every record live; keeper task `StarqTech-StarqBot-Logon` Ready (logon and every 5 minutes) | status checks 2026-11-12 |
+| Room dispatcher | pid 51700 (restarted once at 08:59Z by the keeper for the Vision wake change); state `state\room-dispatch-codex-live` | #19179 |
+| Ingress stale-lock guard | live since 2026-11-12 (#19153); rollback ready | incident file |
+| Owner-addressing sender fix | revision 3 live (#19116) | |
+| Vision terminal | Herdr `w1:p0`, routed to `vision`; wake verified (#19178) | #19179 |
+| Vision's four specialists | blocked: their model's free period ended; the Founder is recovering inference himself; bridge has **NOT** passed real-host acceptance | #19161, #19163, #19166 |
+| PR #3 receiver and seat table | reviewed PASS (#19138), rollback rehearsal accepted (#19146), **held** | |
+| Starq Command | the Cloudroom desktop app was running (8 processes seen 2026-11-12). The lifecycle services (`ui 5173` ... `herdr 5179`) were last known down with `recover` refused by the closeout guard, which was not bypassed; **not rechecked in this refresh: UNVERIFIED now** | `AGENTS.md` procedure |
+| Unattended startup after a Nitro reboot | **UNVERIFIED**: no reboot test has been run | SOP Part 8 |
 
 ## Mandate
 
-Room #18903 (task `FOUNDER-OPS-STARTUP-20261111`), hierarchy in #18912 (Founder correction,
-supersedes #18905): this seat is Operations Deputy / Communications Engineering Lead and reports
-to Codex. It owns the records in this repository — the Factory Startup SOP, the daily journal,
-handovers, roster and session recovery, cross-floor activity for StarqERP and Hoadhaa, and
-communications incidents and improvements. Codex is Chief Engineer / Project Director with
-authority and accountability across every floor and department; delegation does not transfer
-that accountability. Completion and blockers from this seat go to Codex through Room. Merges and
-releases stay with the Founder. The full hierarchy is in
-`docs/operations/FACTORY_STARTUP_SOP.md`.
-
-## Standing duties from Founder #18981 (assigned in #18983)
-
-1. Keep the SOP, roster, journal and handovers current.
-2. 4a — addressing standard; reissue a missed record only when one is identified.
-3. 4b — candidate multi-recipient filter with tests, in a reviewable PR; no activation.
-4. 4c — design for Deadpool as health-gated failover-only sender; do not enable the cron.
-5. Consolidate the ERP and Hoadhaa handover refreshes [#18984, #18985] and notify the Founder
-   at `@mustarq` when each existing Command conversation is ready.
-
-Codex is in save mode: report results in Room, do not wait to be polled. Receipt of #18975 by
-the Founder is UNCONFIRMED.
-
-**Unpushed work:** at #18989 the PR #5 branch had local commits not on GitHub (GitHub head
-`4350bbc`), because the harness at this pane denied the push. Check `git status -sb` in the
-worktree and push once the operator allows it.
+Room #18903 (task `FOUNDER-OPS-STARTUP-20261111`), hierarchy in #18912 (supersedes #18905) and #19096, #19144, #19154,
+#19155: this seat is Operations Deputy / Communications Engineering Lead ("Communications, routing, infrastructure and
+operational continuity", #19144). It owns this repository and its documentation, and, under #19154 and #19155, the
+consolidation of the authoritative SOP; the Acting Chief Engineer reviews and resolves inconsistencies. Completion and
+blockers go to the Acting Chief Engineer through Room. Merges and releases stay with the Founder.
 
 ## Recovering this seat in a new session
 
-1. Complete the startup gate in `D:\StarqTech\AGENTS.md`. Post as `claude` with the harness
-   session ID as `--instance`.
-2. Bind by pane `w3:p1` and the harness session ID. Herdr listed this pane under the previous
-   session (`7db2e99c`) for the whole of 2026-11-11; do not trust that value.
+1. Complete the startup gate in `D:\StarqTech\AGENTS.md`. Post as `claude` with the harness session ID as `--instance`.
+2. Bind by pane `w3:p1` and the harness session ID. Herdr may list this pane under an older session value; do not trust it.
 3. Read this file, then the newest file in `docs/journal/`.
 4. Read Room from the last sequence the journal names, through `readRoomSnapshot()`.
-5. Check infrastructure read-only (SOP step 1) and compare with "Live state" below.
-6. Do not use the harness scratchpad: it resolves under `C:\Users\...\AppData\Local\Temp`, outside
-   `D:\StarqTech`. Work without scratch files, or inside a worktree.
-
-## Live state at handover
-
-| Item | State |
-|---|---|
-| StarqBot gateway | Restored about 15:50 PKT by Codex: supervisor pid 26768, gateway pid 27696, HEALTHY [#18950]. Was down from the 05:37 reboot. Logon task still not found |
-| Starq Command | DEGRADED; all services gone |
-| Room dispatcher | pid 34044, live `agent-comms` script, delivery mode; not the PR #3 candidate |
-| Legacy watchers | none running; `state/claude-herdr-watch.lock` is a stale file from 11-07 |
-| `claude` lease | primary: this seat; shared: ERP `claude-herdr-w1p5-ce2c1fda`, stale Copilot `b14edf13` |
+5. Check infrastructure read-only (SOP Part 8, step 1) and compare with the table above.
+6. Scratch files stay under `D:\StarqTech` (a worktree or `D:\StarqTech\scratch`); never the harness temp directory and never `D:\!starq`.
 
 ## Repository state
 
 | Checkout | Branch | Head |
 |---|---|---|
 | `D:\StarqTech\starq-ops-room` | `main` = `origin/main` | `2d56dd4` |
-| `.worktrees\starq-ops-room-durable-foundation` | `claude/ops-room-durable-foundation-20261107` (PR #3) | `99fe117` |
-| `.worktrees\starq-ops-room-v2-protocol` | `claude/ops-room-v2-protocol-20261107` (PR #4) | `acd8e4b` |
-| `.worktrees\herdr-lifecycle-20261109` | `claude/herdr-lifecycle-phase3-20261110` | `51099da` |
-| `.worktrees\starq-ops-room-ops-records` | `claude/ops-records-20261111` (these records) | see PR |
+| `.worktrees\starq-ops-room-durable-foundation` | PR #3 branch | `99fe117` (open, mergeable, reviewed, held) |
+| `.worktrees\starq-ops-room-sender-fix-pr3` | `claude/pr3-owner-routing-reconcile-20261111` (receiver candidate) | `cefafce` |
+| `.worktrees\starq-ops-room-v2-protocol` | PR #4 branch | `acd8e4b` (open, unreviewed, preserved) |
+| `.worktrees\starq-ops-room-ops-records` | `claude/ops-records-20261111`, **PR #5** (these records) | local, 30 commits ahead of GitHub's `4350bbc`; see below |
 
-PR #3 and PR #4 are open, mergeable and unreviewed. They are preserved as they are; no code work
-on them is authorised.
+**Unpublished work.** The harness at this pane denies `git push`; the Founder holds the push and merge of this
+consolidation for his review (#19155 item 5). Check `git status -sb` and the commit list below before publication.
 
-## Parked (Founder #18808)
+**Commit authors for the publication review (decision for the Founder, flagged by the Acting CE in #19162).** Of the 30
+unpublished commits, 6 carry the author name `Mustarq` (made with the machine's default Git identity after a session
+reset): `6dc3be0`, `20cd01b`, `fc62d68`, `3efc68a`, `ef6079f`, `4ba5293`. 23 carry `Claude (Ops Room Deputy)` (the name used
+before the Acting CE specified `Claude (Operations Deputy)`), and 1 carries `Claude (Operations Deputy)`. The Durable
+Engineering Activity standard asks for the real contributor. Nothing was rewritten; the Founder chooses between leaving
+the unpublished history as it is, or correcting the author on the unpublished commits before the first push. New commits
+use `Claude (Operations Deputy)` and the Standard A email with a `Co-Authored-By` trailer for the actual model.
 
-WSL dispatcher investigation, dispatcher cutover, gateway ingress integration
-(`COMMS-ROUTING-INGRESS-20261111`, blocked at #18871), and other noncritical communications work.
-Do not resume without a new direction.
+## Policy conflicts for the Acting CE (flagged as found; Ops does not resolve them)
 
-## Known communications defects
+1. Cloudroom to Herdr contract §1 (Cloudroom prepares the package; "Repeat" selects the next task) versus Founder #19144
+   (Elder prepares and dispatches through Room; the next task starts only when the Founder initiates it). Handled in SOP
+   Part 4 by following #19144; the contract's package and receipt schemas are kept.
+2. Contract §1 and standard §5 ("Vision has no Herdr pane and does not need one") versus Founder #19164 and #19166 (Herdr
+   Vision, `w1:p0`). Handled in SOP Part 6.
+3. #19164 ("proposed, not authorization to migrate or change running sessions", assess first) versus #19166 ("Proceed with
+   our planned separation"). Recorded as: the role split is the adopted organization; no running session is migrated until
+   the Acting CE's assessment is done. Please confirm that reading.
+4. Vision's own `PROJECT-MANAGEMENT-SOP.md` (read-only; not edited): it makes Cloudroom the authoritative surface and
+   names Vision "Project Manager and Official Verifier" on one surface; it does not describe the Command PM and Herdr
+   Verifier split or stage 5 and 7 of the 8-stage lifecycle. Its 2026-11-07 bridge warning is already marked superseded
+   inside the file. Vision reported the same gaps itself (#19165 section 5). Vision reconciles its own file; Ops lists the
+   gaps.
+5. #19096 told Elder to coordinate JARVIS, FORGE and other nodes; #19154 says not to expand to additional hosts. The later
+   decision is followed (SOP Part 2).
+6. #19122 item 3 authorized controlled cleanup of confirmed idle resources; #19132 says no WSL restart or disruptive cleanup
+   without further authorization. The stricter later one is followed.
+7. `D:\StarqTech\AGENTS.md` (outside this repository) does not mention the Acting Chief Engineer arrangement; a session that
+   reads only AGENTS.md would take Codex as the active Chief Engineer. SOP Part 0 and Part 2 cover it; adding a pointer in
+   AGENTS.md is a change outside this repository and needs authorization.
 
-1. Founder Telegram ingress derives recipients from any `@word` in the message body and emits no
-   structured routing. The fix needs the gateway source under version control (#18871).
-2. The Deadpool relay re-derives recipients without routing metadata; owner decision open.
-3. WSL delivery backend is unverified.
-4. The `claude` handle is shared by three seats; an unqualified mention is ambiguous.
-5. Herdr session values are stale for `w3:p1` and `w1:p5`.
-6. Copilot, OpenCode, Devin, Goose and OMP have no dispatcher seat enrolment.
-7. No logon task was found to relaunch StarqBot after a reboot.
-8. Herdr completion signal fails on XPS (`agent_prompt_stalled`, no `completion_seq` change) and
-   works on Fold 4 (`docs/incidents/2026-11-11-herdr-completion-notification.md`). Until XPS is
-   validated: no blind resend; inspect the pane, read the output, record in Room.
-9. A long Room body was cut off silently on posting (#18912). Read long posts back.
-10. Vision's four-specialist review bridge is blocked for real packages. It blocks HOA-253 and
-    the PR #204 review. Owner chain, failing predicate, source defects and a repair plan are in
-    `docs/incidents/2026-11-11-vision-review-bridge-blocked.md`. The bridge source is outside
-    version control.
-11. No supervisor or autostart is verified for the live dispatcher (pid 34044).
-12. Vision could not post to Room from a second instance while its lease was held by its
-    Cloudroom instance; its PR #204 disposition reached Room only through Codex [#18935].
+## Known communications defects (status 2026-11-12)
 
-## Reviews blocked at handover
+1. Founder messages with no `@handle` wake nobody and the Founder is not told; split messages are a variant (#19154 and
+   #19155). Designs and the marker candidate are in `docs/design/FOUNDER_UNADDRESSED_MESSAGE_DESIGN.md`; the Telegram notice
+   needs the Founder's decision. **Open.**
+2. The Deadpool relay re-derives recipients without routing metadata; owner decision open (`docs/design/DEADPOOL_FAILOVER_SENDER_DESIGN.md`).
+3. WSL delivery backend is unverified; the live dispatcher discovers Windows panes only. **Held.**
+4. The `claude` handle is shared by three seats and `antigravity` by two; a bare mention is held, not defaulted (#19034).
+5. Herdr session values drift after restarts; bind by pane plus the harness's own session id.
+6. Seat capacity is invisible to the dispatcher (`docs/design/SEAT_CAPACITY_GATE_DESIGN.md`). **Design only.**
+7. The StarqBot logon task now exists and ran last at 13:57 local with result 0; **unattended startup after a reboot is still
+   unproven** (no reboot test).
+8. Herdr completion signal fails on XPS and works on Fold 4; out of scope now.
+9. A long Room body was cut off silently once (#18912): read long posts back.
+10. Vision's department: blocked by the specialists' expired model (`docs/incidents/2026-11-12-vision-specialists-model-expired.md`).
+11. The dispatcher is supervised by the keeper (a restart through it was done on 2026-11-12, #19179).
+12. Fixed on 2026-11-12: Room writes blocked by a dead process's lock (`docs/incidents/2026-11-12-ingress-lock-held-by-dead-process.md`);
+    Herdr kind `hermes` routed to `deadpool` (runbook, "Herdr agent kind to handle mapping").
+13. Quote no handle in a body you do not mean to address; copy `--reply-to` event ids in full (SOP Part 7, Decisions log).
 
-- PR #204 (StarqERP), head `808ad84`: independent review BLOCKED, no verdict. Founder to choose
-  a one-off interim solo Vision review or to keep the gate [#18935].
-- HOA-253 (Hoadhaa), candidate `4edf2dab`: independent review BLOCKED [#18923].
-- Bridge correction pass (`VISION-BRIDGE-REPAIR`, #18933): **no builder**. Antigravity released
-  it with zero edits (harness scratch outside `D:\StarqTech`); the WSL Claude transfer was
-  withdrawn at its usage limit, reset 17:40 PKT [#18941, #18943]. Codex owns staffing; Founder
-  choice in #18946. Vision reviews the result under #18642.
+## Reviews and held items
+
+- PR #204 (StarqERP, head `808ad84b`): independent verification waits for the department bridge.
+- HOA-253 (Hoadhaa), candidate `4edf2dab`: verification waits for the bridge; PR #8 preserved as a draft.
+- PR #3, the receiver candidate `cefafce`, seat-table patch v3 (`1dda9fa304a812a6`) and the rollback plan: independent review done
+  (OpenCode #19138), rehearsal accepted (#19146); activation needs a verified readiness report and the Founder's separate
+  authorization (#19089, #19122).
+- The Command Vision and Herdr Vision assessment (#19164) is with the Acting CE.
 
 ## Pending for this seat
 
-Nothing pending. The Founder's execution-to-Command handover [#18948] is preserved in
-`docs/handover/FOUNDER_COMMAND_HANDOVER_2026-11-11.md`: StarqERP-Dev WAITING FOR CHECKPOINT
-(Founder: PR #204 review route); Hoadhaa-Dev READY TO RESUME [#18958, #18959, #18962]. After
-that snapshot the HOA-255 gate opened and Devin (`w2:p2`) became its single builder; HOA-255 is
-In Progress [#18964, #18965].
+- Continue the SOP consolidation per #19162 and #19170 (this refresh is part of it); post a short progress record when the
+  draft is ready for the independent reviewer the Acting CE will name. Hold every push and merge.
+- Fold in the Acting CE's answers to the conflicts above and the Vision assessment.
+- Nothing else is assigned. No new commercial project package starts until the Founder initiates it in Command.
 
-At the next session start, verify StarqBot is HEALTHY before any work (SOP, "StarqBot
-recovery").
+## Other hosts and out-of-scope items
 
-Open assignment for this seat: `FOUNDER-STARQBOT-PRIMARY-DELIVERY-20261111` [#18971, ACK #18972]
-— make StarqBot the primary Room-to-Founder delivery path with the Deadpool relay secondary.
-Verified and tested [#18975, #18977]; blocked on decisions 4a–4c in
-`docs/incidents/2026-11-11-founder-delivery-paths.md`. No live change was made.
-
-## Chain of command and message tracking
-
-Founder → Codex → Floor or Department Lead → owned agents. Reports go up the same chain. Every
-message is tracked through delivered, working, ACK, done and evidence. Both are in
-`docs/operations/FACTORY_STARTUP_SOP.md` [#18915].
-
-## Other hosts
-
-- XPS: reachable two-way from Nitro; JARVIS heads General Engineering Support with six on-demand
-  profiles; no GitHub access to StarqERP; no assignment accepted [#18912].
-- Fold 4: FORGE reachable and ready, supplementary only, session `20261111_114008_dbda46` in
-  remote `w1:p2`. Five X-Men profiles are configured but not running; capacity unverified; shared
-  gateway on that host reported stopped [#18915].
-- Deadpool and the secondary WSL Claude are not yet reported.
-
-## Work in flight on the floors
-
-See "Owner actions in progress" in `docs/journal/2026-11-11.md`. In short: the ERP lead is
-recovered the WSL Claude scratch path and its read-only ERP-543 lanes are running [#18921, #18922]; the Hoadhaa lead holds new activation
-below 1.23 GiB free (NO-GO at 0.92 GiB, #18920) and may start only HOA-255 [#18917]. The Hoadhaa startup was Founder-driven;
-Codex oversees it and does not repeat the lead's activation.
-
-Detail for 1–3 and 6 is on the PR #3 branch under `docs/reviews/`.
+Out of scope for now (#19154): XPS/JARVIS, Fold 4/FORGE and other hosts. Earlier notes: XPS is reachable two-way with
+JARVIS heading six on-demand profiles and no StarqERP GitHub access (#18912); Fold 4's FORGE was ready, supplementary only
+(#18915). Deadpool and the WSL Claude: Deadpool's scope is UNVERIFIED until its inventory (#19088) arrives.
 
 ## Task stage table (Command, Room, Herdr lifecycle; Founder #19144)
 
-Standard: `docs/operations/FACTORY_STARTUP_SOP.md`, "Task lifecycle". Seeded 2026-11-12 from Acting CE #19145
-section 1 and the Room records cited on each line; no stage is advanced beyond what those records say.
-Cloudroom task ID is written `none in Room` where Room gives none.
+Standard: `docs/operations/FACTORY_STARTUP_SOP.md`, Part 4. Seeded 2026-11-12 from Acting CE #19145 section 1 and the Room
+records cited on each line; no stage is advanced beyond what those records say. Cloudroom task ID is written `none in
+Room` where Room gives none. Updated 2026-11-12 after #19161 to #19180.
 
-- [ERP-465 (PR #204) | Room #19122, #19145 | evidence: PR #204, CI green per #19145] stage 4/8 results and evidence returned: built and CI green; stage 6 (Vision verification) is blocked on the bridge repair.
-- [VISION-BRIDGE-REPAIR (Room task tag; Cloudroom ID none in Room) | Room #19109, #19113, #19115, #19122, #19123, #19136, #19137 | evidence: `D:\StarqTech\_worktrees\vision-hermes-bridge-repair-20261108`, run copy `D:\StarqTech\scratch\vision-bridge-e2e-20261112`] stage 3/8 execution: repair built (#19109), pre-read PASS (#19113), real-host synthetic E2E authorized (#19122 item 4); first Cursor attempt stopped on profile_mismatch, one fresh retry authorized (#19136) and running per #19145; its evidence then goes to Vision for formal acceptance.
-- [HOA-253 and Hoadhaa PR #8 (Cloudroom ID none in Room) | Room #19122, #19124, #19131, #19145 | evidence: candidate 4edf2da on room/hoa-253-hoa-218-wp-1-search-through-grap-s5jg; PR #8 head 49fd4ad] stage 6/8 blocked: Vision review waits on the bridge; AG's reconciliation (#19131, as cited in #19145) says the candidate supersedes PR #8, and the existing draft is preserved (#19122 item 2).
+- [ERP-465 (PR #204) | Room #19122, #19145, #19165 | evidence: PR #204 head `808ad84b829e37a300778aef5d79a66d6280f814`, CI 5 of 5 green per Vision's report] stage 4/8 results and evidence returned: built and CI green; stage 6 (verification) waits for the department bridge.
+- [VISION-BRIDGE-REPAIR (Room task tag; Cloudroom ID none in Room) | Room #19109, #19113, #19122, #19123, #19134, #19136, #19137, #19159, #19161, #19163, #19166 | evidence: `D:\StarqTech\_worktrees\vision-hermes-bridge-repair-20261108`, run copy `D:\StarqTech\scratch\vision-bridge-e2e-20261112`, receipts there] stage 3/8 execution: repair built, pre-read PASS; real-host synthetic E2E stopped (profile_mismatch, then timeout) because the four specialists' model expired; the Founder is recovering inference; the bridge has NOT passed real-host acceptance; no retries until he confirms.
+- [HOA-253 and Hoadhaa PR #8 (Cloudroom ID none in Room) | Room #19122, #19124, #19131, #19145 | evidence: candidate `4edf2da` on `room/hoa-253-hoa-218-wp-1-search-through-grap-s5jg`; PR #8 head `49fd4ad`] stage 6/8 blocked: verification waits on the bridge; AG's reconciliation (#19131, as cited in #19145; not read by Ops) says the candidate supersedes PR #8, and the draft is preserved (#19122 item 2).
 - [HOA-255 (Cloudroom ID none in Room) | Room #19145 | evidence: none cited in Room] stage 4/8: complete locally and awaiting review, per #19145.
 - [ERP-543 / B8 | Room #19145 | evidence: none] stage 1/8 not started: waits for PR #204 and for the Founder to initiate it.
-- [Operations infrastructure, not a project task: PR #3 and the sender fix | Room task COMMS-PR3-REVIEW-REHEARSAL | Room #19084, #19117, #19119, #19121, #19122 item 5, #19125, #19138, #19139, #19142, #19146 | evidence: `candidates/pr3-rollback-rehearsal`, `docs/operations/PR3_ACTIVATION_ROLLBACK_PLAN.md`] reviewed change: OpenCode PASS (#19138), rehearsal accepted (#19146), activation on hold for separate Founder authorization.
-- [Operations infrastructure: ingress stale-lock guard | Room task COMMS-INGRESS-LOCK-GUARD | Room #19135, #19143, #19145, #19146 | evidence: `candidates/ingress-stale-lock`] reviewed change: OpenCode PASS (#19143); live only on separate Founder authorization (asked in #19145).
+- [Operations infrastructure, not a project task: PR #3 and the sender fix | Room task COMMS-PR3-REVIEW-REHEARSAL | Room #19089, #19122 item 5, #19138, #19142, #19146 | evidence: `candidates/pr3-rollback-rehearsal`, `docs/operations/PR3_ACTIVATION_ROLLBACK_PLAN.md`] reviewed change: OpenCode PASS, rehearsal accepted, activation on hold.
+- [Operations infrastructure: ingress stale-lock guard | Room task COMMS-INGRESS-LOCK-GUARD | Room #19126, #19135, #19143, #19148, #19153 | evidence: `candidates/ingress-stale-lock`] **live** (#19153).
+- [Operations infrastructure: Vision wake | Room task VISION-ROOM-WAKE-20261112 | Room #19170, #19173, #19175, #19176, #19178, #19179 | evidence: backup `agent-comms\backups\vision-wake-map-20261112T085809Z`] **live**; wake verified on `w1:p0`; Vision's own confirmation of receipt is with the Acting CE.
+- [OPS-SOP-CONSOLIDATION-20261112 | Room #19154, #19155, #19156, #19160, #19162, #19170 | evidence: this repository, PR #5 branch] draft in progress; push and merge held.
 
 ## What this seat may do without asking
 
-Documentation, journal, handover and incident records; read-only status commands and Room reads;
-a documentation-only branch and pull request.
+Documentation, journal, handover and incident records; designs and candidates; read-only status commands and Room reads;
+local commits and a documentation-only branch.
 
 ## What needs authorisation
 
-Any start or restart (StarqBot, Command, dispatcher, watchers); lock release; edits under
-`D:\StarqTech\agent-comms`; dispatcher or seat-table changes; WSL routing; code changes to PR #3
-or PR #4; merge; deploy; takeover of a live lease.
+Any start or restart (StarqBot, Command, dispatcher, watchers); lock release; edits under `D:\StarqTech\agent-comms`
+(a controlled change under a prior authorization, SOP Part 9); dispatcher, agent-map or seat-table changes; WSL routing;
+code changes to PR #3 or PR #4; push, merge or deploy; takeover of a live lease; any change to Vision's models,
+credentials, gateway or configuration (Founder only).
 
 ## Open decisions
 
-Listed in `docs/journal/2026-11-11.md`, "Open decisions".
+Listed in `docs/operations/DECISIONS_AND_LESSONS_2026-11-10_to_12.md` ("Open") and in `docs/journal/2026-11-11.md` ("Open decisions").
