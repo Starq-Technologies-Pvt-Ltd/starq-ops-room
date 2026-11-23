@@ -14,7 +14,7 @@ const fastSleep = () => Promise.resolve();
 function makeDefaultPanes() {
   return {
     local: [
-      { pane_id: 'w3:p1', agent: 'hermes', agent_status: 'idle', cwd: 'D:\\StarqTech\\starq-ops-room', label: 'Ops Vision' },
+      { pane_id: 'w3:p3', agent: 'hermes', agent_status: 'idle', cwd: 'D:\\StarqTech\\starq-ops-room', label: 'Ops Vision' },
       { pane_id: 'w3:p2', agent: 'agy', agent_status: 'working', cwd: 'D:\\StarqTech\\starq-ops-room', label: 'Ops AG' },
       { pane_id: 'w4:p1', agent: 'hermes', agent_status: 'idle', cwd: 'D:\\StarqTech\\Projects\\StarqERP', label: 'ERP Vision' },
       { pane_id: 'w4:p2', agent: 'hermes', agent_status: 'idle', cwd: 'D:\\StarqTech\\Projects\\StarqERP', label: 'PICARD' },
@@ -186,7 +186,7 @@ async function runAll() {
       assert.equal(state.status, 'READY_FOR_FOUNDER_GATE');
       assert.equal(transport.promptCalls.filter((c) => c.paneId === 'w4:p1').length, 0, 'S2 already COMPLETED must not re-run');
       assert.equal(transport.promptCalls.filter((c) => c.paneId === 'w2:p8').length, 1);
-      assert.equal(transport.promptCalls.filter((c) => c.paneId === 'w3:p1').length, 1);
+      assert.equal(transport.promptCalls.filter((c) => c.paneId === 'w3:p3').length, 1);
       results.push({ scenario: 4, name: 'Resume', status: 'PASS', promptsSentOnResume: transport.promptCalls.length, finalStatus: state.status });
     }
 

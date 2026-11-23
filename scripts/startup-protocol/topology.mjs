@@ -5,9 +5,9 @@ export const SEATS = {
     tag: 'OPS_VISION',
     name: 'Ops Room Vision',
     machine: 'local',
-    paneId: 'w3:p1',
-    address: 'w3:p1',
-    role: 'Operations Deputy (Nitro)',
+    paneId: 'w3:p3',
+    address: 'w3:p3',
+    role: 'Operations Deputy (Nitro, Hermes Vision; left pane)',
   },
   OPS_AG: {
     tag: 'OPS_AG',

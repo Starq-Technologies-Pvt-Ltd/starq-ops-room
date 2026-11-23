@@ -445,7 +445,7 @@ function escalateAndStop(state, store, { handoffId, reason, diagnostic }) {
     handoff_id: handoffId,
     reason,
     diagnostic,
-    escalated_to: 'OPS_VISION (w3:p1) -> Command Vision (thr_7gyyc4dv22)',
+    escalated_to: `OPS_VISION (${SEATS.OPS_VISION.address}) -> Command Vision (thr_7gyyc4dv22)`,
     at: new Date().toISOString(),
   };
   for (const step of STEP_ORDER) {
@@ -590,7 +590,7 @@ export async function runHandshake({
               sent_at: now,
               acked_at: now,
               status: 'ACK',
-              evidence: `S1 liveness verified: w3:p1=${p1.agent_status}, w3:p2=${p2.agent_status}`,
+              evidence: `S1 liveness verified: ${SEATS.OPS_VISION.address}=${p1.agent_status}, ${SEATS.OPS_AG.address}=${p2.agent_status}`,
               retry_count: 0,
               notes: 'top-of-chain init verified via pane list',
             });
