@@ -16,3 +16,4 @@ staff-state.json
 state/
 locks/
 *.lock
+runs/startup/*/logs/

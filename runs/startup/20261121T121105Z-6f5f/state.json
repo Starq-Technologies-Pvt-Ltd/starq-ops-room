@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0",
+  "run_id": "20261121T121105Z-6f5f",
+  "mode": "dry_run",
+  "status": "READY_FOR_FOUNDER_GATE",
+  "current_step": null,
+  "created_at": "2026-11-21T12:11:05.281Z",
+  "updated_at": "2026-11-21T12:11:07.144Z",
+  "completed_at": "2026-11-21T12:11:07.144Z",
+  "steps": {
+    "S1": {
+      "status": "COMPLETED",
+      "started_at": "2026-11-21T12:11:07.054Z",
+      "completed_at": "2026-11-21T12:11:07.119Z",
+      "handoffs": {
+        "20261121T121105Z-6f5f:S1:w3:p1->w3:p2:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": null,
+          "acked_at": null
+        }
+      }
+    },
+    "S2": {
+      "status": "COMPLETED",
+      "started_at": "2026-11-21T12:11:07.119Z",
+      "completed_at": "2026-11-21T12:11:07.133Z",
+      "handoffs": {
+        "20261121T121105Z-6f5f:S2:orchestrator->w4:p1:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": "ACK::20261121T121105Z-6f5f::S2::ERP_VISION::5c54",
+          "acked_at": null
+        },
+        "20261121T121105Z-6f5f:S2:w4:p1->w4:p2:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": "ACK::20261121T121105Z-6f5f::S2::PICARD::4483",
+          "acked_at": null
+        }
+      }
+    },
+    "S3": {
+      "status": "COMPLETED",
+      "started_at": "2026-11-21T12:11:07.134Z",
+      "completed_at": "2026-11-21T12:11:07.139Z",
+      "handoffs": {
+        "20261121T121105Z-6f5f:S3:orchestrator->w2:p8:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": "ACK::20261121T121105Z-6f5f::S3::HOADHAA_VISION::6fcf",
+          "acked_at": null
+        },
+        "20261121T121105Z-6f5f:S3:w2:p8->XPS:w2:p1:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": "ACK::20261121T121105Z-6f5f::S3::DEADPOOL::6d21",
+          "acked_at": null
+        },
+        "20261121T121105Z-6f5f:S3:XPS:w2:p1->XPS:w2:p2:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": "ACK::20261121T121105Z-6f5f::S3::JARVIS::251e",
+          "acked_at": null
+        },
+        "20261121T121105Z-6f5f:S3:XPS:w2:p1->XPS:w2:p3:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": "ACK::20261121T121105Z-6f5f::S3::XPS_AG::d40f",
+          "acked_at": null
+        }
+      }
+    },
+    "S4": {
+      "status": "COMPLETED",
+      "started_at": "2026-11-21T12:11:07.140Z",
+      "completed_at": "2026-11-21T12:11:07.143Z",
+      "handoffs": {
+        "20261121T121105Z-6f5f:S4:orchestrator->w3:p1:request": {
+          "status": "SKIPPED",
+          "retry_count": 0,
+          "expected_token": "ACK::20261121T121105Z-6f5f::S4::OPS_VISION::64b8",
+          "acked_at": null
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_handoffs": 8,
+    "acked": 0,
+    "missing": 0,
+    "failed": 0,
+    "skipped": 8,
+    "changes_detected": false,
+    "xps_latencies_ms": []
+  },
+  "escalation": null
+}

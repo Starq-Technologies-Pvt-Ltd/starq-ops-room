@@ -1,5 +1,7 @@
 # STARQ Operations Room
 
+> **Ops Room Navigation:** See [START.md](START.md) for the operations entrypoint, DRAFT SOPs, commissioning architecture, and run evidence map (all procedures pending Founder approval).
+
 Private deployment surface for the STARQ Operations Room.
 
 This repository intentionally contains no live Room data, identities, inboxes, cursors, logs, or credentials. The Vercel deployment is a secure proxy surface and requires an authenticated upstream configured through environment variables.
