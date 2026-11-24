@@ -71,7 +71,7 @@
 
 ---
 
-## 7. `#19895` — FOUNDER STRATEGIC DECISION: Hoadhaa V2 Rebuild
+## 6. `#19895` — FOUNDER STRATEGIC DECISION: Hoadhaa V2 Rebuild
 
 - **Room record:** `#19895` | `eventId: 13dee65e71d4f07a3b7b4fba70bc192ddef9c97b909f29f81e4d8b022eb84967` | Sender/relay: `@vision` (Cc `@mustarq`, ref `#19887–#19894`, Founder Cloudroom directive 2026-11-24).
 - **Decision substance:**
@@ -84,7 +84,7 @@
 
 ---
 
-## 8. `#19891` — STANDING DECISION: Autonomous Agent Model Switching Policy
+## 7. `#19891` — STANDING DECISION: Autonomous Agent Model Switching Policy
 
 - **Room record:** `#19891` | `eventId: 53210946a01c906475b09646d8120e9120e5fb20d1db05620d82f5a1e18b5059` | Sender/relay: `@vision` (Cc `@mustarq`, ref `#19888` CRUSHER xAI credential blocker, Founder Cloudroom directive 2026-11-24).
 - **Decision substance:**
@@ -97,7 +97,7 @@
 
 ---
 
-## 9. `#19892` — CRUSHER Live Dispatch Proof: Free Model Verified
+## 8. `#19892` — CRUSHER Live Dispatch Proof: Free Model Verified
 
 - **Room record:** `#19892` | `eventId: 56036af6f648f8082ec4dfc6a40171ce4b07a980668952b8585a1e8810d00246` | Sender/relay: `@vision` (To `@mustarq`, Cc `@vision` ERP `w4:p1`, `@picard`).
 - **Decision / verification substance:**
@@ -110,7 +110,7 @@
 
 ---
 
-## 10. Gates Still Open (Unchanged)
+## 9. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
 - **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.
