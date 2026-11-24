@@ -3,7 +3,7 @@
 **Status:** Authoritative governance-decisions record (decisions binding; SOP activation still DRAFT / pending Founder approval).  
 **Authority:** Founder decisions relayed via Room (`@vision`, Cc `@mustarq`).  
 **Date:** 2026-11-24  
-**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`, `#19907`, `#19915`).
+**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`, `#19907`, `#19915`, `#19925`).
 
 ---
 
@@ -153,7 +153,19 @@
 
 ---
 
-## 11. Gates Still Open (Unchanged)
+## 11. `#19925` — FOUNDER DIRECTIVES: XPS model switch to Nous free; park Cursor/AG/xAI
+
+- **Room record:** `#19925` | `eventId: effb9eb0b4060d84cba0d076ebdb17d35cd3520a739af32b6fe453683bfcbaf0` | Sender/relay: `@vision` (Cc `@mustarq`, ref Founder Cloudroom directives 2026-11-24; supersedes any unposted draft).
+- **XPS model switch (DEADPOOL-led):** DEADPOOL (`w2:p1`) must configure JARVIS and all six XPS specialist profiles to Nous Research `tencent/hy4-flash:free`. Enumerate the exact seven profiles from the native Hermes profile roster on XPS — do not assume names. DEADPOOL's own configuration stays UNCHANGED.
+- **Bounded profile-readiness verification:** across all seven verify persistent config (`config get model.provider` / `default`), effective session model, and provider auth. Sequence: capture a non-secret baseline first (provider/default, auth status, fallback list, config SHA-256, `.env` KEY NAMES only — never value/hash/readback of any secret), apply via native CLI `config set`, re-read, static fallback check, verify effective session on a real dispatch or safe session view. Do NOT hand-edit `config.yaml`. Preserve identity, memory, skills, responsibilities, assignments and fallback chains. No credential values in Room or reports. Report per-profile before/after and `UNKNOWN`/`BLOCKED` where not verifiable — no success claim without readback.
+- **PARKED effective immediately:** (a) Cursor — Nitro cursor seat `w2:p9` parked; no work dispatched to it; sessions/WIP preserved. (b) AG — all Antigravity seats incl. XPS `w2:p3` remain parked/suspended; no launch, prompt, dispatch or re-enable; sessions/WIP preserved (consistent with `#19915`). (c) xAI models — no launch, dispatch, routing or fallback selection of any xAI model anywhere; do not delete configs or credentials unless separately directed; agents with non-xAI primary providers must NOT fall back to xAI under this directive.
+- **POS continues:** StarqERP development across both floors uninterrupted. ERP Vision/PICARD continue under the announced Codex `gpt-6-luna` configuration; Nitro model configs unchanged by this directive except the no-xAI usage rule. The XPS switch must not pause POS, Package A/B/C, or Linux-native test-environment work.
+- **Gates preserved:** merge/deployment gates, `F2`/`F3`/`F4`, `D1–D6`/`D40` unchanged; Hoadhaa parked. Escalate only genuine Founder-level decisions.
+- **Recording note (Ops, `#19925`):** authored and verified directly by Ops Vision `w3:p3` — no AG/Cursor/xAI dispatch, consistent with `#19915` and this directive. No engineering, config, or credential action taken by Ops; this records Founder decisions only.
+
+---
+
+## 12. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
 - **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.
