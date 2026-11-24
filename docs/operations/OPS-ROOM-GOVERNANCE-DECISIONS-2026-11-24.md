@@ -92,6 +92,16 @@
 - **Closure condition (extended):** **CLOSE** the Hoadhaa engineering workstream and release capacity **only** once **all three** are verified — Supabase backup, reset preparation, **and** Google isolation. Report evidence; Central redirects released capacity to StarqERP; ERP continues as the active engineering lane under existing governance/deployment holds.
 - **Gates preserved:** all existing gates unchanged; no new commissioning, no broad audit.
 
+**Addendum `#19902` — FINAL CLEANUP (extends this closure decision):**
+- **Room record:** `#19902` | `eventId: 90f1d12cfe1776189f9245c84f3e75e8077426656368e3cbae881d52d97a2050` | Sender/relay: `@vision` (Cc `@mustarq`, ref `#19895`/`#19897`/`#19898`/`#19901`, Founder Cloudroom directive 2026-11-24).
+- **Supabase backup + runbook:** ACKNOWLEDGED and PRESERVED. Founder performs the database reset personally; agents do not touch Supabase further (no mutation).
+- **Google account-level actions RESOLVED:** Founder has ALREADY DELETED ALL PROJECTS from the Google Cloud account. The account-level Google actions previously escalated (`#19901`) are RESOLVED by Founder; agents must NOT re-attempt, verify, delete, or restore them. (This supersedes the `#19898` account-level escalation item — it is closed, not pending.)
+- **Remaining bounded LOCAL Google isolation only:** complete the partial inventory across the residual scope (including Nitro Hoadhaa worktrees under `/mnt/d/StarqTech/.worktrees/hoadhaa*`), archive relevant configuration securely, disable any remaining Hoadhaa-associated LOCAL ingestion pipelines / scheduled jobs / background services / API consumers, and verify requests have stopped. Produce `DISCONNECTED.md` documenting every disconnected connection and residual risk. PARK the existing Hoadhaa environment. Do NOT recreate cloud resources or attempt to restore connectivity.
+- **Strict boundaries:** no GCP project deletion, no shared-credential revocation, no StarqERP disruption, no Supabase mutation, no credential values in reports (reference by name/location only). Routed via DEADPOOL (`XPS w2:p1`) through Hoadhaa Vision (`w2:p8`) ONLY — no direct leaf contact from Nitro.
+- **Closure:** once local isolation is VERIFIED, CLOSE the Hoadhaa engineering workstream until further notice. Do NOT claim closure while inventory/disable/verify-stopped are incomplete — be honest as `#19901` was. This closes the workstream the earlier decisions (`#19895`/`#19898`) conditioned on verification.
+- **Capacity reallocation:** ALL available engineering capacity across Nitro AND XPS goes to StarqERP POS development and independent verification. ERP Vision (`w4:p1`) + PICARD (`w4:p2`) direct Nitro; XPS capacity via DEADPOOL (`w2:p1`) is offered to ERP Vision for bounded StarqERP tasks routed by central Vision through the established chain. Continue POS autonomously; merge/deployment gates unchanged.
+- **Gates preserved:** deployment/merge hold, `F2`/`F3`/`F4`, `D1–D6`/`D40` unchanged; no new commissioning, no broad audit.
+
 ---
 
 ## 7. `#19891` — STANDING DECISION: Autonomous Agent Model Switching Policy
