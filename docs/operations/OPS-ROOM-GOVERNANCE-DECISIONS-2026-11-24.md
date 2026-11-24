@@ -3,7 +3,7 @@
 **Status:** Authoritative governance-decisions record (decisions binding; SOP activation still DRAFT / pending Founder approval).  
 **Authority:** Founder decisions relayed via Room (`@vision`, Cc `@mustarq`).  
 **Date:** 2026-11-24  
-**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)).
+**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`).
 
 ---
 
@@ -71,9 +71,49 @@
 
 ---
 
-## 6. Gates Still Open (Unchanged)
+## 7. `#19895` — FOUNDER STRATEGIC DECISION: Hoadhaa V2 Rebuild
+
+- **Room record:** `#19895` | `eventId: 13dee65e71d4f07a3b7b4fba70bc192ddef9c97b909f29f81e4d8b022eb84967` | Sender/relay: `@vision` (Cc `@mustarq`, ref `#19887–#19894`, Founder Cloudroom directive 2026-11-24).
+- **Decision substance:**
+  - **Hoadhaa V2 rebuild & suspension:** Hoadhaa will be rebuilt **entirely from scratch** in a **separate** development environment as Hoadhaa V2. **Suspend all** current Hoadhaa engineering immediately — `HOA-257`, `HOA-136`, `HOA-260`, the `#19889` Hoadhaa security/remediation workstream, and all implementation.
+  - **Sole remaining Hoadhaa assignment (Supabase backup + cleanup prep):** `DEADPOOL` (`XPS w2:p1`, via Hoadhaa Vision `w2:p8` — no direct leaf contact from Nitro) must comprehensively back up the existing Hoadhaa Supabase environment (all data, schemas, functions, policies, storage files, and relevant configuration), securely archive outside Supabase, verify recoverability, document restoration limitations, and prepare the existing Supabase project for a complete application-level reset (same project retained for V2; no existing application schemas or commercial records migrated).
+  - **Absolute safety (read-only against Supabase):** **Do not delete or modify anything** — zero schema/data/policy/storage/config changes in Supabase; backup and prep are strictly read-only against Supabase; Founder personally performs the reset after reviewing backup/recovery evidence; archive writes only outside Supabase; never expose credentials in Room/reports.
+  - **Capacity redirect:** Once backup/cleanup-prep is complete and evidenced, **close** the current Hoadhaa engineering workstream and redirect released engineering capacity to StarqERP. StarqERP continues under existing governance/deployment restrictions (implementation, independent verification, security remediation, dependency auditing).
+- **Gates preserved:** Deployment/merge hold, `F2`/`F3`/`F4`, and `D1–D6`/`D40` unchanged; no new commissioning or broad audit.
+- **Supersedes / changes:** Explicitly **supersedes** the Hoadhaa development assignments in `#19885`/`#19889` and supersedes the `#19893` Hoadhaa security workstream (now suspended).
+
+---
+
+## 8. `#19891` — STANDING DECISION: Autonomous Agent Model Switching Policy
+
+- **Room record:** `#19891` | `eventId: 53210946a01c906475b09646d8120e9120e5fb20d1db05620d82f5a1e18b5059` | Sender/relay: `@vision` (Cc `@mustarq`, ref `#19888` CRUSHER xAI credential blocker, Founder Cloudroom directive 2026-11-24).
+- **Decision substance:**
+  - **Standing authority:** Vision has standing authority to change any agent profile's model across all engineering lanes whenever its current model becomes unavailable (no approval needed for routine switching).
+  - **Allocation policy:** (1) first preference **FREE** models from Nous Research / OpenRouter; (2) if unsuitable, existing paid providers at **LOW/MEDIUM** tier only; (3) frontier models **only** with explicit Founder approval. Preserve profile identity, responsibilities, memory, and active assignments; maintain quality and independent verification; no unauthorised cost.
+  - **Action taken (Picard officers):** All six Picard officers (`CRUSHER`, `RIKER`, `DATA`, `GEORDI`, `WORF`, `GUINAN`) had `xai/grok` (logged out, no `XAI_API_KEY`); switched primary to `provider=nous`, `model=tencent/hy4-flash:free` via native CLI config (config-only, no hand-edit); verified per-profile via `hermes config get`; fallback chain retained; `PICARD` main default `gpt-6-sol` unchanged; config SHA-256 recorded before/after (only model block changed; no credentials read/written).
+  - **Live probe at `#19891` time:** Two one-shot attempts failed at CLI arg parsing before provider contact; static readiness passed; `LIVE INFERENCE UNKNOWN` then (subsequently resolved in `#19892`).
+- **Gates preserved:** Frontier-model Founder gate, no unauthorised cost, profile identity/memory preservation; deployment holds unchanged.
+- **Supersedes / changes:** Grants Vision standing autonomous model-switching authority within the 3-tier policy and resolves the `#19888` CRUSHER xAI credential blocker at config level.
+
+---
+
+## 9. `#19892` — CRUSHER Live Dispatch Proof: Free Model Verified
+
+- **Room record:** `#19892` | `eventId: 56036af6f648f8082ec4dfc6a40171ce4b07a980668952b8585a1e8810d00246` | Sender/relay: `@vision` (To `@mustarq`, Cc `@vision` ERP `w4:p1`, `@picard`).
+- **Decision / verification substance:**
+  - Founder `#19891` executed via a real delegation dispatch (not a CLI one-shot or readiness probe) through `PICARD` to the existing `CRUSHER` profile under its already-configured free model on the F1 void slice (`vision/erp-pos-readiness-step-a-20261123` @ `8ca76a1`).
+  - **Dispatch proof:** `delegate_task profile=crusher` (`deleg_01e76e2b`, child `sa-0-7523bef5`), log `D:/AgentRuntimes/Picard/cache/delegation/live/deleg_01e76e2b/task-0.log`; envelope `status=completed`, duration `94.07s`, `api_calls=4`, model `tencent/hy4-flash:free`; transcript shows `CRUSHER` identity, `runtime_provider=nous`, verdict `PASS/NO-VETO`, defects `none`, `EXIT_CODE=0` on two-file replay (`2` files, `3` tests passed, `13.74s`).
+  - **Limitation:** Provider/model evidence comes from the dispatch envelope plus officer report, not a separate usage receipt.
+  - **Resolution:** This **resolves** the earlier `LIVE INFERENCE UNKNOWN` from `#19891`.
+- **Gates preserved:** No profile/model/provider/credential change in this dispatch; `:3001` listening; deployment/merge hold and all gates intact; no PR/merge/release/acceptance.
+- **Supersedes / changes:** Converts `#19891` `LIVE INFERENCE UNKNOWN` to live-verified on `CRUSHER` (`tencent/hy4-flash:free` via `nous`).
+
+---
+
+## 10. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
+- **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.
 - **`D1–D6`:** Founder Hoadhaa product decisions.
 - **`D40`:** PR / publication hold.
 - **`F2` / `F3` / `F4`:** Hoadhaa / XPS gated items (recommendations requested in `#19877`; no execution authorization).
