@@ -3,7 +3,7 @@
 **Status:** Authoritative governance-decisions record (decisions binding; SOP activation still DRAFT / pending Founder approval).  
 **Authority:** Founder decisions relayed via Room (`@vision`, Cc `@mustarq`).  
 **Date:** 2026-11-24  
-**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`).
+**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`, `#19907`).
 
 ---
 
@@ -130,7 +130,18 @@
 
 ---
 
-## 9. Gates Still Open (Unchanged)
+## 9. `#19907` — Unified StarqERP Operation: XPS-ERP verification accepted; Nitro/XPS ownership split
+
+- **Room record:** `#19907` | `eventId: ccf5e4aa6e1f9ff1082cc3a8b918c471423fe279b2e35d222dff55108f039e96` | Sender/relay: `@vision` (Cc `@mustarq`, ref `#19895`/`#19902`/`#19903`/`#19905`/`#19906`, Founder Cloudroom directive 2026-11-24).
+- **Priority & posture:** StarqERP POS is the **sole** engineering priority. Unified operation: `PICARD` on Nitro + `DEADPOOL`/`JARVIS`/`AG` on XPS. Hoadhaa stays parked/closed.
+- **`XPS-ERP-1..4` — COMPLETE and INDEPENDENTLY VERIFIED:** deliverables in `/home/mustarq/Work/xps-erp-19903/` and mirror `D:/StarqTech/_tmp-xps-erp-19903/` (`AG-VERIFY.md` + four reports). All four verdicts `CONFIRMED` by AG, with honest exceptions: `ERP-1/4` Room-command text not on disk -> verdict `UNKNOWN` not `CONFIRMED` (commit-content presence independently confirmed); `ERP-2` assertion-shape gaps (`counter_f1_void_refund` / `serp_088_cash_void_refund` / `counter_intake`: negative/NaN/rounding, noncash, rejected POST, alternate outlet, absent product, zero/negative price, location mismatch, multi-quantity race); `ERP-3` `npm ping` + `npm audit` full and `omit=dev` both exit `0`, `0` vulnerabilities, pins `vite` `6.4.5`, `vitest` `4.1.12`, `undici` `8.12.3` transitive, minor note `vite ^6.2.3` in **both** `deps` and `devDeps`. Zero repo changes, zero secret values, Hoadhaa untouched.
+- **Kanban reconciliation:** ERP Vision (`w4:p1`) maps substantiated gaps to correct `SERP` cards (counter POS hardening `SERP-085..091`; CI/probe `SERP-456/457/458`; SAST disposition `SERP-383/385`) within existing board authority — evidence comments only, no mass status flips or self-closes; report reconciliation.
+- **Ownership split (shared filesystem):** two runtimes **share** the `D:/StarqTech` filesystem via `/mnt/d`, so XPS **must** use a **dedicated** worktree off pinned base `a10d460`, never the active checkout. Nitro/`PICARD` (`w4:p2`) + officers **own** the active branch `vision/erp-pos-readiness-step-a-20261123` and **all** runtime POS implementation (`web/src/components/counter/CounterView.tsx`, `web/src/domain/counter.ts`, cart/tender/void/session logic, in-progress `SERP-439/440/444/455`). XPS/`DEADPOOL` (`w2:p1`) -> `JARVIS` **own** disjoint implementation packages in the separate worktree: new/standalone test-hardening files for `ERP-2` gaps, `SERP-456/457/458` CI/probe/infra, `SERP-383/385` audit documentation. **No** XPS edits to `CounterView.tsx`, `counter.ts`, the active Nitro WIP (`19` entries incl. `web/vite.config.ts`), or `:3001`. XPS AG independently verifies every XPS deliverable; ERP Vision replays all merged work. **Central** Vision alone routes between the two — no direct cross-machine contact.
+- **Posture change:** XPS moves from read-only reviews to **actual** implementation in its disjoint packages, preserving implement/verify separation. No PR/merge/deploy/release/acceptance; merge/deployment gates, `F2`/`F3`/`F4`, `D1–D6`/`D40` unchanged. Keep the whole floor moving.
+
+---
+
+## 10. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
 - **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.
