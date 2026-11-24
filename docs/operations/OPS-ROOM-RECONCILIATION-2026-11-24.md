@@ -3,7 +3,8 @@
 **Status:** Authoritative current-state operational record (pending Founder approval for any SOP activation).  
 **Date:** 2026-11-24  
 **Authority:** Founder continuation ref Room `#19868` (`eventId: b12cf7c3b66d997b05561edecf41fd0f7679a464f27a45891e0b414042b2c527`).  
-**Author & Independent Reviewer:** Ops AG (`w3:p2`), directed by Ops Room Vision (`w3:p3`).  
+**Author:** Ops AG (`w3:p2`), directed by Ops Room Vision (`w3:p3`).  
+**Independent Review:** Ops AG (`w3:p2`), recorded separately on 2026-11-24 after the 32823e8 review pass (all 13 evidence spot-checks PASS; 0 defects other than this corrected line).  
 **Scope:** Reconciles prior-24h operational changes from cited Room evidence without mutating historical records, unrelated dirty/untracked paths, engineering repos, or Room state.
 
 ---
