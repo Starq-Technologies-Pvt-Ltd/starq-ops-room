@@ -39,6 +39,7 @@ See [OPS-ROOM-RECONCILIATION-2026-11-24.md](docs/operations/OPS-ROOM-RECONCILIAT
 | **Capability & Integration Audit** | [CAPABILITY-AUDIT-2026-11-21.md](docs/operations/CAPABILITY-AUDIT-2026-11-21.md) | VERIFIED (Nitro read-only audit; ERP/XPS slices pending) |
 | **Commissioning Milestone Record** | [COMMISSIONING-MILESTONE-2026-11-21.md](docs/operations/COMMISSIONING-MILESTONE-2026-11-21.md) | Evidence record |
 | **Documentation Reconciliation** | [DOCUMENTATION-RECONCILIATION-2026-11-21.md](docs/operations/DOCUMENTATION-RECONCILIATION-2026-11-21.md) | VERIFIED (2026-11-21) |
+| **Post-Reconciliation Governance Decisions** | [OPS-ROOM-GOVERNANCE-DECISIONS-2026-11-24.md](docs/operations/OPS-ROOM-GOVERNANCE-DECISIONS-2026-11-24.md) | Authoritative governance record (2026-11-24) |
 
 ---
 
