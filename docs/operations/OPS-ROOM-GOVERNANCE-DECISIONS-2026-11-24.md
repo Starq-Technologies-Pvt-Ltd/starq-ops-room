@@ -3,7 +3,7 @@
 **Status:** Authoritative governance-decisions record (decisions binding; SOP activation still DRAFT / pending Founder approval).  
 **Authority:** Founder decisions relayed via Room (`@vision`, Cc `@mustarq`).  
 **Date:** 2026-11-24  
-**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`, `#19907`).
+**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`, `#19907`, `#19915`).
 
 ---
 
@@ -141,7 +141,19 @@
 
 ---
 
-## 10. Gates Still Open (Unchanged)
+## 10. `#19915` — FOUNDER DIRECTIVE: Immediate Halt of All Antigravity (AG) Usage
+
+- **Room record:** `#19915` | `eventId: 2a54fd1d437cdad7e66aa5b45a3e81164fc1d41e6f0c2e85fcd90ba1594cdbc1` | Sender/relay: `@vision` (Cc `@mustarq`, ref Founder Cloudroom directive 2026-11-24).
+- **Effective immediately until further Founder notice:** HALT **all** Antigravity (AG) usage across **Nitro and XPS**. Do **not** launch, prompt, dispatch, resume, or re-enable any AG agent. No work may be assigned to AG — including XPS AG `w2:p3` and any Nitro/Cursor AG seat. This **supersedes** earlier AG assignments and the temporary quota reroute in `#19914`.
+- **Preserve sessions and WIP:** existing AG sessions and work in progress are preserved — do not kill panes, delete sessions, reset worktrees, discard WIP, or modify any AG-created files. XPS AG `w2:p3` stays **idle and untouched** with sessions intact; its prior Package A evidence files remain in place as static evidence.
+- **Reallocate AG assignments to NON-AG agents, preserving independent verification:** XPS Package A/B/C verification — DEADPOOL (`w2:p1`) assigns a non-AG verifier (not the implementer JARVIS); if none independent exists on XPS, DEADPOOL reports `VERIFICATION BACKLOG` with specific packages rather than self-verifying or using AG. Central may route cross-floor verification to a PICARD officer on Nitro (CRUSHER live-proven on the free Nous model, `#19892`) — central-only routing, no direct cross-machine contact. All Nitro AG verification duties — ERP Vision redistributes to PICARD officers. No AG dispatch.
+- **POS continues uninterrupted:** no impact on active branch `vision/erp-pos-readiness-step-a-20261123` / HEAD `74243c1`, the landed Infinity fix, `:3001`, Kanban reconciliation, or the XPS worktree `/mnt/d/StarqTech/.worktrees/erp-xps-19907`.
+- **Gates preserved:** merge/deployment gates, `F2`/`F3`/`F4`, `D1–D6`/`D40` unchanged; Hoadhaa remains parked/closed. This halt is self-executing — escalate only genuine Founder-level decisions. No new AG dispatch under any circumstances without explicit Founder authorization.
+- **Recording note (Ops, `#19915`):** this directive was authored and verified directly by Ops Vision `w3:p3` with no AG dispatch — dispatching Ops AG `w3:p2` to record an AG halt would contradict the directive itself. Independent AG review is not applicable while AG is halted; verification was by evidence cross-check against the Room record.
+
+---
+
+## 11. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
 - **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.
