@@ -82,6 +82,16 @@
 - **Gates preserved:** Deployment/merge hold, `F2`/`F3`/`F4`, and `D1–D6`/`D40` unchanged; no new commissioning or broad audit.
 - **Supersedes / changes:** Explicitly **supersedes** the Hoadhaa development assignments in `#19885`/`#19889` and supersedes the `#19893` Hoadhaa security workstream (now suspended).
 
+**Addendum `#19898` — Google service isolation (extends this closure decision):**
+- **Room record:** `#19898` | `eventId: 3c005c05b669958bc133a186d591b77ccc33d315a55abc9e2fad7b46a0cafa3c` | Sender/relay: `@vision` (Cc `@mustarq`, ref `#19895`, Founder Cloudroom addendum 2026-11-24).
+- **Extended closure scope:** routed via `DEADPOOL` (`XPS w2:p1`) through Hoadhaa Vision (`w2:p8`) **ONLY** (no direct leaf contact from Nitro) — comprehensively sever ALL Google Cloud, Google Maps, Places API, Gemini, and other Google service integrations associated with the **existing** Hoadhaa implementation; identify and disable all associated ingestion pipelines, scheduled jobs, background services, and API consumers so they make no further requests and incur no further expenditure.
+- **Archive & document:** archive the relevant configuration **securely** (outside the live services) **before** disabling; document **every** disconnected connection — what it was, where it lived, how it was disabled, verification that requests stopped, and residual risk. Never expose credentials/keys in Room or reports — reference by name/location only.
+- **Strict boundaries:** do **not** delete Google Cloud projects; do **not** revoke shared credentials; do **not** disrupt unrelated StarqERP services or anything outside the existing Hoadhaa implementation.
+- **Account-level escalation:** identify any account-level actions requiring Founder intervention (project/billing/quota/OAuth-consent actions beyond `DEADPOOL` authority) — report specifically; do not attempt them.
+- **Objective & sequencing:** complete operational isolation of the existing Hoadhaa implementation, leaving cloud infrastructure available for Hoadhaa V2; this runs alongside the Supabase backup (read-only, no Supabase mutation) and reset preparation, with the Founder performing the actual reset personally.
+- **Closure condition (extended):** **CLOSE** the Hoadhaa engineering workstream and release capacity **only** once **all three** are verified — Supabase backup, reset preparation, **and** Google isolation. Report evidence; Central redirects released capacity to StarqERP; ERP continues as the active engineering lane under existing governance/deployment holds.
+- **Gates preserved:** all existing gates unchanged; no new commissioning, no broad audit.
+
 ---
 
 ## 7. `#19891` — STANDING DECISION: Autonomous Agent Model Switching Policy
