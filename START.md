@@ -5,9 +5,15 @@
 
 ---
 
+## Current-State Reconciliation (2026-11-24)
+
+See [OPS-ROOM-RECONCILIATION-2026-11-24.md](docs/operations/OPS-ROOM-RECONCILIATION-2026-11-24.md) for the authoritative 2026-11-24 reconciliation of Nitro/Herdr recovery (`#19839`), shared-profile model/lease routing (`#19856`, `--shared`), PICARD custody (`w4:p2` / BuzzLab `23c9f577`), XPS/Fold6 evidence boundaries (`#19841`, `#19864`), and revised engineering arrangements (`#19868`).
+
+---
+
 ## 1. Repository Purpose
 
-`D:\StarqTech\starq-ops-room` is the operational coordination and documentation home for the **Starq Ops Room** (`w3:p1` Ops Room Vision, `w3:p2` Ops AG). It coordinates daily operational status across Command, StarqERP, and Hoadhaa **without taking over either engineering studio**, and maintains durable operational records under `docs/operations/` and `runs/startup/`.
+`D:\StarqTech\starq-ops-room` is the operational coordination and documentation home for the **Starq Ops Room** (`w3:p3` Ops Room Vision, `w3:p2` Ops AG; Founder-approved two-pane layout per commit `cda1407` and Room `#19839`). It coordinates daily operational status across Command, StarqERP, and Hoadhaa **without taking over either engineering studio**, and maintains durable operational records under `docs/operations/` and `runs/startup/`.
 
 ---
 

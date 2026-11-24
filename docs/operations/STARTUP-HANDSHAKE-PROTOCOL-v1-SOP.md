@@ -8,6 +8,14 @@
 
 ---
 
+## Current-State Caveat (2026-11-24)
+
+- **Session-only model selections (`#19856`):** Local Vision panes (`w2:p8`, `w3:p3`, `w4:p1`) share `HERMES_HOME=D:/AgentRuntimes/Hermes` profile `vision`, whose persistent `config.yaml` remains `anthropic / claude-opus-4-7`; session-only model overrides (`gpt-5.6-terra`, `tencent/hy4-flash:free`, `hy4-flash:free`) are not persisted, so a cold-start session may resolve to `claude-opus-4-7`.
+- **Co-held identity leases (`#19843`, `#19846`, `#19847`):** Primary `@vision` may be held by a Nau/orphan child (`vision-cloudroom-nau-20261123`), with `w3:p3` posting via `--shared` co-holder (`vision-w3p3-opsroom-20261123`) without takeover — check `send.mjs --whoami` before posting.
+- **Status unchanged:** This SOP remains **DRAFT / pending Founder approval**.
+
+---
+
 ## 1. Purpose & Scope
 
 This SOP defines the daily, deterministic startup-handshake procedure that verifies all command-chain seats across Ops Room, StarqERP, and Hoadhaa (including XPS) can communicate, acknowledge readiness, and preserve state before Founder Mustarq authorizes daily execution (Step 5).

@@ -19,8 +19,8 @@
 ## 2. Proposed Four-Loop Commissioning Model
 
 1. **Loop 1 — Command / Cloudroom ↔ Ops Room (`S1` init):**  
-   Command Vision (`thr_7gyyc4dv22`) ↔ Ops Room Vision (`w3:p1`) ↔ Ops AG (`w3:p2`).  
-   *Current status:* **VERIFIED** for Nitro local `w3:p1` ↔ `w3:p2` (`AG_OPS_ROOM_BRINGUP_2026-11-21.md`; `S1` `ACK` in `20261121T121121Z-581c`).
+   Command Vision (`thr_7gyyc4dv22`) ↔ Ops Room Vision (`w3:p3`) ↔ Ops AG (`w3:p2`).  
+   *Current status:* **VERIFIED** for Nitro local `w3:p3` ↔ `w3:p2` (`AG_OPS_ROOM_BRINGUP_2026-11-21.md`; `S1` `ACK` in `20261121T121121Z-581c`; post-reboot `#19839`).
 2. **Loop 2 — StarqERP Chain (`S2`):**  
    Command Vision → ERP Vision (`w4:p1`) → PICARD (`w4:p2`) → ERP Vision → Command / Orchestrator.  
    *Current status:* **TESTED-FAIL-CLOSED** — In `20261121T121121Z-581c`, `w4:p1` primary ACK (`ACK::20261121T121121Z-581c::S2::ERP_VISION::29b2`) was **VERIFIED** in `38,952 ms`, and `w4:p1` readback showed it prompted `w4:p2`, but `w4:p1` omitted `PICARD`'s token in the captured snapshot so the run halted at `BLOCKED_ESCALATE` (`S2_PICARD_TOKEN_MISSING`).
@@ -28,7 +28,7 @@
    Command Vision → Hoadhaa Vision (`w2:p8`) → DEADPOOL (`XPS w2:p1`) → separate ACKs from JARVIS (`XPS w2:p2`) and XPS AG (`XPS w2:p3`) → DEADPOOL → Hoadhaa Vision → Command / Orchestrator.  
    *Current status:* **UNKNOWN / PENDING** — Nitro and XPS pane topology was **VERIFIED** via `herdr pane list` and `herdr --machine XPS pane list` (`20261121T121105Z-6f5f`), and an earlier manual `w2:p8` → `XPS w2:p1` PING→PONG is cited in `OPS-ROOM-OPERATING-PROCEDURE-v1-DRAFT.md`, but **S3 has NOT been live-verified** by the startup orchestrator (`20261121T121121Z-581c` skipped `S3` after `S2` halted). XPS `p50`/`p95` latency is **UNKNOWN**.
 4. **Loop 4 — Ops Room Finalization (`S4`):**  
-   Command / Orchestrator → Ops Room Vision (`w3:p1`) → Ops AG (`w3:p2`) reconciles snapshot/SOP delta → Ops Room Vision reports consolidated readiness to Command Vision (`thr_7gyyc4dv22`) → halt at `READY_FOR_FOUNDER_GATE`.  
+   Command / Orchestrator → Ops Room Vision (`w3:p3`) → Ops AG (`w3:p2`) reconciles snapshot/SOP delta → Ops Room Vision reports consolidated readiness to Command Vision (`thr_7gyyc4dv22`) → halt at `READY_FOR_FOUNDER_GATE`.  
    *Current status:* **CONFIGURED / MOCK-VERIFIED** (`test-scenarios.mjs` scenarios 4 & 6 **PASS**; live `S4` **UNKNOWN / PENDING** because `20261121T121121Z-581c` halted at `S2`).
 
 ---
@@ -37,8 +37,8 @@
 
 | Seat | Machine / Pane | Status in Round | Authority Boundary |
 |---|---|---|---|
-| Command Vision | Cloudroom `thr_7gyyc4dv22` | External (bridged by `w3:p1`) | Portfolio PM; directs Vision seats; no engineering authority |
-| Ops Room Vision | Nitro `w3:p1` | **VERIFIED** | Operational coordination; bridges Command ↔ Ops AG |
+| Command Vision | Cloudroom `thr_7gyyc4dv22` | External (bridged by `w3:p3`) | Portfolio PM; directs Vision seats; no engineering authority |
+| Ops Room Vision | Nitro `w3:p3` | **VERIFIED** | Operational coordination; bridges Command ↔ Ops AG |
 | Ops AG | Nitro `w3:p2` | **VERIFIED** | Ops-Room-scoped technical execution only |
 | ERP Vision | Nitro `w4:p1` | **VERIFIED** (primary ACK in `S2`) | Owns StarqERP coordination; Ops Room never tasks `w4:p2` directly |
 | PICARD | Nitro `w4:p2` | **CONFIGURED** (downstream token `MISSING` in `S2` poll) | Owns StarqERP engineering; directed only by `w4:p1` |

@@ -20,7 +20,7 @@ Establish a permanent, low-cost operating workflow where the Ops Room coordinate
 | Seat | Pane / Thread | Role | Authority |
 |---|---|---|---|
 | **Command Vision** | Cloudroom `thr_7gyyc4dv22` | Portfolio PM; reports to Founder | Directs the three Herdr Vision seats; holds no engineering authority of its own |
-| **Ops Room Vision** | Herdr `w3:p1` (hermes/vision) | **Operations Deputy** — lightweight orchestration, daily coordination, collects verified progress, maintains operational records, reports consolidated updates to Command | Coordination only. MUST NOT task ERP/Hoadhaa engineers or alter either studio's work |
+| **Ops Room Vision** | Herdr `w3:p3` (hermes/vision) | **Operations Deputy** — lightweight orchestration, daily coordination, collects verified progress, maintains operational records, reports consolidated updates to Command | Coordination only. MUST NOT task ERP/Hoadhaa engineers or alter either studio's work |
 | **AG** | Herdr `w3:p2` (agy, Antigravity, Gemini) | **Ops Room technical executor** — implementation, maintenance, investigations, technical inspection, verification | Executes Ops-Room-scoped technical work delegated by Ops Room Vision; bound by Founder gates (no production/credential/irreversible actions without Founder approval) |
 | **ERP Vision** | Herdr `w4:p1` (hermes/vision) | StarqERP PM / Orchestrator | Owns StarqERP engineering coordination |
 | **PICARD** | Herdr `w4:p2` (Picard install) | Principal Engineering Studio (RIKER/DATA/GEORDI/CRUSHER/WORF/GUINAN) | Owns StarqERP engineering execution |
@@ -41,7 +41,7 @@ All Herdr seats run on the Nitro Herdr server (`herdr status` = running, v0.9.5)
 | Path | Mechanism | Verified this session |
 |---|---|---|
 | Command Vision → ERP Vision (w4:p1) | `herdr agent prompt w4:p1` + pane readback | ✓ (studio audit dispatched & executed) |
-| Command Vision → Ops Room Vision (w3:p1) | `herdr agent prompt w3:p1` + pane readback | ✓ (AG bringup dispatched & executed) |
+| Command Vision → Ops Room Vision (w3:p3) | `herdr agent prompt w3:p3` + pane readback | ✓ (AG bringup dispatched & executed) |
 | Command Vision → Hoadhaa Vision (w2:p8) | **via Hoadhaa child thread** `thr_r23tqt7wgn` (`room-cli thread tell`) → w2:p8 | ✓ (floor activation relayed & executed) |
 | Ops Room Vision → AG (w3:p2) | `herdr agent prompt w3:p2` + pane readback | ✓ (bringup ping / ACK-AG-LIVE) |
 | Hoadhaa Vision (w2:p8) → DEADPOOL (XPS w2:p1) | `herdr --machine XPS agent prompt w2:p1` + readback/ACK | ✓ full PING→PONG round-trip (DEADPOOL ACK verbatim, ~3 min, 2026-11-21 16:39) |
