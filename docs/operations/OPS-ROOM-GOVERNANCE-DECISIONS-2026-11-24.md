@@ -3,7 +3,7 @@
 **Status:** Authoritative governance-decisions record (decisions binding; SOP activation still DRAFT / pending Founder approval).  
 **Authority:** Founder decisions relayed via Room (`@vision`, Cc `@mustarq`).  
 **Date:** 2026-11-24  
-**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`, `#19907`, `#19915`, `#19925`).
+**Scope:** Decisions arising after the `#19871` reconciliation ([OPS-ROOM-RECONCILIATION-2026-11-24.md](OPS-ROOM-RECONCILIATION-2026-11-24.md)), including post-`#19889` strategic/standing decisions (`#19895`, `#19891`, `#19892`, `#19907`, `#19915`, `#19925`, `#19929`).
 
 ---
 
@@ -165,7 +165,20 @@
 
 ---
 
-## 12. Gates Still Open (Unchanged)
+## 12. `#19929` — FOUNDER RESTRUCTURE: consolidate all XPS ERP work to Nitro; XPS reserved for Hoadhaa
+
+- **Room record:** `#19929` | `eventId: 756e1d82b76aaf4db216d6615d5b1c4328eae08c86ef2831207846efad28ca91` | Sender/relay: `@vision` (Cc `@mustarq`, ref Founder Cloudroom directive 2026-11-24). **Supersedes all prior cross-floor ERP routing** (incl. the XPS ownership split in §9).
+- **Consolidate all XPS ERP work back to Nitro before parking — nothing lost:** POSIX/Linux-native test-environment setup and evidence; pending Packages A/B/C; WIP in the dedicated worktree `/mnt/d/StarqTech/.worktrees/erp-xps-19907` (branch `xps/erp-19907-impl`, base `a10d460`); verification evidence under `/home/mustarq/Work/xps-erp-19907/`, `/home/mustarq/Work/xps-erp-19903/`, `/home/mustarq/Work/xps-erp-linux-native-19920/`; and all outstanding responsibilities/known blockers. DEADPOOL was asked for a read-only inventory manifest. Nitro must receive paths, file manifests, native Vitest reproduction commands, and the status of every package. Do NOT delete, reset, or prune the XPS worktree or any evidence during handover.
+- **Then PARK DEADPOOL `w2:p1`, JARVIS `w2:p2`, AG `w2:p3` on XPS:** preserve sessions, configurations, and working state; stop all further dispatches to XPS ERP; conserve model quotas. The seven XPS specialist profiles switched to Nous `tencent/hy4-flash:free` under `#19925`/`#19928` remain intact while parked; DEADPOOL own config unchanged (`anthropic/claude-opus-4-8`).
+- **XPS exclusively reserved for Hoadhaa:** no further ERP assignments to XPS under any circumstances. Hoadhaa itself remains parked until further notice (§6/#19895/#19902/#19915).
+- **Full Nitro capacity on StarqERP:** complete POS and associated functionality plus the remaining Finance and Accounting modules. PRIORITIZE critical transactional, financial, and accounting foundations — `SERP-004` finance kernel, `SERP-075..084` (accounting consequence/journal/receivables/payables/banking/tax/reporting), tenant chart of accounts, double-entry truth, idempotency. Maintain rigorous PICARD-officer verification (current `codex/gpt-6-luna` config), full replay, evidence-only Kanban comments (DEC-072 — no self-close), feature-branch push.
+- **Parked remain parked:** Cursor, all AG seats, all xAI models — no dispatch, routing, or fallback; no config or credential deletion (consistent with §10/#19915 and §11/#19925).
+- **Gates preserved:** merge/deployment gates, `F2`/`F3`/`F4`, `D1–D6`/`D40` unchanged; no PR/merge/deploy/release/acceptance without Founder authority. Proceed autonomously at full capacity within these boundaries; escalate only genuine Founder-level decisions.
+- **Recording note (Ops, `#19929`):** authored and verified directly by Ops Vision `w3:p3` with no XPS/AG/Cursor/xAI dispatch — AG remains halted under §10/#19915, and this restructure parks the XPS ERP seats. Ops took no engineering, board, or room-state action; this records Founder's decision only.
+
+---
+
+## 13. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
 - **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.
