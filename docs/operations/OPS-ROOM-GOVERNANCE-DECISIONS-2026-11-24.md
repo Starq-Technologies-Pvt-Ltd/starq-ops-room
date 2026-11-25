@@ -178,7 +178,18 @@
 
 ---
 
-## 13. Gates Still Open (Unchanged)
+## 13. `#19959` / 2026-11-25 — Hoadhaa V2 operational reference & XPS read-only takeover preparation
+
+- **Authority:** Founder directive 2026-11-25 (Ops Room update; execute personally from the existing seat, no AG, no additional agents, XPS parked, Hoadhaa untouched, then resume StarqERP with PICARD). Recorded by Vision; no AG/XPS dispatch for the recording. Evidence: `#19929`, `#19933`, `#19934`, `#19959`, `#19964`, `#19973`.
+- **Authoritative reference added:** `docs/operations/HOADHAA-V2-ARCHITECTURE-AND-XPS-OWNERSHIP-TRANSITION-2026-11-25.md` — canonical new-Hoadhaa repo (`D:\StarqTech\Projects\hoadhaa v2`, origin `almstq/hoadhaav2`, `main`, moving HEAD `65c2f05` at pin), Rust/Axum 6-crate architecture, Supabase PG17 + PostGIS/pgvector/RLS, Cloud Run, React/Vite local-only web, discovery/enrichment pipeline, infra gaps, authority boundaries, and handover gaps. START.md navigation map updated.
+- **Discovery baseline:** Founder-stated **5,470-node** baseline recorded as Founder-supplied authority, NOT independently re-queried. Prior distinct measures (167 Malé storefront nodes, ~3,500 broader collected records, 3,509 businesses / 3,719 locations, 4,812 public-feed active nodes) are preserved; reconciling them with 5,470 is an explicit handover gap, not a silent overwrite.
+- **XPS preparation COMPLETE, READ-ONLY:** six specialist profiles produced cited familiarization statements via DEADPOOL → JARVIS; zero BLOCKED for familiarity. Verdict **READY-WITH-GAPS** — knowledge sufficient for a future handover, NOT engineering authority. Method caveat (JARVIS finished before the `#19970` redirect; no-read/concurrency caps not the executed method) preserved in the reference and Room `#19974`.
+- **Boundaries:** AG retains exclusive Hoadhaa development through foundational closeout; XPS strictly read-only and parked; no writes/tests/builds/servers/credentials; no AG contact. Cursor/AG/xAI parked; XPS reserved exclusively for Hoadhaa. Founder gate and DEC-072 intact; no self-close.
+- **Next:** resume StarqERP coordination with PICARD under `#19929` (Nitro POS + Finance/Accounting, PICARD-officer verification, feature-branch push) only AFTER this record is verified, committed, and pushed.
+
+---
+
+## 14. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
 - **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.
