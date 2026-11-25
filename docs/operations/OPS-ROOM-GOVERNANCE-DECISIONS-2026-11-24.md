@@ -189,7 +189,20 @@
 
 ---
 
-## 14. Gates Still Open (Unchanged)
+## 14. 2026-11-25 — Founder accepts asymmetric simplification: Hoadhaa VISION absorption APPROVED-BUT-GATED
+
+- **Authority:** Founder directive 2026-11-25, accepting the recommendation delivered in Room `#19979` (wrapped `#19980`). Assessment only; this section records the decision, NOT its execution.
+- **Retained unchanged:** ERP VISION `w4:p1` and PICARD `w4:p2` with PICARD's officers, independent replay and context separation. Founder: demonstrated replay/concurrency/context value outweighs resource savings. ERP VISION and PICARD structure is NOT to be altered.
+- **Approved (gated):** absorb the Hoadhaa intermediary VISION seat (`w2:p8`) into Main Command VISION. Target Hoadhaa chain: `Founder → Main Command VISION → DEADPOOL w2:p1 → JARVIS w2:p2 + specialists`, with DEADPOOL reporting DIRECTLY to Main Command and retaining coordination of JARVIS and independent AG verification on XPS. This restores the documented pre-intermediary chain.
+- **Execution gates — BOTH required, neither met as of this record:** (1) Founder formally accepts AG's Hoadhaa handover in a canonical Room record with exact seq + eventId; (2) Founder explicitly authorizes the new operating arrangement. Acceptance of handover alone does NOT authorize restructuring.
+- **Prepared artifact:** `docs/operations/HOADHAA-VISION-SEAT-ABSORPTION-TRANSITION-PLAN-2026-11-25.md` — full current/target structure, preserved invariants (DEC-072, independent verification, reporting, continuity, Founder gates), step-by-step execution procedure for use only after both gates, rollback trigger, and constraints (no cross-machine Herdr push; context load; identity binding). Status PREPARED — NOT EXECUTED.
+- **Preserved:** DEC-072 no self-close; builder != verifier (AG as independent XPS verifier under DEADPOOL post-handover); canonical Room reporting with readback; WIP and sessions intact; Cursor/AG/xAI parked; Founder gates on merge/deploy/release/acceptance.
+- **Not done:** no XPS contact, no engineering activation, no AG dispatch, no ERP interruption, no config/credential/session/task/acceptance change. ERP continued under retained chain — SERP-439/440/444 landed at `#19978`/`#19981`/`#19982` during preparation.
+- **Recording note:** authored directly by Main Command VISION; no AG/XPS delegation for this record.
+
+---
+
+## 15. Gates Still Open (Unchanged)
 
 The following gates remain **recorded, not resolved**:
 - **Hoadhaa engineering suspended pending V2 rebuild (`#19895`):** All current Hoadhaa engineering is suspended; Supabase backup + cleanup-prep is the sole remaining Hoadhaa assignment.

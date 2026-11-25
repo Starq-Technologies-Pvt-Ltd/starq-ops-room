@@ -41,6 +41,7 @@ See [OPS-ROOM-RECONCILIATION-2026-11-24.md](docs/operations/OPS-ROOM-RECONCILIAT
 | **Documentation Reconciliation** | [DOCUMENTATION-RECONCILIATION-2026-11-21.md](docs/operations/DOCUMENTATION-RECONCILIATION-2026-11-21.md) | VERIFIED (2026-11-21) |
 | **Post-Reconciliation Governance Decisions** | [OPS-ROOM-GOVERNANCE-DECISIONS-2026-11-24.md](docs/operations/OPS-ROOM-GOVERNANCE-DECISIONS-2026-11-24.md) | Authoritative governance record (2026-11-24) |
 | **Hoadhaa V2 Architecture & XPS Transition** | [HOADHAA-V2-ARCHITECTURE-AND-XPS-OWNERSHIP-TRANSITION-2026-11-25.md](docs/operations/HOADHAA-V2-ARCHITECTURE-AND-XPS-OWNERSHIP-TRANSITION-2026-11-25.md) | Authoritative architecture/infra/discovery-baseline reference; XPS prep READY-WITH-GAPS, handover Founder-gated (2026-11-25) |
+| **Hoadhaa VISION Absorption — Transition Plan** | [HOADHAA-VISION-SEAT-ABSORPTION-TRANSITION-PLAN-2026-11-25.md](docs/operations/HOADHAA-VISION-SEAT-ABSORPTION-TRANSITION-PLAN-2026-11-25.md) | Founder-approved but GATED — PREPARED/NOT EXECUTED; dual handover+arrangement authorization required |
 
 ---
 
